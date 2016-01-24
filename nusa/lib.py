@@ -5,17 +5,9 @@
 #  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
+import material as mat
 
-class Material(object):
-	def __init__(self,name,**kwargs):
-		self.name = name
-		if "E" in kwargs.keys():
-			self.E = kwargs["E"]
-	
-	def __str__(self):
-		return self.name
+## ================== Materials ======================
 
-
-if __name__=='__main__':
-	pass
-	
+STEEL_1018 = mat.Material("1018 Steel",E=205e9,nu=0.3)
+ALUMINIUM_6061 = mat.Material("6061 Aluminium Alloy",E=69e9,nu=0.33)

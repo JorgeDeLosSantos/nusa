@@ -3,13 +3,13 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to SAPY documentation
+Welcome to NuSA documentation
 =============================
 
-What is SAPY ?
+What is NuSA ?
 
-SAPY (Structural Analysis with Python) is a mini-toolkit for solve simple and common structural analysis 
-problems.
+NuSA (Numerical Structural Analysis with Python) is a mini-toolkit for solve simple and common 
+structural analysis problems.
 
 Code: https://github.com/JorgeDeLosSantos
 
@@ -18,7 +18,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
    
-.. automodule:: core.base
+.. automodule:: nusa.core
     :members:
     :undoc-members:
     :inherited-members:
