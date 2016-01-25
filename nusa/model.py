@@ -5,18 +5,18 @@
 #  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
-
 import numpy as np
 import numpy.linalg as la
+import templates as tmp
 from core import Model
-import _templates as tmp
+from _info import __version__,__organization__
 
 class SpringModel(Model):
 	"""
 	Model for finite element analysis
 	"""
 	def __init__(self,name="Spring Model 01"):
-		Model.__init__(self,name)
+		Model.__init__(self,name=name,mtype="spring")
 		self.F = {}
 		self.U = {}
 		self.dof = 1 # 1 DOF for spring element
@@ -74,13 +74,24 @@ class SpringModel(Model):
 			unb = self.U[nb.label]
 			_uv = np.array([una,unb])
 			self.EF.update([(elm.label,np.dot(_ke,_uv)),])
-
-		
+			
+	def getDisplacements(self):
+		_str = ""
+		for lbl,u in self.U.items():
+			_str += (str(lbl) + "\t|\t" + str(u) + "\n")
+		return _str
+				
 	def getNodalForces(self):
-		return self.NF
+		_str = ""
+		for lbl,nf in self.NF.items():
+			_str += (str(lbl) + "\t|\t" + str(nf) + "\n")
+		return _str
 	
 	def getElementForces(self):
-		return self.EF
+		_str = ""
+		for lbl,ef in self.EF.items():
+			_str += (str(lbl) + "\t|\t" + str(ef) + "\n")
+		return _str
 		
 	def report(self,out="cli"):
 		"""
@@ -101,14 +112,15 @@ class SpringModel(Model):
 		"""
 		_str = tmp.MINI_REPORT_TEMPLATE.format(
 		model=self.name,
-		etype="Spring",
+		mtype=self.mtype,
 		nelements=self.getNumberOfElements(),
 		nnodes=self.getNumberOfNodes(),
-		displacements=self.U.values())
+		displacements=self.getDisplacements(),
+		nodalforces=self.getNodalForces(),
+		elementforces=self.getElementForces(),
+		version=__version__)
 		return _str
 		
-	
-
 
 if __name__=='__main__':
 	pass

@@ -5,19 +5,12 @@
 #  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
-MINI_REPORT_TEMPLATE = """
-Mini-Report for {model}
+import numpy as np
+import model
 
-Element types: {etype}
-Number of nodes: {nnodes}
-Number of elements: {nelements}
+def ModelFromFiles(nodesfile,elementsfile,modeltype):
+	pass
 
 
-=========
-Solutions
-=========
-
-Displacement vector:
-
-{displacements}
-"""
+if __name__=='__main__':
+	pass

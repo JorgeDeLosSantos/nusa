@@ -8,13 +8,14 @@
 
 import numpy as np
 import numpy.linalg as la
-import _templates as tmp
+import templates as tmp
 
 class Model(object):
 	"""
 	Model for finite element analysis
 	"""
-	def __init__(self,name):
+	def __init__(self,name,mtype):
+		self.mtype = mtype
 		self.name = name
 		self.nodes = {}
 		self.elements = {}
@@ -39,6 +40,8 @@ class Model(object):
 			m1.addElement(e1)
 		
 		"""
+		if self.mtype != element.etype:
+			raise ValueError("Element type must be "+self.mtype)
 		current_label = self.getNumberOfElements()
 		if element.label is "":
 			element.setLabel(current_label)

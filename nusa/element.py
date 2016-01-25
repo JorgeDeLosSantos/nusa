@@ -9,7 +9,7 @@
 import numpy as np
 import numpy.linalg as la
 from core import Element
-import _templates as tmp
+import templates as tmp
 
 class Spring(Element):
 	"""
@@ -86,8 +86,8 @@ class Bar(Element):
 		e1 = Bar((n1,n2),200e9,0.02,1)
 	
 	"""
-	def __init__(self,nodes,E,A,L):
-		Element.__init__(self,etype="bar")
+	def __init__(self,nodes,E,A,L,label=""):
+		Element.__init__(self,etype="bar",label=label)
 		self.nodes = nodes
 		self.E = E
 		self.A = A
