@@ -15,5 +15,3 @@ setup(name='nusa',
       license = "MIT",
       url='https://github.com/JorgeDeLosSantos/nusa',
       packages=['nusa'],)
-
-

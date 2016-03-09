@@ -9,8 +9,8 @@ import numpy as np
 import model
 
 def ModelFromFiles(nodesfile,elementsfile,modeltype):
-	pass
+    pass
 
 
 if __name__=='__main__':
-	pass
+    pass
