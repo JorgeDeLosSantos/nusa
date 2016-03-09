@@ -1,17 +1,140 @@
-# NUSA
+# NuSA
 
 Numerical Structural Analysis with Python
 
 
-## Status:
+## Version / Status
+
+Current: **0.1.0-dev**
+
+## Requirements
+
+* NumPy
+* Matplotlib (Optional for post)
 
 
+## Installation
+
+Clone this repository:
+
+```
+$ git clone https://github.com/JorgeDeLosSantos/nusa.git
+```
+
+and install:
+
+```
+python setup.py install
+```
 
 ## Capabilities
 
 * Bar elements analysis
 * 2D frames analysis
 * Beams analysis
+
+## Mini-Demo
+
+Example for a spring element analysis.
+
+```python
+# -*- coding: utf-8 -*-
+# NuSA Demo
+from nusa.core import *
+from nusa.model import *
+from nusa.element import *
+    
+def test1():
+    """
+    Logan, D. (2007). A first course in the finite element analysis.
+    Example 2.1, pp. 42.
+    """
+    P = 5000.0
+
+    # Model
+    m1 = SpringModel("2D Model")
+
+    # Nodes
+    n1 = Node((0,0))
+    n2 = Node((0,0))
+    n3 = Node((0,0))
+    n4 = Node((0,0))
+
+    # Elements
+    e1 = Spring((n1,n3),1000.0)
+    e2 = Spring((n3,n4),2000.0)
+    e3 = Spring((n4,n2),3000.0)
+
+    # Add elements 
+    for nd in (n1,n2,n3,n4):
+        m1.addNode(nd)
+    for el in (e1,e2,e3):
+        m1.addElement(el)
+
+    m1.buildGlobalMatrix()
+    m1.addForce(n4, (P,))
+    m1.addConstraint(n1, ux=0)
+    m1.addConstraint(n2, ux=0)
+    m1.solve()
+    m1.report()
+
+if __name__ == '__main__':
+    test1()
+```
+
+Results:
+
+```
+==========================
+    NuSA 0.1.0
+==========================
+
+
+Mini-Report for 2D Model
+
+Model type: spring
+Number of nodes: 4
+Number of elements: 3
+
+
+=========
+Solutions
+=========
+
+-------------------------------------------------------------
+Displacements:
+
+1       |       0
+2       |       0
+3       |       0.909090909091
+4       |       1.36363636364
+
+
+
+-------------------------------------------------------------
+Nodal forces:
+
+1       |       -909.090909091
+2       |       -4090.90909091
+3       |       0.0
+4       |       5000.0
+
+
+
+-------------------------------------------------------------
+Element forces:
+
+1       |       [-909.09090909  909.09090909]
+2       |       [-909.09090909  909.09090909]
+3       |       [ 4090.90909091 -4090.90909091]
+
+```
+
+
+
+## Documentation
+
+
 
 ## About...
 
