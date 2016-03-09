@@ -8,6 +8,21 @@
 
 class Material(object):
 	def __init__(self,name,**kwargs):
+		"""
+		
+		Parameters
+		----------
+		
+		name :    Name of material
+		
+		
+		**kwargs:
+		
+		E       :    Elastic modulus
+		nu      :    Poisson ratio
+		density :    Density
+		
+		"""
 		self.name = name
 		if "E" in kwargs.keys():
 			self.E = kwargs["E"]

@@ -8,7 +8,7 @@
 from distutils.core import setup
 
 setup(name='nusa',
-      version='0.1.0',
+      version='0.1.0-dev',
       description='Numerical Structural Analysis with Python',
       author='Pedro Jorge De Los Santos',
       author_email='delossantosmfq@gmail.com',
