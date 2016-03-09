@@ -78,19 +78,19 @@ class SpringModel(Model):
     def getDisplacements(self):
         _str = ""
         for lbl,u in self.U.items():
-            _str += (str(lbl) + "\t|\t" + str(u) + "\n")
+            _str += (str(lbl+1) + "\t|\t" + str(u) + "\n")
         return _str
                 
     def getNodalForces(self):
         _str = ""
         for lbl,nf in self.NF.items():
-            _str += (str(lbl) + "\t|\t" + str(nf) + "\n")
+            _str += (str(lbl+1) + "\t|\t" + str(nf) + "\n")
         return _str
     
     def getElementForces(self):
         _str = ""
         for lbl,ef in self.EF.items():
-            _str += (str(lbl) + "\t|\t" + str(ef) + "\n")
+            _str += (str(lbl+1) + "\t|\t" + str(ef) + "\n")
         return _str
         
     def report(self,out="cli"):
