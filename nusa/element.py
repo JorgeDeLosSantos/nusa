@@ -105,5 +105,54 @@ class Bar(Element):
         return self.nodes
         
 
+class Beam(Element):
+    """
+    Beam element for finite element analysis
+    
+    *nodes* : :class:`~core.base.Node`
+        Conectivity for element
+    
+    *E* : float
+        Young modulus
+        
+    *A* : float
+        Area of element
+        
+    *L* : float
+        Length of element
+    
+    
+    Example::
+    
+        n1 = Node((0,0),1)
+        n2 = Node((1,0),1)
+        e1 = Bar((n1,n2),200e9,0.02,1)
+    
+    """
+    def __init__(self,nodes,E,I,L,label=""):
+        Element.__init__(self,etype="beam",label=label)
+        self.nodes = nodes
+        self.E = E
+        self.I = I
+        self.L = L
+        
+    def getElementStiffness(self):
+        """
+        Get stiffness matrix for this element
+        
+        """
+        multiplier = (self.I*self.E/self.L**3)
+        a = 6*self.L
+        b = 4*self.L**2
+        c = 2*self.L**2
+        self._K = multiplier*np.array([[ 12, a, -12, a],
+                                       [  a, b,  -a, c],
+                                       [-12,-a,  12,-a],
+                                       [  a, c,  -a, b]])
+        return self._K
+        
+    def getNodes(self):
+        return self.nodes
+
 if __name__=='__main__':
     pass
