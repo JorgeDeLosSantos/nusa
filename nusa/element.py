@@ -154,5 +154,56 @@ class Beam(Element):
     def getNodes(self):
         return self.nodes
 
+
+class Truss(Element):
+    """
+    Truss element for finite element analysis
+    
+    *nodes* : :class:`~core.base.Node`
+        Conectivity for element
+    
+    *E* : float
+        Young modulus
+        
+    *A* : float
+        Area of element
+        
+    *L* : float
+        Length of element
+    
+    
+    Example::
+    
+        n1 = Node((0,0),1)
+        n2 = Node((1,0),1)
+        e1 = Bar((n1,n2),200e9,0.02,1)
+    
+    """
+    def __init__(self,nodes,E,A,L,theta,label=""):
+        Element.__init__(self,etype="truss",label=label)
+        self.nodes = nodes
+        self.E = E
+        self.A = A
+        self.L = L
+        self.theta = theta
+        
+    def getElementStiffness(self):
+        """
+        Get stiffness matrix for this element
+        
+        """
+        multiplier = (self.A*self.E/self.L)
+        C = np.cos(self.theta)
+        S = np.sin(self.theta)
+        CS = C*S
+        self._K = multiplier*np.array([[C**2 , CS   , -C**2, -CS  ],
+                                       [CS   , S**2 , -CS  , -S**2],
+                                       [-C**2, -CS  , C**2 , CS   ],
+                                       [-CS  , -S**2,  CS  , S**2 ]])
+        return self._K
+        
+    def getNodes(self):
+        return self.nodes
+
 if __name__=='__main__':
     pass
