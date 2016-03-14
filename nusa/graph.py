@@ -47,7 +47,6 @@ class GFixedNode(collections.PatchCollection):
         #self.set_mfc('r')
         #self.set_ms(10)
         
-        
 def plot_spring_model(model):
     GRAPH_TOL = 0.1
     fig = plt.figure()
@@ -65,8 +64,39 @@ def plot_spring_model(model):
     max_y = 0.2
     ax.set_xlim(-GRAPH_TOL, max_x+GRAPH_TOL)
     ax.set_ylim(-max_y,max_y)
-    fig.savefig('this.png')
+    #~ fig.savefig('this.png')
     plt.show()
     
+
+def plot_truss_model(model):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    
+    for node in model.nodes.values():
+        ax.plot(node.x, node.y, "ko")
+    
+    for element in model.elements.values():
+        na, nb = element.getNodes()
+        xx = [model.nodes[na.label].x, model.nodes[nb.label].x]
+        yy = [model.nodes[na.label].y, model.nodes[nb.label].y]
+        ax.plot(xx, yy, color="#5050dd")
+    
+    minx, maxx = xlim(model)
+    miny, maxy = ylim(model)
+    tolx = (maxx-minx)/10.0
+    toly = (maxy-miny)/10.0
+    ax.set_xlim(minx - tolx, maxx + tolx)
+    ax.set_ylim(miny - toly, maxy + toly)
+    plt.show()
+
+def xlim(model):
+    xcoords = [node.x for node in model.nodes.values()]
+    return (min(xcoords),max(xcoords))
+    
+def ylim(model):
+    ycoords = [node.y for node in model.nodes.values()]
+    return (min(ycoords),max(ycoords))
+
+
 if __name__ == '__main__':
     pass
