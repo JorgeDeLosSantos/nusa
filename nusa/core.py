@@ -94,9 +94,13 @@ class Node(object):
     """
     def __init__(self,coordinates,label=""):
         self.coordinates = coordinates
+        self.x = coordinates[0] # usable prop
+        self.y = coordinates[1] # usable prop
         self.__label = label
         self.__ux = np.nan
         self.__uy = np.nan
+        self.__fx = np.nan
+        self.__fy = np.nan
         
     @property
     def label(self):
@@ -115,7 +119,7 @@ class Node(object):
     
     @ux.setter
     def ux(self,val):
-        if val in [int,float]:
+        if True:#type(val) in [int,float]:
             self.__ux = val
         else:
             raise ValueError("Value must be float or int")
@@ -126,7 +130,7 @@ class Node(object):
     
     @uy.setter
     def uy(self,val):
-        if val in [int,float]:
+        if True:#type(val) in [int,float]:
             self.__uy = val
         else:
             raise ValueError("Value must be float or int")
@@ -138,11 +142,18 @@ class Node(object):
         self.__label = label
     
     def getDisplacements(self):
-        return (self.ux,self.__uy)
+        return (self.__ux,self.__uy)
         
     def setDisplacements(self,ux=np.nan,uy=np.nan):
         self.__ux = ux
         self.__uy = uy
+    
+    def getForces(self):
+        return (self.__fx,self.__fy)
+    
+    def setForces(self,fx=np.nan,fy=np.nan):
+        self.__fx = fx
+        self.__fy = fy
         
 
 if __name__=='__main__':
