@@ -51,7 +51,13 @@ class Model(object):
         return len(self.nodes)
         
     def getNumberOfElements(self):
-        return len(self.elements)        
+        return len(self.elements)
+        
+    def getNodes(self):
+        return self.nodes.values()
+        
+    def getElements(self):
+        return self.elements.values()
     
     def __str__(self):
         custom_str = ("Model: "+self.name+"\nNodes: "+str(self.getNumberOfNodes())+
@@ -59,7 +65,6 @@ class Model(object):
         return custom_str
             
 
-        
 class Element(object):
     """
     Superclass for Element objects 
@@ -67,13 +72,37 @@ class Element(object):
     def __init__(self,etype,label):
         self.etype = etype
         self.label = label
+        self.__fx = 0.0
+        self.__fy = 0.0
+        
+    @property
+    def fx(self):
+        return self.__fx
+        
+    @fx.setter
+    def fx(self,val):
+        self.__fx = val
+        
+    @property
+    def fy(self):
+        return self.__fy
+        
+    @fy.setter
+    def fy(self,val):
+        self.__fy = val
         
     def setLabel(self,label):
         self.label = label
         
+    def setElementForces(self,fx=0.0, fy=0.0):
+        self.__fx = fx
+        self.__fy = fy
+        
+    def getElementForces(self):
+        return (self.__fx, self.__fy)
+        
     def __str__(self):
         return self.etype, self.nodes, self.elements
-
 
 
 class Node(object):
@@ -99,8 +128,8 @@ class Node(object):
         self.__label = label
         self.__ux = np.nan
         self.__uy = np.nan
-        self.__fx = np.nan
-        self.__fy = np.nan
+        self.__fx = 0.0
+        self.__fy = 0.0
         
     @property
     def label(self):
@@ -134,6 +163,22 @@ class Node(object):
             self.__uy = val
         else:
             raise ValueError("Value must be float or int")
+        
+    @property
+    def fx(self):
+        return self.__fx
+    
+    @fx.setter
+    def fx(self,val):
+        self.__fx = val
+    
+    @property
+    def fy(self):
+        return self.__fy
+    
+    @fx.setter
+    def fy(self,val):
+        self.__fy = val
         
     def getLabel(self):
         return self.__label
