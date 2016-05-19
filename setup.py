@@ -5,13 +5,14 @@
 #  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='nusa',
-      version='0.1.0-dev',
+      version='0.1.0.dev0',
       description='Numerical Structural Analysis with Python',
       author='Pedro Jorge De Los Santos',
       author_email='delossantosmfq@gmail.com',
       license = "MIT",
       url='https://github.com/JorgeDeLosSantos/nusa',
-      packages=['nusa'],)
+      packages=['nusa'],
+      )
