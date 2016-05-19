@@ -5,6 +5,9 @@
 #  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
+import sys
+sys.path.insert(0,'../') # Insert parent folder
+
 import numpy as np
 from nusa.core import *
 from nusa.model import *

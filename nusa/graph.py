@@ -5,11 +5,11 @@
 #  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
-#~ """
-#~ The graph module contains functions for 
-#~ plot displacements, stress, strains and 
-#~ other outputs from analysis.
-#~ """
+
+"""
+Frozen development
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.lines as lines

@@ -7,5 +7,5 @@ License: MIT License
 """
 __version__ = "0.1.0"
 __author__ = "Pedro Jorge De Los Santos"
-__organization__ = "LAB DLS"
+__organization__ = "LARYSA TECH"
 __email__ = "delossantosmfq@gmail.com"

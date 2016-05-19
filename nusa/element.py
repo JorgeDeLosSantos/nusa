@@ -5,7 +5,6 @@
 #  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
-
 import numpy as np
 import numpy.linalg as la
 from core import Element
@@ -103,7 +102,7 @@ class Bar(Element):
         
     def getNodes(self):
         return self.nodes
-        
+
 
 class Beam(Element):
     """
@@ -190,7 +189,6 @@ class Truss(Element):
     def getElementStiffness(self):
         """
         Get stiffness matrix for this element
-        
         """
         multiplier = (self.A*self.E/self.L)
         C = np.cos(self.theta)

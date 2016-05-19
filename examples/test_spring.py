@@ -5,11 +5,13 @@
 #  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
+import sys
+sys.path.insert(0,'../') # Insert parent folder
+
 from nusa.core import *
 from nusa.model import *
 from nusa.element import *
 
-    
 def test1():
     """
     Logan, D. (2007). A first course in the finite element analysis.
@@ -42,10 +44,9 @@ def test1():
     m1.addConstraint(n1,ux=0)
     m1.addConstraint(n2,ux=0)
     m1.solve()
-
+    
     for node in m1.getNodes():
-        print node.fx, node.fy
-
+        print  node.ux, node.uy, node.fx, node.fy
 
 def test2():
     """
@@ -79,7 +80,6 @@ def test2():
     m2.addConstraint(n5,ux=0.02)
     
     m2.solve()
-    m2.report()
 
 
 def test3():
@@ -107,11 +107,44 @@ def test3():
     m3.buildGlobalMatrix()
     m3.addForce(n3,(P,))
     m3.addConstraint(n1,ux=0)
-    
     m3.solve()
-    m3.report()
     
+    for n in m3.getNodes():
+        print n.ux, n.uy
+        
+
+def simple_case():
+    """
+    """
+    P = 750
+    k = 300
+    # Model
+    ms = SpringModel("Simple")
+    # Nodes
+    n1 = Node((0,0))
+    n2 = Node((0,0))
+    # Elements
+    e1 = Spring((n1,n2),k)
+    
+    for nd in (n1,n2):
+        ms.addNode(nd)
+    ms.addElement(e1)
+    
+    ms.buildGlobalMatrix()
+    ms.addForce(n2,(P,))
+    ms.addConstraint(n1,ux=0)
+    ms.solve()
+    
+    print("Node displacements")
+    for n in ms.getNodes():
+        print n.ux, n.uy
+    
+    print("Element stiffness matrix")
+    for el in ms.getElements():
+        print(el.getElementStiffness())
+
 
 if __name__ == '__main__':
-    test1()
-    #test3()
+    #~ test1()
+    #~ test3()
+    simple_case()
