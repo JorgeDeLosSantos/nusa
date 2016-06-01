@@ -2,7 +2,7 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
+#  Blog: numython.blogspot.mx
 #  License: MIT License
 # ***********************************
 MINI_REPORT_TEMPLATE = """

@@ -7,6 +7,8 @@
 # ***********************************
 from setuptools import setup
 
+# Current status: pre-alpha
+
 setup(name='nusa',
       version='0.1.0.dev0',
       description='Numerical Structural Analysis with Python',
