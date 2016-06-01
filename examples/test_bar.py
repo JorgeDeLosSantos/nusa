@@ -47,7 +47,10 @@ def test1():
     m1.addConstraint(n1,ux=0) # fixed 
     m1.addConstraint(n4,ux=0) # fixed
     m1.solve() # Solve model
-    m1.report(out="cli") # Print report
+    
+    print("Node | Displacements | Forces")
+    for node in m1.getNodes():
+        print("%-8s %4.4f\t\t%4.4f"%(node.label, node.ux, node.fx))
 
 
 if __name__ == '__main__':

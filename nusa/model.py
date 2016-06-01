@@ -85,12 +85,11 @@ class SpringModel(Model):
         node = idx
         var = opts[0]
         return node,var
-        
-        
+
 
 class BarModel(Model):
     """
-    Model for finite element analysis
+    Bar model for finite element analysis
     """
     def __init__(self,name="Bar Model 01"):
         Model.__init__(self,name=name,mtype="bar")
@@ -100,7 +99,7 @@ class BarModel(Model):
         
     def buildForcesVector(self):
         for node in self.nodes.values():
-            self.F[node.label] = 0
+            self.F[node.label] = {"fx":0, "fy":0}
         
     def buildGlobalMatrix(self):
         msz = (self.dof)*self.getNumberOfNodes()
@@ -116,42 +115,48 @@ class BarModel(Model):
         self.buildDisplacementsVector()
         
     def buildDisplacementsVector(self):
-        msz = (self.dof)*self.getNumberOfNodes()
         for node in self.nodes.values():
-            self.U[node.label] = np.nan
+            self.U[node.label] = {"ux":np.nan, "uy":np.nan}
         
     def addForce(self,node,force):
-        self.F[node.label] = force[0]
+        self.F[node.label]["fx"] = force[0]
         
     def addConstraint(self,node,**constraint):
-        label = node.label
         if constraint.has_key('ux'):
-            val = constraint.get('ux')
-            node.setDisplacements(ux=val)
-            self.U[label] = val
+            ux = constraint.get('ux')
+            node.setDisplacements(ux=ux)
+            self.U[node.label]["ux"] = ux
         
     def solve(self):
-        knw = [lbl for lbl in self.U.keys() if not self.U[lbl] is np.nan]
-        unknw = [lbl for lbl in self.U.keys() if self.U[lbl] is np.nan]
+        # known and unknown values
+        self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
+        self.VF = [node[key] for node in self.F.values() for key in ("fx",)]
+        knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]
+        unknw = [pos for pos,value in enumerate(self.VU) if value is np.nan]
+        # Matrices to solve
         self.K2S = np.delete(np.delete(self.KG,knw,0),knw,1)
-        self.F2S = np.delete(self.F.values(),knw,0)
+        self.F2S = np.delete(self.VF,knw,0)
         # For displacements
         self.solved_u = la.solve(self.K2S,self.F2S)
-        self.U.update(zip(unknw,self.solved_u))
+        # Updating U (displacements vector)
+        for k,ic in enumerate(unknw):
+            nd, var = self.index2key(ic)
+            self.U[nd][var] = self.solved_u[k]
+            self.nodes[ic].ux = self.solved_u[k]
         # For nodal forces/reactions
         self.NF = self.F.copy()
-        nf_calc = np.dot(self.KG,self.U.values())
-        self.NF.update(zip(self.NF.keys(),nf_calc))
-        # For element forces
-        self.EF = self.elements.copy()
-        for elm in self.elements.values():
-            _ke = elm.getElementStiffness()
-            na,nb = elm.getNodes()
-            una = self.U[na.label]
-            unb = self.U[nb.label]
-            _uv = np.array([una,unb])
-            self.EF.update([(elm.label,np.dot(_ke,_uv)),])
-
+        self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
+        nf_calc = np.dot(self.KG, self.VU)
+        for k,ic in enumerate(range(self.getNumberOfNodes())):
+            nd, var = self.index2key(ic, ("fx",))
+            self.NF[nd][var] = nf_calc[k]
+            self.nodes[ic].fx = nf_calc[k]
+            
+    def index2key(self,idx,opts=("ux",)):
+        node = idx
+        var = opts[0]
+        return node,var
+    
 
 class BeamModel(Model):
     """

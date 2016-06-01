@@ -201,8 +201,9 @@ class Node(object):
         self.__fy = fy
         
     def __str__(self):
-        _str = "Node\nCoords:(%g,%g)\n"%(self.ux, self.uy)
-        _str = "%sForces:(%g,%g)"%(_str,self.fx,self.fy)
+        _str = self.__class__
+        _str = "%s\nU:(%g,%g)\n"%(_str,self.ux, self.uy)
+        _str = "%sF:(%g,%g)"%(_str,self.fx,self.fy)
         return _str
         
 
