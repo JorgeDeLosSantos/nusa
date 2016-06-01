@@ -2,7 +2,7 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
+#  Blog: numython.blogspot.mx
 #  License: MIT License
 # ***********************************
 import re
@@ -18,15 +18,13 @@ class SpringModel(Model):
     """
     def __init__(self,name="Spring Model 01"):
         Model.__init__(self,name=name,mtype="spring")
-        self.F = []
-        self.U = []
+        self.F = {} # Forces
+        self.U = {} # Displacements
         self.dof = 1 # 1 DOF for spring element
         
     def buildForcesVector(self):
         for node in self.nodes.values():
-            fx, _ = node.getForces()
-            self.F.append(fx)
-        self.F = np.array(self.F)
+            self.F[node.label] = {"fx":0, "fy":0}
         
     def buildGlobalMatrix(self):
         msz = (self.dof)*self.getNumberOfNodes()
@@ -39,49 +37,56 @@ class SpringModel(Model):
             self.KG[n2.label, n1.label] += ku[1,0]
             self.KG[n2.label, n2.label] += ku[1,1]
         
+        self.buildForcesVector()
+        self.buildDisplacementsVector()
+        
     def buildDisplacementsVector(self):
         for node in self.nodes.values():
-            ux, _ = node.getDisplacements()
-            self.U.append(ux)
-        self.U = np.array(self.U)
+            self.U[node.label] = {"ux":np.nan, "uy":np.nan}
         
     def addForce(self,node,force):
-        node.setForces(fx=force[0])
+        self.F[node.label]["fx"] = force[0]
         
     def addConstraint(self,node,**constraint):
-        if constraint.has_key('ux'):
-            ux = constraint.get('ux')
+        """
+        Only displacement in x-dir 
+        """
+        if constraint.has_key("ux"):
+            ux = constraint.get("ux")
             node.setDisplacements(ux=ux)
+            self.U[node.label]["ux"] = ux
         
     def solve(self):
-        # Build forces and displacements vectors.
-        self.buildDisplacementsVector()
-        self.buildForcesVector()
         # known and unknown values
-        knw = [pos for pos,val in enumerate(self.U) if not np.isnan(val)]
-        unknw = [pos for pos,val in enumerate(self.U) if np.isnan(val)]
+        self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
+        self.VF = [node[key] for node in self.F.values() for key in ("fx",)]
+        knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]
+        unknw = [pos for pos,value in enumerate(self.VU) if value is np.nan]
         # Matrices to solve
         self.K2S = np.delete(np.delete(self.KG,knw,0),knw,1)
-        self.F2S = np.delete(self.F,knw,0)
+        self.F2S = np.delete(self.VF,knw,0)
         # For displacements
-        self.solved_u = la.solve(self.K2S, self.F2S)
+        self.solved_u = la.solve(self.K2S,self.F2S)
         # Updating U (displacements vector)
-        for k,idx in enumerate(unknw):
-            self.U[idx] = self.solved_u[k]
-            self.nodes[idx].ux = self.solved_u[k]
+        for k,ic in enumerate(unknw):
+            nd, var = self.index2key(ic)
+            self.U[nd][var] = self.solved_u[k]
+            self.nodes[ic].ux = self.solved_u[k]
         # For nodal forces/reactions
         self.NF = self.F.copy()
-        nf_calc = np.dot(self.KG,self.U)
-        for k,_ in enumerate(self.getNodes()):
-            self.NF[k] = nf_calc[k]
-        # For element forces
-        for elm in self.getElements():
-            _ke = elm.getElementStiffness()
-            na,nb = elm.getNodes()
-            una = self.U[na.label]
-            unb = self.U[nb.label]
-            _uv = np.array([una,unb])
-            elm.fx = np.dot(_ke, _uv) # Set element force
+        self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
+        nf_calc = np.dot(self.KG, self.VU)
+        for k,ic in enumerate(range(self.getNumberOfNodes())):
+            nd, var = self.index2key(ic, ("fx",))
+            self.NF[nd][var] = nf_calc[k]
+            self.nodes[ic].fx = nf_calc[k]
+            print self.nodes[ic].fx, self.nodes[ic]
+            
+    def index2key(self,idx,opts=("ux",)):
+        node = idx
+        var = opts[0]
+        return node,var
+        
         
 
 class BarModel(Model):
