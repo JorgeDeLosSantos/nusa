@@ -41,7 +41,7 @@ def test1():
     m1.addConstraint(n1,ux=0)
     m1.addConstraint(n2,ux=0)
     m1.solve()
-    print m1.F
+    #~ print m1.F
     for node in m1.getNodes():
         print  node.ux, node.uy, node.fx, node.fy
 

@@ -80,7 +80,6 @@ class SpringModel(Model):
             nd, var = self.index2key(ic, ("fx",))
             self.NF[nd][var] = nf_calc[k]
             self.nodes[ic].fx = nf_calc[k]
-            print self.nodes[ic].fx, self.nodes[ic]
             
     def index2key(self,idx,opts=("ux",)):
         node = idx
