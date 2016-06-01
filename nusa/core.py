@@ -2,7 +2,7 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
+#  Blog: numython.blogspot.mx
 #  License: MIT License
 # ***********************************
 
@@ -176,7 +176,7 @@ class Node(object):
     def fy(self):
         return self.__fy
     
-    @fx.setter
+    @fy.setter
     def fy(self,val):
         self.__fy = val
         
@@ -199,6 +199,11 @@ class Node(object):
     def setForces(self,fx=np.nan,fy=np.nan):
         self.__fx = fx
         self.__fy = fy
+        
+    def __str__(self):
+        _str = "Node\nCoords:(%g,%g)\n"%(self.ux, self.uy)
+        _str = "%sForces:(%g,%g)"%(_str,self.fx,self.fy)
+        return _str
         
 
 if __name__=='__main__':
