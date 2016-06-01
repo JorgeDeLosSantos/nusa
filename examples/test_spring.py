@@ -37,14 +37,11 @@ def test1():
         m1.addElement(el)
 
     m1.buildGlobalMatrix()
-    #~ n4.fx = P
     m1.addForce(n4,(P,))
-    #~ n1.ux = 0.0
-    #~ n2.ux = 0.0
     m1.addConstraint(n1,ux=0)
     m1.addConstraint(n2,ux=0)
     m1.solve()
-    
+    print m1.F
     for node in m1.getNodes():
         print  node.ux, node.uy, node.fx, node.fy
 
@@ -135,16 +132,12 @@ def simple_case():
     ms.addConstraint(n1,ux=0)
     ms.solve()
     
+    print ms.U
     print("Node displacements")
     for n in ms.getNodes():
         print n.ux, n.uy
-    
-    print("Element stiffness matrix")
-    for el in ms.getElements():
-        print(el.getElementStiffness())
-
 
 if __name__ == '__main__':
-    #~ test1()
+    test1()
     #~ test3()
-    simple_case()
+    #~ simple_case()
