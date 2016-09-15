@@ -1,0 +1,38 @@
+\chapter{Introducción al método de los elementos finitos}
+
+En el método de elementos finitos se considera un cuerpo continuo o sólido, como un ensamble de pequeñas 
+subdivisiones llamadas elementos finitos. Estos elementos están interconectados a través de nodos comunes. 
+Debido a que la variación real de las variables de campo (desplazamientos, esfuerzos, temperaturas, etc.) 
+se desconoce en el continuo, se asume que la variación de estas en el modelo de elemento finito puede ser 
+aproximada por una simple función. Estas funciones de aproximación, también llamadas modelos de interpolación, 
+son definidas en términos de los valores nodales de las variables de campo.\\
+
+En general, el método de los elementos finitos, consiste en formular un sistema de ecuaciones 
+(ecuaciones de equilibrio) para el sistema continuo que ha sido discretizado, donde las incógnitas 
+suelen ser los valores nodales de las variables de campo. Luego, se resuelve este sistema de ecuaciones, 
+con las consideraciones correspondientes a las condiciones de frontera o valores iniciales que simplifiquen 
+el modelo original. La siguiente ecuación muestra, en notación matricial, el sistema de ecuaciones resuelto 
+en una formulación de elemento finito.
+
+\begin{equation} \label{eq:fem_simple}
+K\,\vec{u} = \vec{P}
+\end{equation}
+
+Donde $K$ es la matriz global de rigidez, $\vec{u}$ es el vector de desplazamientos nodales y $\vec{P}$ el 
+vector de fuerzas nodales en el sistema.\\
+
+Para problemas lineales, el vector $\vec{u}$ puede ser resuelto de manera sencilla, mediante 
+procedimientos básicos del álgebra lineal. Sin embargo, para problemas no lineales, la solución 
+tiene que ser obtenida mediante una secuencia de pasos, en el cual cada uno de estos implica la 
+modificación de la matriz de rigidez $K$ y/o el vector global de carga $\vec{P}$.\\
+
+En problemas de análisis dinámico, desplazamientos, velocidades, deformaciones, esfuerzos y cargas 
+son dependientes del tiempo. Por ello deben incluirse algunos otros términos, por lo que la ecuación 
+a resolver viene dada por la expresión siguiente:
+
+\begin{equation}
+M\ddot{\vec{u}} + C\dot{\vec{u}} ̇+ K\vec{u} = \bf{P}
+\end{equation}
+
+Donde $C\,\dot{u}$ representa las fuerzas viscosas, mismas que deben incluirse cuando el 
+sistema esté amortiguado artificialmente y $M$ la matriz de masas.\\

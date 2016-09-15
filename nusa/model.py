@@ -20,14 +20,15 @@ class SpringModel(Model):
         Model.__init__(self,name=name,mtype="spring")
         self.F = {} # Forces
         self.U = {} # Displacements
-        self.dof = 1 # 1 DOF for spring element
+        self.dof = 1 # 1 DOF for spring element (axial displacement)
+        self.IS_KG_BUILDED = False
         
     def buildForcesVector(self):
         for node in self.nodes.values():
             self.F[node.label] = {"fx":0, "fy":0}
         
     def buildGlobalMatrix(self):
-        msz = (self.dof)*self.getNumberOfNodes()
+        msz = (self.dof)*self.getNumberOfNodes() # Matrix size
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
             ku = element.getElementStiffness()
@@ -45,6 +46,7 @@ class SpringModel(Model):
             self.U[node.label] = {"ux":np.nan, "uy":np.nan}
         
     def addForce(self,node,force):
+        if not(self.I)
         self.F[node.label]["fx"] = force[0]
         
     def addConstraint(self,node,**constraint):
@@ -58,6 +60,7 @@ class SpringModel(Model):
         
     def solve(self):
         # known and unknown values
+        #~ self.buildGlobalMatrix()
         self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
         self.VF = [node[key] for node in self.F.values() for key in ("fx",)]
         knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]
