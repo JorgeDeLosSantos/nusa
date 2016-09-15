@@ -12,13 +12,13 @@ import templates as tmp
 
 class Model(object):
     """
-    Model for finite element analysis
+    Superclass for all FAE models
     """
     def __init__(self,name,mtype):
-        self.mtype = mtype
-        self.name = name
-        self.nodes = {}
-        self.elements = {}
+        self.mtype = mtype # Model type
+        self.name = name # Name 
+        self.nodes = {} # Dictionary for nodes {number: NodeObject}
+        self.elements = {} # Dictionary for elements {number: ElementObject}
         
     def addNode(self,node):
         current_label = self.getNumberOfNodes()

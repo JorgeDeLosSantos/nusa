@@ -24,13 +24,13 @@ class Material(object):
         
         """
         self.name = name
-        if "E" in kwargs.keys():
-            self.E = kwargs["E"]
+        self.__dict__ = kwargs # add all properties
     
     def __str__(self):
         return self.name
 
 
 if __name__=='__main__':
-    pass
+    a = Material("Aluminio",E=200,nu=0.3)
+    print dir(a)
     

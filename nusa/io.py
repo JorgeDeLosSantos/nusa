@@ -14,6 +14,11 @@ import numpy as np
 import model
 
 def ModelFromFiles(nodesfile,elementsfile,modeltype):
+    """
+    Creates a model from ASCII files, where nodesfile contains 
+    the coordinates X/Y and elementsfile contains the connectivity 
+    of elements.
+    """
     pass
 
 if __name__=='__main__':
