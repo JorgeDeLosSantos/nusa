@@ -20,13 +20,9 @@ class SpringModel(Model):
         Model.__init__(self,name=name,mtype="spring")
         self.F = {} # Forces
         self.U = {} # Displacements
-        self.dof = 1 # 1 DOF for spring element (axial displacement)
+        self.dof = 1 # 1 DOF per Node
         self.IS_KG_BUILDED = False
-        
-    def buildForcesVector(self):
-        for node in self.nodes.values():
-            self.F[node.label] = {"fx":0, "fy":0}
-        
+
     def buildGlobalMatrix(self):
         msz = (self.dof)*self.getNumberOfNodes() # Matrix size
         self.KG = np.zeros((msz,msz))
@@ -40,19 +36,25 @@ class SpringModel(Model):
         
         self.buildForcesVector()
         self.buildDisplacementsVector()
+        self.IS_KG_BUILDED = True
+        
+    def buildForcesVector(self):
+        for node in self.nodes.values():
+            self.F[node.label] = {"fx":0, "fy":0}
         
     def buildDisplacementsVector(self):
         for node in self.nodes.values():
             self.U[node.label] = {"ux":np.nan, "uy":np.nan}
         
     def addForce(self,node,force):
-        if not(self.I)
+        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
         self.F[node.label]["fx"] = force[0]
         
     def addConstraint(self,node,**constraint):
         """
         Only displacement in x-dir 
         """
+        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
         if constraint.has_key("ux"):
             ux = constraint.get("ux")
             node.setDisplacements(ux=ux)
@@ -60,7 +62,6 @@ class SpringModel(Model):
         
     def solve(self):
         # known and unknown values
-        #~ self.buildGlobalMatrix()
         self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
         self.VF = [node[key] for node in self.F.values() for key in ("fx",)]
         knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]
@@ -90,6 +91,7 @@ class SpringModel(Model):
         return node,var
 
 
+
 class BarModel(Model):
     """
     Bar model for finite element analysis
@@ -98,7 +100,8 @@ class BarModel(Model):
         Model.__init__(self,name=name,mtype="bar")
         self.F = {} # Forces
         self.U = {} # Displacements
-        self.dof = 1 # 1 DOF for bar element
+        self.dof = 1 # 1 DOF for bar element (per node)
+        self.IS_KG_BUILDED = False
         
     def buildForcesVector(self):
         for node in self.nodes.values():
@@ -116,15 +119,18 @@ class BarModel(Model):
             self.KG[n2.label, n2.label] += ku[1,1]
         self.buildForcesVector()
         self.buildDisplacementsVector()
+        self.IS_KG_BUILDED = True
         
     def buildDisplacementsVector(self):
         for node in self.nodes.values():
             self.U[node.label] = {"ux":np.nan, "uy":np.nan}
         
     def addForce(self,node,force):
+        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
         self.F[node.label]["fx"] = force[0]
         
     def addConstraint(self,node,**constraint):
+        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
         if constraint.has_key('ux'):
             ux = constraint.get('ux')
             node.setDisplacements(ux=ux)
@@ -136,11 +142,20 @@ class BarModel(Model):
         self.VF = [node[key] for node in self.F.values() for key in ("fx",)]
         knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]
         unknw = [pos for pos,value in enumerate(self.VU) if value is np.nan]
-        # Matrices to solve
-        self.K2S = np.delete(np.delete(self.KG,knw,0),knw,1)
-        self.F2S = np.delete(self.VF,knw,0)
+        
+        if len(unknw)==1:
+            _k = unknw[0]
+            _rowtmp = self.KG[_k,:]
+            _ftmp = self.VF[_k]
+            _fk = _ftmp - np.dot(np.delete(_rowtmp,_k), np.delete(self.VU,_k))
+            _uk = _fk / self.KG[_k, _k]
+            # Then 
+            self.solved_u = np.array([_uk])
+        else: # "Normal" case
+            self.K2S = np.delete(np.delete(self.KG,knw,0),knw,1)
+            self.F2S = np.delete(self.VF,knw,0)
+            self.solved_u = la.solve(self.K2S,self.F2S)
         # For displacements
-        self.solved_u = la.solve(self.K2S,self.F2S)
         # Updating U (displacements vector)
         for k,ic in enumerate(unknw):
             nd, var = self.index2key(ic)
@@ -154,7 +169,7 @@ class BarModel(Model):
             nd, var = self.index2key(ic, ("fx",))
             self.NF[nd][var] = nf_calc[k]
             self.nodes[ic].fx = nf_calc[k]
-            
+
     def index2key(self,idx,opts=("ux",)):
         node = idx
         var = opts[0]

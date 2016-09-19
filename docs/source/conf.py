@@ -19,7 +19,7 @@ import sphinx_bootstrap_theme
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath(r'C:\Users\User\Desktop\LABPro\PX1502 - NUSA\nusa'))
+sys.path.insert(0, os.path.abspath(r'C:\Users\adminIS\Desktop\LABPro\PX1502 - NuSA\nusa'))
 
 # -- General configuration ------------------------------------------------
 

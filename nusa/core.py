@@ -12,7 +12,7 @@ import templates as tmp
 
 class Model(object):
     """
-    Superclass for all FAE models
+    Superclass for all FEA models
     """
     def __init__(self,name,mtype):
         self.mtype = mtype # Model type
@@ -21,6 +21,11 @@ class Model(object):
         self.elements = {} # Dictionary for elements {number: ElementObject}
         
     def addNode(self,node):
+        """
+        Add element to current model
+        
+        *node* :   :class:`~nusa.core.Node`
+        """
         current_label = self.getNumberOfNodes()
         if node.label is "":
             node.setLabel(current_label)
@@ -30,7 +35,7 @@ class Model(object):
         """
         Add element to current model
         
-        *element* :  :class:`~core.base.Element`
+        *element* :  :class:`~nusa.core.Element`
             Element instance 
         
         ::
@@ -72,37 +77,38 @@ class Element(object):
     def __init__(self,etype,label):
         self.etype = etype
         self.label = label
-        self.__fx = 0.0
-        self.__fy = 0.0
+        self._fx = 0.0
+        self._fy = 0.0
         
     @property
     def fx(self):
-        return self.__fx
+        return self._fx
         
     @fx.setter
     def fx(self,val):
-        self.__fx = val
+        self._fx = val
         
     @property
     def fy(self):
-        return self.__fy
+        return self._fy
         
     @fy.setter
     def fy(self,val):
-        self.__fy = val
+        self._fy = val
         
     def setLabel(self,label):
         self.label = label
         
-    def setElementForces(self,fx=0.0, fy=0.0):
-        self.__fx = fx
-        self.__fy = fy
+    def setElementForces(self,fx=0.0,fy=0.0):
+        self._fx = fx
+        self._fy = fy
         
     def getElementForces(self):
-        return (self.__fx, self.__fy)
+        return self._fx, self._fy
         
     def __str__(self):
-        return self.etype, self.nodes, self.elements
+        _str = str(self.__class__)
+        return _str
 
 
 class Node(object):
@@ -125,80 +131,80 @@ class Node(object):
         self.coordinates = coordinates
         self.x = coordinates[0] # usable prop
         self.y = coordinates[1] # usable prop
-        self.__label = label
-        self.__ux = np.nan
-        self.__uy = np.nan
-        self.__fx = 0.0
-        self.__fy = 0.0
+        self._label = label
+        self._ux = np.nan
+        self._uy = np.nan
+        self._fx = 0.0
+        self._fy = 0.0
         
     @property
     def label(self):
-        return self.__label
+        return self._label
         
     @label.setter
     def label(self,val):
         """
         Experimental setter for adjust range of labels
         """
-        self.__label = val
+        self._label = val
         
     @property
     def ux(self):
-        return self.__ux
+        return self._ux
     
     @ux.setter
     def ux(self,val):
         if True:#type(val) in [int,float]:
-            self.__ux = val
+            self._ux = val
         else:
             raise ValueError("Value must be float or int")
     
     @property
     def uy(self):
-        return self.__uy
+        return self._uy
     
     @uy.setter
     def uy(self,val):
         if True:#type(val) in [int,float]:
-            self.__uy = val
+            self._uy = val
         else:
             raise ValueError("Value must be float or int")
         
     @property
     def fx(self):
-        return self.__fx
+        return self._fx
     
     @fx.setter
     def fx(self,val):
-        self.__fx = val
+        self._fx = val
     
     @property
     def fy(self):
-        return self.__fy
+        return self._fy
     
     @fy.setter
     def fy(self,val):
-        self.__fy = val
+        self._fy = val
         
     def getLabel(self):
-        return self.__label
+        return self._label
     
     def setLabel(self,label):
-        self.__label = label
+        self._label = label
     
     def getDisplacements(self):
-        return (self.__ux,self.__uy)
+        return self._ux,self._uy
         
     def setDisplacements(self,ux=np.nan,uy=np.nan):
-        self.__ux = ux
-        self.__uy = uy
+        self._ux = ux
+        self._uy = uy
     
     def getForces(self):
-        return (self.__fx,self.__fy)
+        return (self._fx,self._fy)
     
     def setForces(self,fx=np.nan,fy=np.nan):
-        self.__fx = fx
-        self.__fy = fy
+        self._fx = fx
+        self._fy = fy
         
     def __str__(self):
         _str = self.__class__
