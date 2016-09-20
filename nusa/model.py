@@ -12,6 +12,10 @@ import templates as tmp
 from core import Model
 from _info import __version__,__organization__
 
+
+#~ *********************************************************************
+#~ ****************************  SpringModel ***************************
+#~ *********************************************************************
 class SpringModel(Model):
     """
     Spring Model for finite element analysis
@@ -92,6 +96,9 @@ class SpringModel(Model):
 
 
 
+#~ *********************************************************************
+#~ ****************************  BarModel ******************************
+#~ *********************************************************************
 class BarModel(Model):
     """
     Bar model for finite element analysis
@@ -155,6 +162,7 @@ class BarModel(Model):
             self.K2S = np.delete(np.delete(self.KG,knw,0),knw,1)
             self.F2S = np.delete(self.VF,knw,0)
             self.solved_u = la.solve(self.K2S,self.F2S)
+            
         # For displacements
         # Updating U (displacements vector)
         for k,ic in enumerate(unknw):
@@ -169,13 +177,21 @@ class BarModel(Model):
             nd, var = self.index2key(ic, ("fx",))
             self.NF[nd][var] = nf_calc[k]
             self.nodes[ic].fx = nf_calc[k]
+        
+        
+        
 
     def index2key(self,idx,opts=("ux",)):
         node = idx
         var = opts[0]
         return node,var
-    
 
+
+
+
+#~ *********************************************************************
+#~ ****************************  BeamModel *****************************
+#~ *********************************************************************    
 class BeamModel(Model):
     """
     Model for finite element analysis
@@ -185,10 +201,7 @@ class BeamModel(Model):
         self.F = {} # Forces
         self.U = {} # Displacements
         self.dof = 2 # 2 DOF for beam element
-        
-    def buildForcesVector(self):
-        for node in self.nodes.values():
-            self.F[node.label] = {"fy":0, "m":0} # (fy, m)
+        self.IS_KG_BUILDED = False
         
     def buildGlobalMatrix(self):
         msz = (self.dof)*self.getNumberOfNodes()
@@ -219,41 +232,50 @@ class BeamModel(Model):
             
         self.buildForcesVector()
         self.buildDisplacementsVector()
-        
+        self.IS_KG_BUILDED = True
+    
+    def buildForcesVector(self):
+        for node in self.nodes.values():
+            self.F[node.label] = {"fy":0.0, "m":0.0} # (fy, m)
+    
+            
     def buildDisplacementsVector(self):
         for node in self.nodes.values():
-            self.U[node.label] = {"uy":np.nan, "r":np.nan} # (uy, r)
+            self.U[node.label] = {"uy":np.nan, "ur":np.nan} # (uy, r)
     
     def addForce(self,node,force):
+        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
         self.F[node.label]["fy"] = force[0]
         
     def addMoment(self,node,moment):
-        self.F[node.label]["m"] = force[0]
+        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
+        self.F[node.label]["m"] = moment[0]
         
     def addConstraint(self,node,**constraint):
+        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
         cs = constraint
-        if cs.has_key('ux') and cs.has_key("uy") and cs.has_key('r'): # 
+        if cs.has_key('ux') and cs.has_key("uy") and cs.has_key('ur'): # 
             ux = cs.get('ux')
             uy = cs.get('uy')
-            r = cs.get('r')
+            ur = cs.get('ur')
             node.setDisplacements(ux=ux, uy=uy)
-            print("Empotrado")
+            print("Encastre")
             self.U[node.label]["uy"] = uy
-            self.U[node.label]["r"] = r
+            self.U[node.label]["ur"] = ur
         elif cs.has_key('ux') and cs.has_key("uy"): # 
             ux = cs.get('ux')
             uy = cs.get('uy')
             node.setDisplacements(ux=ux, uy=uy)
-            print("Fijado")
+            print("Fixed")
             self.U[node.label]["uy"] = uy
         elif cs.has_key('uy'):
             uy = cs.get('uy')
             node.setDisplacements(uy=uy)
-            print("Soporte simple")
+            print("Simple support")
             self.U[node.label]["uy"] = uy
         
     def solve(self):
-        self.VU = [node[key] for node in self.U.values() for key in ("uy","r")]
+        self.VU = [node[key] for node in self.U.values() for key in ("uy","ur")]
         self.VF = [node[key] for node in self.F.values() for key in ("fy","m")]
         knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]
         unknw = [pos for pos,value in enumerate(self.VU) if value is np.nan]
@@ -266,19 +288,27 @@ class BeamModel(Model):
             self.U[nd][var] = self.solved_u[k]
         # For nodal forces/reactions
         self.NF = self.F.copy()
-        self.VU = [node[key] for node in self.U.values() for key in ("uy","r")]
+        self.VU = [node[key] for node in self.U.values() for key in ("uy","ur")]
         nf_calc = np.dot(self.KG, self.VU)
         for k,ic in enumerate(range(2*self.getNumberOfNodes())):
             nd, var = self.index2key(ic, ("fy","m"))
             self.NF[nd][var] = nf_calc[k]
+            if var=="fy": 
+                self.nodes[ic].fy = nf_calc[k]
+            elif var=="m": 
+                self.nodes[ic].m = nf_calc[k]
         
             
-    def index2key(self,idx,opts=("uy","r")):
+    def index2key(self,idx,opts=("uy","ur")):
         node = idx/2
         var = opts[0] if ((-1)**idx)==1 else opts[1]
         return node,var
         
 
+
+#~ *********************************************************************
+#~ ****************************  TrussModel ****************************
+#~ *********************************************************************
 class TrussModel(Model):
     """
     Model for finite element analysis

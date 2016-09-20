@@ -106,6 +106,9 @@ class Bar(Element):
         
     @property
     def fx(self):
+        """
+        Compute 
+        """
         ke = self.getElementStiffness() # Element stiffness
         n1, n2 = self.getNodes()
         un = np.array([[n1.ux],[n2.ux]]) # Nodal displacements
@@ -114,6 +117,30 @@ class Bar(Element):
     @fx.setter
     def fx(self,val):
         self._fx = val
+        
+    @property
+    def sx(self):
+        """
+        Compute stress in x-dir: Sx
+        
+        Given by:
+        
+        Sx = K * u/A
+        
+        K - Element stiffness matrix
+        u - Nodal displacements
+        A - Cross-section
+        
+        """
+        ke = self.getElementStiffness() # Element stiffness
+        na, nb = self.getNodes()
+        u = np.array([na.ux, nb.ux])
+        sx = np.dot(ke, u/self.A)
+        return sx
+        
+    @sx.setter
+    def sx(self,val):
+        self._sx = val
         
         
     def getElementStiffness(self):
@@ -177,6 +204,9 @@ class Beam(Element):
         
     def getNodes(self):
         return self.nodes
+
+
+
 
 
 class Truss(Element):

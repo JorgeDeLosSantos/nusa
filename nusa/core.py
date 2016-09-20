@@ -79,6 +79,8 @@ class Element(object):
         self.label = label
         self._fx = 0.0
         self._fy = 0.0
+        self._sx = 0.0
+        self._sy = 0.0
         
     @property
     def fx(self):
@@ -136,6 +138,7 @@ class Node(object):
         self._uy = np.nan
         self._fx = 0.0
         self._fy = 0.0
+        self._m = 0.0
         
     @property
     def label(self):
@@ -185,6 +188,14 @@ class Node(object):
     @fy.setter
     def fy(self,val):
         self._fy = val
+        
+    @property
+    def m(self):
+        return self._m
+    
+    @m.setter
+    def m(self,val):
+        self._m = val
         
     def getLabel(self):
         return self._label

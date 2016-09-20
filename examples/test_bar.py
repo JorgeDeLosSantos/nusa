@@ -82,7 +82,8 @@ def test2():
     
     print m1.KG
     print n1.ux, n2.ux, n3.ux
-    print n1.fx, n3.fx
+    print n1.fx, n2.fx, n3.fx
+    print e1.sx, e2.sx
     
     
 if __name__ == '__main__':
