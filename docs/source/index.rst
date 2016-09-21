@@ -24,6 +24,7 @@ Contents:
     :inherited-members:
     :show-inheritance:
 
+
 Indices and tables
 ==================
 

@@ -38,6 +38,17 @@ class Spring(Element):
         Element.__init__(self,etype="spring",label=label)
         self.nodes = nodes
         self.ke = ke
+    
+    @property
+    def fx(self):
+        ke = self.getElementStiffness() # Element stiffness
+        n1, n2 = self.getNodes()
+        un = np.array([[n1.ux],[n2.ux]]) # Nodal displacements
+        return np.dot(ke, un) # Return  {fxe} = [Ke]{uxe}
+        
+    @fx.setter
+    def fx(self,val):
+        self._fx = val
         
     def getElementStiffness(self):
         r"""
@@ -56,9 +67,10 @@ class Spring(Element):
         """
         self._KE = np.array([[self.ke,-self.ke],[-self.ke,self.ke]])
         return self._KE
-        
+    
     def getNodes(self):
         return self.nodes
+
 
 
 class Bar(Element):
@@ -80,28 +92,68 @@ class Bar(Element):
     
     Example::
     
-        n1 = Node((0,0),1)
-        n2 = Node((1,0),1)
+        n1 = Node((0,0))
+        n2 = Node((1,0))
         e1 = Bar((n1,n2),200e9,0.02,1)
     
     """
     def __init__(self,nodes,E,A,L,label=""):
         Element.__init__(self,etype="bar",label=label)
         self.nodes = nodes
-        self.E = E
-        self.A = A
-        self.L = L
+        self.E = E # Elastic modulus
+        self.A = A # Cross-section
+        self.L = L # Length
+        
+    @property
+    def fx(self):
+        """
+        Compute 
+        """
+        ke = self.getElementStiffness() # Element stiffness
+        n1, n2 = self.getNodes()
+        un = np.array([[n1.ux],[n2.ux]]) # Nodal displacements
+        return np.dot(ke, un) # Return  {fxe} = [Ke]{uxe}
+        
+    @fx.setter
+    def fx(self,val):
+        self._fx = val
+        
+    @property
+    def sx(self):
+        """
+        Compute stress in x-dir: Sx
+        
+        Given by:
+        
+        Sx = K * u/A
+        
+        K - Element stiffness matrix
+        u - Nodal displacements
+        A - Cross-section
+        
+        """
+        ke = self.getElementStiffness() # Element stiffness
+        na, nb = self.getNodes()
+        u = np.array([na.ux, nb.ux])
+        sx = np.dot(ke, u/self.A)
+        return sx
+        
+    @sx.setter
+    def sx(self,val):
+        self._sx = val
+        
         
     def getElementStiffness(self):
         """
         Get stiffness matrix for this element
-        
         """
-        self._K = (self.A*self.E/self.L)*np.array([[1,-1],[-1,1]])
-        return self._K
+        self._KE = (self.A*self.E/self.L)*np.array([[1,-1],[-1,1]])
+        return self._KE
         
     def getNodes(self):
         return self.nodes
+
+
 
 
 class Beam(Element):
@@ -154,6 +206,9 @@ class Beam(Element):
         return self.nodes
 
 
+
+
+
 class Truss(Element):
     """
     Truss element for finite element analysis
@@ -202,6 +257,10 @@ class Truss(Element):
         
     def getNodes(self):
         return self.nodes
+
+
+
+
 
 if __name__=='__main__':
     pass

@@ -7,4 +7,5 @@ License: MIT License
 """
 import _info
 
+# Print NUSA info
 print("NuSA %s\n%s\n"%(_info.__version__,10*"_"))

@@ -18,6 +18,7 @@ def test1():
     Example 2.1, pp. 42.
     """
     P = 5000.0
+    k1, k2, k3 = 1000, 2000, 3000
     # Model
     m1 = SpringModel("2D Model")
     # Nodes
@@ -26,9 +27,9 @@ def test1():
     n3 = Node((0,0))
     n4 = Node((0,0))
     # Elements
-    e1 = Spring((n1,n3),1000.0)
-    e2 = Spring((n3,n4),2000.0)
-    e3 = Spring((n4,n2),3000.0)
+    e1 = Spring((n1,n3),k1)
+    e2 = Spring((n3,n4),k2)
+    e3 = Spring((n4,n2),k3)
 
     # Add elements 
     for nd in (n1,n2,n3,n4):
@@ -36,14 +37,32 @@ def test1():
     for el in (e1,e2,e3):
         m1.addElement(el)
 
-    m1.buildGlobalMatrix()
     m1.addForce(n4,(P,))
     m1.addConstraint(n1,ux=0)
     m1.addConstraint(n2,ux=0)
     m1.solve()
-    #~ print m1.F
-    for node in m1.getNodes():
-        print  node.ux, node.uy, node.fx, node.fy
+    
+    # a) Matriz global
+    print "a) Matriz global:\n {0}".format(m1.KG)
+    # b) Desplazamiento en los nodos 3 y 4
+    print "\nb) Desplazamientos de nodos 3 y 4"
+    print "UX3: {0}".format(n3.ux)
+    print "UX4: {0}".format(n4.ux)
+    # c) Fuerzas de reacción en los nodos 1 y 2
+    print "\nc) Fuerzas nodales en 1 y 2"
+    print "FX1: {0}".format(n1.fx)
+    print "FX2: {0}".format(n2.fx)
+    # d) Fuerzas en cada resorte
+    print "\nd) Fuerzas en elementos"
+    print "FE1:\n {0}".format(e1.fx)
+    print "FE2:\n {0}".format(e2.fx)
+    print "FE3:\n {0}".format(e3.fx)
+    
+    
+    #~ for node in m1.getNodes():
+        #~ print "UX{0}\t{1}".format(node.label, node.ux)
+        #~ print "FX{0}\t{1}\n".format(node.label, node.fx)
+
 
 def test2():
     """
@@ -71,7 +90,6 @@ def test2():
     for el in (e1,e2,e3,e4):
         m2.addElement(el)
     
-    m2.buildGlobalMatrix()
     m2.addForce(n4,(P,))
     m2.addConstraint(n1,ux=0)
     m2.addConstraint(n5,ux=0.02)
@@ -101,7 +119,6 @@ def test3():
     for el in (e1,e2):
         m3.addElement(el)
     
-    m3.buildGlobalMatrix()
     m3.addForce(n3,(P,))
     m3.addConstraint(n1,ux=0)
     m3.solve()
@@ -127,7 +144,6 @@ def simple_case():
         ms.addNode(nd)
     ms.addElement(e1)
     
-    ms.buildGlobalMatrix()
     ms.addForce(n2,(P,))
     ms.addConstraint(n1,ux=0)
     ms.solve()
