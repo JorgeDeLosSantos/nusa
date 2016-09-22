@@ -2,7 +2,6 @@
 
 Numerical Structural Analysis with Python
 
-
 ## Version / Status
 
 Current: **0.1.0-dev**
@@ -15,16 +14,10 @@ Current: **0.1.0-dev**
 
 ## Installation
 
-Clone this repository:
+Using pip:
 
 ```
-$ git clone https://github.com/JorgeDeLosSantos/nusa.git
-```
-
-and install:
-
-```
-python setup.py install
+$ pip install git+https://github.com/JorgeDeLosSantos/nusa.git
 ```
 
 ## Capabilities
@@ -35,7 +28,13 @@ python setup.py install
 
 ## Mini-Demo
 
-Example for a spring element analysis.
+**Example 01**. For the spring assemblage with arbitrarily numbered nodes shown in the figure 
+obtain (a) the global stiffness matrix, (b) the displacements of nodes 3 and 4, (c) the 
+reaction forces at nodes 1 and 2, and (d) the forces in each spring. A force of 5000 lb
+is applied at node 4 in the $x$ direction. The spring constants are given in the figure.
+Nodes 1 and 2 are fixed.
+
+![](docs\nusa-theory\src\spring-element\example_01.PNG)
 
 ```python
 # -*- coding: utf-8 -*-
