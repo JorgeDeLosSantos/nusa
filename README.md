@@ -26,7 +26,9 @@ $ pip install git+https://github.com/JorgeDeLosSantos/nusa.git
 * 2D frames analysis
 * Beams analysis
 
-## Mini-Demo
+## Mini-Demos
+
+### Spring element
 
 **Example 01**. For the spring assemblage with arbitrarily numbered nodes shown in the figure 
 obtain (a) the global stiffness matrix, (b) the displacements of nodes 3 and 4, (c) the 
@@ -64,13 +66,12 @@ def test1():
     e2 = Spring((n3,n4),2000.0)
     e3 = Spring((n4,n2),3000.0)
 
-    # Add elements 
+    # Adding elements and nodes to the model
     for nd in (n1,n2,n3,n4):
         m1.addNode(nd)
     for el in (e1,e2,e3):
         m1.addElement(el)
 
-    m1.buildGlobalMatrix()
     m1.addForce(n4, (P,))
     m1.addConstraint(n1, ux=0)
     m1.addConstraint(n2, ux=0)
@@ -81,10 +82,51 @@ if __name__ == '__main__':
 ```
 
 
+### Beam element
+
+**Example 02**. For the beam and loading shown, determine the deflection at point C. 
+Use E = 29 x 10<sup>6</sup> psi.
+
+![](docs/nusa-theory/src/beam-element/P913_beer.PNG)
+
+```python
+"""
+Beer & Johnston. (2012) Mechanics of materials. 
+Problem 9.13 , pp. 568.
+"""
+
+# Input data 
+E = 29e6
+I = 291 # W14x30 
+P = 35e3
+L1 = 5*12 # in
+L2 = 10*12 #in
+# Model
+m1 = BeamModel("Beam Model")
+# Nodes
+n1 = Node((0,0))
+n2 = Node((L1,0))
+n3 = Node((L1+L2,0))
+# Elements
+e1 = Beam((n1,n2),E,I,L1)
+e2 = Beam((n2,n3),E,I,L2)
+
+# Add elements 
+for nd in (n1,n2,n3): m1.addNode(nd)
+for el in (e1,e2): m1.addElement(el)
+    
+m1.addForce(n2, (-P,))
+m1.addConstraint(n1, ux=0, uy=0) # fixed 
+m1.addConstraint(n3, uy=0) # fixed
+m1.solve() # Solve model
+
+# Displacement at C point
+print n2.uy
+```
 
 ## Documentation
 
-
+---
 
 ## About...
 

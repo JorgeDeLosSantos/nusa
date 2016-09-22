@@ -148,9 +148,8 @@ def test4():
     m1.addConstraint(n1, ux=0, uy=0) # fixed 
     m1.addConstraint(n3, uy=0) # fixed
     m1.solve() # Solve model
-    #~ print m1.KG
-    #~ print m1.U
-    #~ print e1.m
+    # Displacement at C point
+    print n2.uy
     
 def test5():
     """
@@ -198,4 +197,4 @@ def test5():
 
 
 if __name__ == '__main__':
-    test5()
+    test4()
