@@ -5,14 +5,11 @@
 #  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
-import sys
-sys.path.insert(0,'../') # Insert parent folder
-
 import numpy as np
 from nusa.core import *
 from nusa.model import *
 from nusa.element import *
-from nusa.graph import *
+#~ from nusa.graph import *
 
 def test1():
     """

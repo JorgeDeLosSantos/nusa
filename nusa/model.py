@@ -237,7 +237,6 @@ class BeamModel(Model):
     def buildForcesVector(self):
         for node in self.nodes.values():
             self.F[node.label] = {"fy":0.0, "m":0.0} # (fy, m)
-    
             
     def buildDisplacementsVector(self):
         for node in self.nodes.values():
@@ -258,7 +257,7 @@ class BeamModel(Model):
             ux = cs.get('ux')
             uy = cs.get('uy')
             ur = cs.get('ur')
-            node.setDisplacements(ux=ux, uy=uy)
+            node.setDisplacements(ux=ux, uy=uy, ur=ur)
             print("Encastre")
             self.U[node.label]["uy"] = uy
             self.U[node.label]["ur"] = ur
@@ -275,34 +274,68 @@ class BeamModel(Model):
             self.U[node.label]["uy"] = uy
         
     def solve(self):
+        # ---
         self.VU = [node[key] for node in self.U.values() for key in ("uy","ur")]
         self.VF = [node[key] for node in self.F.values() for key in ("fy","m")]
         knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]
         unknw = [pos for pos,value in enumerate(self.VU) if value is np.nan]
         self.K2S = np.delete(np.delete(self.KG,knw,0),knw,1)
         self.F2S = np.delete(self.VF,knw,0)
+        
         # For displacements
         self.solved_u = la.solve(self.K2S,self.F2S)
         for k,ic in enumerate(unknw):
             nd, var = self.index2key(ic)
             self.U[nd][var] = self.solved_u[k]
+            
+        # Updating nodes displacements
+        for nd in self.nodes.values():
+            if np.isnan(nd.uy):
+                nd.uy = self.U[nd.label]["uy"]
+            if np.isnan(nd.ur):
+                nd.ur = self.U[nd.label]["ur"]
+                    
         # For nodal forces/reactions
         self.NF = self.F.copy()
         self.VU = [node[key] for node in self.U.values() for key in ("uy","ur")]
         nf_calc = np.dot(self.KG, self.VU)
-        for k,ic in enumerate(range(2*self.getNumberOfNodes())):
-            nd, var = self.index2key(ic, ("fy","m"))
+        for k in range(2*self.getNumberOfNodes()):
+            nd, var = self.index2key(k, ("fy","m"))
             self.NF[nd][var] = nf_calc[k]
+            cnlab = np.floor(k/float(self.dof))
             if var=="fy": 
-                self.nodes[ic].fy = nf_calc[k]
+                self.nodes[cnlab].fy = nf_calc[k]
             elif var=="m": 
-                self.nodes[ic].m = nf_calc[k]
-        
+                self.nodes[cnlab].m = nf_calc[k]
             
     def index2key(self,idx,opts=("uy","ur")):
         node = idx/2
         var = opts[0] if ((-1)**idx)==1 else opts[1]
         return node,var
+        
+    def getDataForMomentDiagram(self):
+        cx = 0
+        X, M = [], []
+        for el in self.getElements():
+            L = el.L
+            X = np.concatenate((X, np.array([cx, cx+L])))
+            mel = el.m.squeeze()
+            mel[0] = - mel[0]
+            M = np.concatenate((M, mel))
+            cx = cx + L
+        return X, M
+        
+    def getDataForShearDiagram(self):
+        cx = 0
+        X, S = [], []
+        for el in self.getElements():
+            L = el.L
+            X = np.concatenate((X, np.array([cx, cx+L])))
+            fel = el.fy.squeeze()
+            fel[-1] = - fel[-1]
+            S = np.concatenate((S, fel))
+            cx = cx + L
+        return X, S
         
 
 

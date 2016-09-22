@@ -136,6 +136,7 @@ class Node(object):
         self._label = label
         self._ux = np.nan
         self._uy = np.nan
+        self._ur = np.nan
         self._fx = 0.0
         self._fy = 0.0
         self._m = 0.0
@@ -172,6 +173,17 @@ class Node(object):
             self._uy = val
         else:
             raise ValueError("Value must be float or int")
+    
+    @property
+    def ur(self):
+        return self._ur
+    
+    @ur.setter
+    def ur(self,val):
+        if True:#type(val) in [int,float]:
+            self._ur = val
+        else:
+            raise ValueError("Value must be float or int")
         
     @property
     def fx(self):
@@ -204,11 +216,12 @@ class Node(object):
         self._label = label
     
     def getDisplacements(self):
-        return self._ux,self._uy
+        return self._ux,self._uy,self._ur
         
-    def setDisplacements(self,ux=np.nan,uy=np.nan):
+    def setDisplacements(self,ux=np.nan, uy=np.nan, ur=np.nan):
         self._ux = ux
         self._uy = uy
+        self._ur = ur
     
     def getForces(self):
         return (self._fx,self._fy)

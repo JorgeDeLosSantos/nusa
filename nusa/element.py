@@ -134,8 +134,8 @@ class Bar(Element):
         """
         ke = self.getElementStiffness() # Element stiffness
         na, nb = self.getNodes()
-        u = np.array([na.ux, nb.ux])
-        sx = np.dot(ke, u/self.A)
+        u = np.array([na.ux, nb.ux]) # Nodes displacements
+        sx = np.dot(ke, u/self.A) # matrix multiplication
         return sx
         
     @sx.setter
@@ -201,6 +201,43 @@ class Beam(Element):
                                        [-12,-a,  12,-a],
                                        [  a, c,  -a, b]])
         return self._K
+
+    def _compute_element_forces(self):
+        """
+        Just that 
+        
+        Set fy and m properties.
+        """
+        ke = self.getElementStiffness() # Element stiffness
+        n1, n2 = self.getNodes()
+        un = np.array([[n1.uy, n1.ur, n2.uy, n2.ur]]).transpose() # Nodal displacements
+        EF = np.dot(ke, un) # Return  {fxe} = [Ke]{uxe}
+        self.fy = EF[::2] # Set fy
+        self.m = EF[1::2] # Set m
+        
+    @property
+    def fy(self):
+        """
+        Compute y-force 
+        """
+        self._compute_element_forces()
+        return self._fy
+        
+    @fy.setter
+    def fy(self,val):
+        self._fy = val
+        
+    @property
+    def m(self):
+        """
+        Compute moment 
+        """
+        self._compute_element_forces()
+        return self._m
+        
+    @m.setter
+    def m(self,val):
+        self._m = val
         
     def getNodes(self):
         return self.nodes
