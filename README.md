@@ -31,10 +31,10 @@ $ pip install git+https://github.com/JorgeDeLosSantos/nusa.git
 **Example 01**. For the spring assemblage with arbitrarily numbered nodes shown in the figure 
 obtain (a) the global stiffness matrix, (b) the displacements of nodes 3 and 4, (c) the 
 reaction forces at nodes 1 and 2, and (d) the forces in each spring. A force of 5000 lb
-is applied at node 4 in the $x$ direction. The spring constants are given in the figure.
+is applied at node 4 in the `x` direction. The spring constants are given in the figure.
 Nodes 1 and 2 are fixed.
 
-![](docs\nusa-theory\src\spring-element\example_01.PNG)
+![](docs/nusa-theory/src/spring-element/example_01.PNG)
 
 ```python
 # -*- coding: utf-8 -*-
