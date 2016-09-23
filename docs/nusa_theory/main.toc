@@ -1,6 +1,0 @@
-\select@language {spanish}
-\contentsline {chapter}{\numberline {1}Una introducci\IeC {\'o}n a NuSA}{1}{chapter.1}
-\contentsline {section}{\numberline {1.1}\IeC {\textquestiondown }Qu\IeC {\'e} es NuSA?}{1}{section.1.1}
-\contentsline {chapter}{\numberline {2}Elemento Spring}{3}{chapter.2}
-\contentsline {section}{\numberline {2.1}Fundamento te\IeC {\'o}rico}{3}{section.2.1}
-\contentsline {section}{\numberline {2.2}Un ejemplo resuelto en NuSA}{4}{section.2.2}
