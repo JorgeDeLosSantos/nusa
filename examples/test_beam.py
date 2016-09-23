@@ -150,6 +150,12 @@ def test4():
     m1.solve() # Solve model
     # Displacement at C point
     print n2.uy
+    x,m = m1.getDataForMomentDiagram()
+    print max(m)
+    import matplotlib.pyplot as plt
+    plt.plot(x,m)
+    plt.show()
+    
     
 def test5():
     """
