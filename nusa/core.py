@@ -8,7 +8,6 @@
 
 import numpy as np
 import numpy.linalg as la
-import templates as tmp
 
 class Model(object):
     """
