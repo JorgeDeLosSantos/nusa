@@ -6,6 +6,12 @@
 #  License: MIT License
 # ***********************************
 
+"""
+Miscellaneous codes for structural analysis
+"""
+import numpy as np
+
+
 class Material(object):
     def __init__(self,name,**kwargs):
         """
@@ -28,6 +34,8 @@ class Material(object):
     
     def __str__(self):
         return self.name
+
+
 
 
 if __name__=='__main__':

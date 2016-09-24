@@ -10,8 +10,6 @@ import numpy as np
 import numpy.linalg as la
 import templates as tmp
 from core import Model
-from _info import __version__,__organization__
-
 
 #~ *********************************************************************
 #~ ****************************  SpringModel ***************************
@@ -258,23 +256,23 @@ class BeamModel(Model):
             uy = cs.get('uy')
             ur = cs.get('ur')
             node.setDisplacements(ux=ux, uy=uy, ur=ur)
-            print("Encastre")
+            #~ print("Encastre")
             self.U[node.label]["uy"] = uy
             self.U[node.label]["ur"] = ur
         elif cs.has_key('ux') and cs.has_key("uy"): # 
             ux = cs.get('ux')
             uy = cs.get('uy')
             node.setDisplacements(ux=ux, uy=uy)
-            print("Fixed")
+            #~ print("Fixed")
             self.U[node.label]["uy"] = uy
         elif cs.has_key('uy'):
             uy = cs.get('uy')
             node.setDisplacements(uy=uy)
-            print("Simple support")
+            #~ print("Simple support")
             self.U[node.label]["uy"] = uy
         
     def solve(self):
-        # ---
+        # Solve LS
         self.VU = [node[key] for node in self.U.values() for key in ("uy","ur")]
         self.VF = [node[key] for node in self.F.values() for key in ("fy","m")]
         knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]

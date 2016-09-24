@@ -46,8 +46,8 @@ def test1():
     m1.addConstraint(n2, ur=0)
     m1.addConstraint(n4, ur=0)
     m1.solve() # Solve model
-    print m1.U
-    print m1.NF
+    
+    
 
 def test2():
     """
@@ -203,4 +203,4 @@ def test5():
 
 
 if __name__ == '__main__':
-    test4()
+    test1()
