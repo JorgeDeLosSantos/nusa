@@ -1,10 +1,10 @@
 # NuSA
 
-Numerical Structural Analysis with Python
+Numerical Structural Analysis in Python
 
 ## Version / Status
 
-Current: **0.1.0-dev**
+Current: **0.1.0.dev1** 
 
 ## Requirements
 
@@ -17,11 +17,12 @@ Current: **0.1.0-dev**
 Using pip:
 
 ```
-$ pip install git+https://github.com/JorgeDeLosSantos/nusa.git
+$ pip install nusa
 ```
 
 ## Capabilities
 
+* Spring elements analysis
 * Bar elements analysis
 * 2D frames analysis
 * Beams analysis
@@ -126,12 +127,19 @@ print n2.uy
 
 ## Documentation
 
----
+Tutorials (Jupyter notebooks):
+
+* [Introduction to NuSA](docs/nusa-theory/intro-nusa.ipynb)
+* [Spring element](docs/nusa-theory/spring-element.ipynb)
+* [Bar element](docs/nusa-theory/bar-element.ipynb)
+* [Beam element](docs/nusa-theory/beam-element.ipynb)
+
+To build documentation based on docstrings execute the `docs/toHTML.py` script.
 
 ## About...
 
 ```
 Developer: Pedro Jorge De Los Santos
 E-mail: delossantosmfq@gmail.com
-Blog: labdls.blogspot.mx
+Blog: numython.github.io // jorgedelossantos.github.io
 ```

@@ -1,4 +1,4 @@
-.. sapy documentation master file, created by
+.. nusa documentation master file, created by
    sphinx-quickstart on Mon Jan 11 01:05:11 2016.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -11,19 +11,16 @@ What is NuSA ?
 NuSA (Numerical Structural Analysis with Python) is a mini-toolkit for solve simple and common 
 structural analysis problems.
 
-Code: https://github.com/JorgeDeLosSantos
+Code: https://github.com/JorgeDeLosSantos/nusa
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
-   
-.. automodule:: nusa.core
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
 
+   _src/core.rst
+   _src/model.rst
+   _src/element.rst
 
 Indices and tables
 ==================
