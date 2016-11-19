@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # ***********************************
-#  Author: Pedro Jorge De Los Santos     
+#  Author: Pedro Jorge De Los Santos    
 #  E-mail: delossantosmfq@gmail.com 
-#  Blog: numython.blogspot.mx
+#  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
 
