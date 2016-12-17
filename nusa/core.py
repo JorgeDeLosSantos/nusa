@@ -7,8 +7,9 @@
 # ***********************************
 
 import numpy as np
-import numpy.linalg as la
+#~ import numpy.linalg as la
 
+#~ ===========================  MODEL  ===========================
 class Model(object):
     """
     Superclass for all FEA models
@@ -21,9 +22,11 @@ class Model(object):
         
     def addNode(self,node):
         """
-        Add element to current model
+        Add node to current model
         
         *node* :   :class:`~nusa.core.Node`
+            Node instance
+        
         """
         current_label = self.getNumberOfNodes()
         if node.label is "":
@@ -52,15 +55,27 @@ class Model(object):
         self.elements[element.label] = element
 
     def getNumberOfNodes(self):
+        """
+        Returns the number of nodes
+        """
         return len(self.nodes)
         
     def getNumberOfElements(self):
+        """
+        Returns the number of nodes
+        """
         return len(self.elements)
         
     def getNodes(self):
+        """
+        Returns a list of Node objects
+        """
         return self.nodes.values()
         
     def getElements(self):
+        """
+        Returns a list of Element objects
+        """
         return self.elements.values()
     
     def __str__(self):
@@ -69,13 +84,15 @@ class Model(object):
         return custom_str
             
 
+#~ =========================== ELEMENT ===========================
+
 class Element(object):
     """
-    Superclass for Element objects 
+    Superclass for all Elements
     """
-    def __init__(self,etype,label):
-        self.etype = etype
-        self.label = label
+    def __init__(self,etype):
+        self.etype = etype # element type
+        self.label = "" # label (reassignment -> Model.addElement)
         self._fx = 0.0
         self._fy = 0.0
         self._sx = 0.0
@@ -98,19 +115,41 @@ class Element(object):
         self._fy = val
         
     def setLabel(self,label):
+        """
+        Set the label property
+        
+        *label* : int
+            Label, must be an integer
+        """
         self.label = label
         
     def setElementForces(self,fx=0.0,fy=0.0):
+        """
+        Set element forces
+        
+        *fx* : float
+            Force in x-dir
+        *fy* : float
+            Force in y-dir
+        
+        Normally this method is used by the `solve` method to 
+        update computed element-forces.
+        """
         self._fx = fx
         self._fy = fy
         
     def getElementForces(self):
+        """
+        Returns a tuple with element forces:  (fx, fy)
+        """
         return self._fx, self._fy
         
     def __str__(self):
         _str = str(self.__class__)
         return _str
 
+
+#~ =========================== NODE ===========================
 
 class Node(object):
     """
@@ -128,11 +167,11 @@ class Node(object):
         n2 = Node((0,0),1)
     
     """
-    def __init__(self,coordinates,label=""):
+    def __init__(self,coordinates):
         self.coordinates = coordinates
         self.x = coordinates[0] # usable prop
         self.y = coordinates[1] # usable prop
-        self._label = label
+        self._label = ""
         self._ux = np.nan
         self._uy = np.nan
         self._ur = np.nan
@@ -147,7 +186,7 @@ class Node(object):
     @label.setter
     def label(self,val):
         """
-        Experimental setter for adjust range of labels
+        Experimental setter for adjust range of labels: TO DO
         """
         self._label = val
         
