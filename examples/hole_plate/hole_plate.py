@@ -8,9 +8,9 @@
 import numpy as np
 from nusa._experimental import *
 
-nc = np.loadtxt("nlist")
-ec = np.loadtxt("elist")[:,6:-1]
-x,y = nc[:,1], nc[:,2]
+nc = np.loadtxt("nodos")
+ec = np.loadtxt("elementos")
+x,y = nc[:,0], nc[:,1]
 
 nodos = []
 elementos = []
@@ -29,16 +29,20 @@ m = LinearTriangleModel()
 for node in nodos: m.addNode(node)
 for elm in elementos: m.addElement(elm)
 
-#~ m.plot_model()
-
 for n in (1,22,32,33,34,35,36,37,38,39,40):
     m.addConstraint(nodos[n-1], ux=0, uy=0)
 for n in [2]+range(12,22):
     m.addForce(nodos[n-1], (20,0))
 
+#~ m.plot_model()
+
 m.solve()
-#~ for e in m.getElements():
-    #~ print e.sx, e.sy
+#~ m.plot_model()
+m.plot_ux()
+m.plot_uy()
+m.plot_usum()
 #~ m.plot_sxx()
 #~ m.plot_syy() 
-m.plot_seqv()
+#~ m.plot_seqv()
+import matplotlib.pyplot as plt
+plt.show()

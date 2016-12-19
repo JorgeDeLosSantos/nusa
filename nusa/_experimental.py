@@ -208,6 +208,8 @@ class LinearTriangleModel(Model):
         if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
         self.F[node.label]["fx"] = force[0]
         self.F[node.label]["fy"] = force[1]
+        node.fx = force[0]
+        node.fy = force[1]
         
     def addMoment(self,node,moment):
         pass
@@ -271,10 +273,9 @@ class LinearTriangleModel(Model):
 
     def plot_model(self):
         """
-        Plot the mesh model
+        Plot the mesh model, including bcs
         """
         import matplotlib.pyplot as plt
-        import numpy as np
         from matplotlib.patches import Polygon
         from matplotlib.collections import PatchCollection
         
@@ -286,6 +287,9 @@ class LinearTriangleModel(Model):
         for k,elm in enumerate(self.getElements()):
             _x,_y,_ux,_uy = [],[],[],[]
             for nd in elm.nodes:
+                if nd.fx != 0: self._draw_xforce(ax,nd.x,nd.y)
+                if nd.fy != 0: self._draw_yforce(ax,nd.x,nd.y)
+                if nd.ux == 0 and nd.uy == 0: self._draw_xyconstraint(ax,nd.x,nd.y)
                 _x.append(nd.x)
                 _y.append(nd.y)
             polygon = Polygon(zip(_x,_y), True)
@@ -294,10 +298,109 @@ class LinearTriangleModel(Model):
         pc = PatchCollection(patches, color="#21C2E7", edgecolor="k", alpha=0.4)
         ax.add_collection(pc)
         x0,x1,y0,y1 = self.rect_region()
+        #~ self.draw_bcs(ax)
+        ax.set_xlim(x0,x1)
+        ax.set_ylim(y0,y1)
+        ax.set_title("Model %s"%(self.name))
+        ax.set_aspect("equal")
+        plt.show()
+       
+    def draw_bcs(self,ax):
+		pass
+        
+    def _draw_xforce(self,axes,x,y):
+		dx, dy = self._calculate_arrow_size(), 0
+		HW = dx/5.0
+		HL = dx/3.0
+		arrow_props = dict(head_width=HW, head_length=HL, fc='r', ec='r')
+		axes.arrow(x, y, dx, dy, **arrow_props)
+        
+    def _draw_yforce(self,axes,x,y):
+		dx,dy = 0, self._calculate_arrow_size()
+		HW = dy/5.0
+		HL = dy/3.0
+		arrow_props = dict(head_width=HW, head_length=HL, fc='r', ec='r')
+		axes.arrow(x, y, dx, dy, **arrow_props)
+        
+    def _draw_xyconstraint(self,axes,x,y):
+        axes.plot(x, y, "gv", markersize=10, alpha=0.6)
+        axes.plot(x, y, "g<", markersize=10, alpha=0.6)
+        
+    def _calculate_arrow_size(self):
+        x0,x1,y0,y1 = self.rect_region(factor=10)
+        sf = 8e-2
+        kfx = sf*(x1-x0)
+        kfy = sf*(y1-y0)
+        return np.mean([kfx,kfy])
+        
+    def _get_tri(self):
+        import matplotlib.tri as tri
+        
+        _x,_y = [],[]
+        for n in self.getNodes():
+            _x.append(n.x)
+            _y.append(n.y)
+            
+        tg = []
+        for e in self.getElements():
+            ni,nj,nm = e.getNodes()
+            tg.append([ni.label, nj.label, nm.label])
+            
+        tr = tri.Triangulation(_x,_y, triangles=tg)
+        return tr
+        
+    def plot_ux(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        tr = self._get_tri()
+        ux = [n.ux for n in self.getNodes()]
+        tp = ax.tricontourf(tr, ux, cmap="jet")
+        fig.colorbar(tp)
+        x0,x1,y0,y1 = self.rect_region()
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
-        plt.show()
+        ax.set_title("UX")
+        
+    def plot_uy(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        tr = self._get_tri()
+        ux = [n.uy for n in self.getNodes()]
+        tp = ax.tricontourf(tr, ux, cmap="jet")
+        fig.colorbar(tp)
+        x0,x1,y0,y1 = self.rect_region()
+        ax.set_xlim(x0,x1)
+        ax.set_ylim(y0,y1)
+        ax.set_aspect("equal")
+        ax.set_title("UY")
+        #~ plt.show()
+        
+    def plot_usum(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        tr = self._get_tri()
+        ux = [np.sqrt(n.ux**2 + n.uy**2) for n in self.getNodes()]
+        tp = ax.tricontourf(tr, ux, cmap="jet")
+        fig.colorbar(tp)
+        x0,x1,y0,y1 = self.rect_region()
+        ax.set_xlim(x0,x1)
+        ax.set_ylim(y0,y1)
+        ax.set_aspect("equal")
+        ax.set_title("USUM")
+        #~ plt.show()
         
     def plot_sxx(self):
         import matplotlib.pyplot as plt
@@ -394,7 +497,6 @@ class LinearTriangleModel(Model):
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
         ax.set_title("SEQV")
-        plt.show()
         
         
     def calculate_deformed_factor(self):
@@ -406,14 +508,14 @@ class LinearTriangleModel(Model):
         kfy = sf*(y1-y0)/uy.max()
         return np.mean([kfx,kfy])
                 
-    def rect_region(self):
+    def rect_region(self,factor=7.0):
         nx,ny = [],[]
         for n in self.getNodes():
             nx.append(n.x)
             ny.append(n.y)
         xmn,xmx,ymn,ymx = min(nx),max(nx),min(ny),max(ny)
-        kx = (xmx-xmn)/10
-        ky = (ymx-ymn)/10
+        kx = (xmx-xmn)/factor
+        ky = (ymx-ymn)/factor
         return xmn-kx, xmx+kx, ymn-ky, ymx+ky
         
 
