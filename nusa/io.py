@@ -10,10 +10,10 @@ The purpose of this module is to provide tools to build
 a model automatically from text files with coordinates 
 and connectivities.
 """
-import numpy as np
-from core import *
-from element import *
-from model import *
+#~ import numpy as np
+#~ from core import *
+#~ from element import *
+#~ from model import *
 
 
 def ModelFromFiles(nodesfile,elementsfile,model):

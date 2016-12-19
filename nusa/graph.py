@@ -99,4 +99,4 @@ def ylim(model):
 
 
 if __name__ == '__main__':
-    pass
+    plot_truss_model()

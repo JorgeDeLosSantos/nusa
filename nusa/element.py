@@ -7,7 +7,6 @@
 # ***********************************
 from __future__ import division
 import numpy as np
-import numpy.linalg as la
 from core import Element
 import templates as tmp
 
@@ -32,7 +31,7 @@ class Spring(Element):
     def __init__(self,nodes,ke):
         Element.__init__(self, etype="spring")
         self.nodes = nodes
-        self.k = k
+        self.k = ke
     
     @property
     def fx(self):

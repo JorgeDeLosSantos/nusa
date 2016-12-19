@@ -7,7 +7,6 @@
 # ***********************************
 
 import numpy as np
-#~ import numpy.linalg as la
 
 #~ ===========================  MODEL  ===========================
 class Model(object):
