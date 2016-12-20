@@ -186,6 +186,7 @@ class Node(object):
         self._sx = 0.0
         self._sy = 0.0
         self._sxy = 0.0
+        self._seqv = 0.0 
         # Elements ¿what?
         self._elements = []
         
@@ -288,6 +289,42 @@ class Node(object):
     def sxy(self,val):
         self._sxy = val
         
+    @property
+    def seqv(self):
+        sxx, syy, sxy = self.sx, self.sy, self.sxy
+        seqv = np.sqrt(sxx**2 - sxx*syy + syy**2 + 3*sxy**2)
+        return seqv
+
+    @property
+    def ex(self):
+        elements = self._elements
+        self._ex = sum([el.ex for el in elements])/len(elements)
+        return self._ex
+    
+    @ex.setter
+    def ex(self,val):
+        self._ex = val
+
+    @property
+    def ey(self):
+        elements = self._elements
+        self._ey = sum([el.ey for el in elements])/len(elements)
+        return self._ey
+    
+    @ey.setter
+    def ey(self,val):
+        self._ey = val
+
+    @property
+    def exy(self):
+        elements = self._elements
+        self._exy = sum([el.exy for el in elements])/len(elements)
+        return self._exy
+    
+    @exy.setter
+    def exy(self,val):
+        self._exy = val
+
     def getLabel(self):
         return self._label
     

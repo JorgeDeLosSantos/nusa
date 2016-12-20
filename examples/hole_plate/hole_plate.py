@@ -2,7 +2,7 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
+#  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
 import numpy as np
@@ -36,21 +36,6 @@ for n in [2]+range(12,22):
 
 #~ m.plot_model()
 m.solve()
-
-#~ sx = []
-#~ for n in m.getNodes():
-    #~ sx.append(n.sx)
-#~ print max(sx)
-#~ m.plot_model()
-#~ m.plot_ux()
-#~ m.plot_uy()
-#~ m.plot_usum()
-#~ m.plot_sxx()
-#~ m.plot_syy()
-#~ m.plot_sxy()
-#~ m.plot_seqv()
-#~ m.plot_syy() 
-#~ m.plot_seqv()
-print elementos[3].ex
-m.plot_eex()
+m.plot_esol("exy")
+m.plot_nsol("exy")
 m.show()
