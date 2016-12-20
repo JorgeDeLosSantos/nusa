@@ -52,6 +52,10 @@ class Model(object):
         if element.label is "":
             element.setLabel(current_label)
         self.elements[element.label] = element
+        # Assign this element to "xxxx" 
+        for node in element.getNodes():
+            node._elements.append(element)
+        
 
     def getNumberOfNodes(self):
         """
@@ -96,6 +100,7 @@ class Element(object):
         self._fy = 0.0
         self._sx = 0.0
         self._sy = 0.0
+        self._sxy = 0.0
         
     @property
     def fx(self):
@@ -162,8 +167,8 @@ class Node(object):
         
     ::
     
-        n1 = Node((0,0),0)
-        n2 = Node((0,0),1)
+        n1 = Node((0,0))
+        n2 = Node((0,0))
     
     """
     def __init__(self,coordinates):
@@ -177,6 +182,13 @@ class Node(object):
         self._fx = 0.0
         self._fy = 0.0
         self._m = 0.0
+        # Nodal stresses
+        self._sx = 0.0
+        self._sy = 0.0
+        self._sxy = 0.0
+        # Elements ¿what?
+        self._elements = []
+        
         
     @property
     def label(self):
@@ -245,6 +257,36 @@ class Node(object):
     @m.setter
     def m(self,val):
         self._m = val
+        
+    @property
+    def sx(self):
+        elements = self._elements
+        self._sx = sum([el.sx for el in elements])/len(elements)
+        return self._sx
+    
+    @sx.setter
+    def sx(self,val):
+        self._sx = val
+        
+    @property
+    def sy(self):
+        elements = self._elements
+        self._sy = sum([el.sy for el in elements])/len(elements)
+        return self._sy
+    
+    @sy.setter
+    def sy(self,val):
+        self._sy = val
+        
+    @property
+    def sxy(self):
+        elements = self._elements
+        self._sxy = sum([el.sxy for el in elements])/len(elements)
+        return self._sxy
+    
+    @sxy.setter
+    def sxy(self,val):
+        self._sxy = val
         
     def getLabel(self):
         return self._label

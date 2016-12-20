@@ -23,13 +23,13 @@ m.addConstraint(n1, ux=0, uy=0)
 m.addConstraint(n4, ux=0, uy=0)
 m.addForce(n2, (9375,0))
 m.addForce(n3, (9375,0))
-#~ m.plot_model()
+m.plot_model()
 m.solve()
-for node in m.getNodes():
-    print node.label, node.fx, node.fy
+#~ for node in m.getNodes():
+    #~ print node.label, node.fx, node.fy
 #~ m.plot_model()
-m.plot_ux()
-#~ print e1.sx, e1.sy
-#~ print e2.sx, e2.sy
-#~ print e3.sx, e3.sy
-
+m.plot_nsxx()
+m.plot_sxx()
+#~ m.plot_syy()
+#~ m.plot_seqv()
+m.show()

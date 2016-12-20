@@ -69,8 +69,18 @@ class LinearTriangle(Element):
         return self._sxy
     
     @sxy.setter
-    def sy(self,val):
+    def sxy(self,val):
         self._sxy = val
+    
+    @property
+    def ex(self):
+        ex,ey,exy = self.getElementStrains()
+        self._ex = ex
+        return self._ex
+    
+    @ex.setter
+    def ex(self,val):
+        self._ex = val
     
     @property
     def D(self):
@@ -126,6 +136,13 @@ class LinearTriangle(Element):
         u = np.array([ni.ux,ni.uy,nj.ux,nj.uy,nm.ux,nm.uy])
         B, D = self.B, self.D
         return np.dot(np.dot(D,B),u)
+        
+    def getElementStrains(self):
+        ni, nj, nm = self.nodes
+        A, nu, t, E = self.A, self.nu, self.t, self.E 
+        u = np.array([ni.ux,ni.uy,nj.ux,nj.uy,nm.ux,nm.uy])
+        B = self.B
+        return np.dot(B,u)
         
     def getNodes(self):
         return self.nodes
@@ -295,15 +312,13 @@ class LinearTriangleModel(Model):
             polygon = Polygon(zip(_x,_y), True)
             patches.append(polygon)
 
-        pc = PatchCollection(patches, color="#21C2E7", edgecolor="k", alpha=0.4)
+        pc = PatchCollection(patches, color="#7CE7FF", edgecolor="k", alpha=0.4)
         ax.add_collection(pc)
         x0,x1,y0,y1 = self.rect_region()
-        #~ self.draw_bcs(ax)
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
         ax.set_title("Model %s"%(self.name))
         ax.set_aspect("equal")
-        plt.show()
        
     def draw_bcs(self,ax):
 		pass
@@ -382,7 +397,6 @@ class LinearTriangleModel(Model):
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
         ax.set_title("UY")
-        #~ plt.show()
         
     def plot_usum(self):
         import matplotlib.pyplot as plt
@@ -400,9 +414,79 @@ class LinearTriangleModel(Model):
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
         ax.set_title("USUM")
-        #~ plt.show()
         
     def plot_sxx(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        tr = self._get_tri()
+        sxx = [n.sx for n in self.getNodes()]
+        tp = ax.tricontourf(tr, sxx, cmap="jet")
+        fig.colorbar(tp)
+        x0,x1,y0,y1 = self.rect_region()
+        ax.set_xlim(x0,x1)
+        ax.set_ylim(y0,y1)
+        ax.set_aspect("equal")
+        ax.set_title("SXX")
+        
+    def plot_syy(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        tr = self._get_tri()
+        syy = [n.sy for n in self.getNodes()]
+        tp = ax.tricontourf(tr, syy, cmap="jet")
+        fig.colorbar(tp)
+        x0,x1,y0,y1 = self.rect_region()
+        ax.set_xlim(x0,x1)
+        ax.set_ylim(y0,y1)
+        ax.set_aspect("equal")
+        ax.set_title("SYY")
+        
+    def plot_sxy(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        tr = self._get_tri()
+        sxy = [n.sxy for n in self.getNodes()]
+        tp = ax.tricontourf(tr, sxy, cmap="jet")
+        fig.colorbar(tp)
+        x0,x1,y0,y1 = self.rect_region()
+        ax.set_xlim(x0,x1)
+        ax.set_ylim(y0,y1)
+        ax.set_aspect("equal")
+        ax.set_title("SXY")
+        
+    def plot_seqv(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        tr = self._get_tri()
+        sxx = np.array([n.sx for n in self.getNodes()])
+        syy = np.array([n.sy for n in self.getNodes()])
+        sxy = np.array([n.sx for n in self.getNodes()])
+        seqv = np.sqrt(sxx**2 - sxx*syy + syy**2 + 3*sxy**2)
+        tp = ax.tricontourf(tr, seqv, cmap="jet")
+        fig.colorbar(tp)
+        x0,x1,y0,y1 = self.rect_region()
+        ax.set_xlim(x0,x1)
+        ax.set_ylim(y0,y1)
+        ax.set_aspect("equal")
+        ax.set_title("SEQV")
+
+    def plot_esxx(self):
         import matplotlib.pyplot as plt
         import numpy as np
         from matplotlib.patches import Polygon
@@ -431,9 +515,8 @@ class LinearTriangleModel(Model):
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
         ax.set_title("SXX")
-        #~ plt.show()
         
-    def plot_syy(self):
+    def plot_esyy(self):
         import matplotlib.pyplot as plt
         import numpy as np
         from matplotlib.patches import Polygon
@@ -462,9 +545,8 @@ class LinearTriangleModel(Model):
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
         ax.set_title("SYY")
-        #~ plt.show()
         
-    def plot_seqv(self):
+    def plot_eseqv(self):
         import matplotlib.pyplot as plt
         import numpy as np
         from matplotlib.patches import Polygon
@@ -498,7 +580,44 @@ class LinearTriangleModel(Model):
         ax.set_aspect("equal")
         ax.set_title("SEQV")
         
+    def plot_eex(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        from matplotlib.patches import Polygon
+        from matplotlib.collections import PatchCollection
         
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        _x,_y = [],[]
+        patches = []
+        kf = self.calculate_deformed_factor()
+        for k,elm in enumerate(self.getElements()):
+            _x,_y,_ux,_uy = [],[],[],[]
+            for nd in elm.nodes:
+                _x.append(nd.x + nd.ux*kf)
+                _y.append(nd.y + nd.uy*kf)
+            polygon = Polygon(zip(_x,_y), True)
+            patches.append(polygon)
+
+        pc = PatchCollection(patches, cmap="jet", alpha=1)
+        ex = np.array([e.ex for e in self.getElements()])
+        pc.set_array(ex)
+        ax.add_collection(pc)
+        plt.colorbar(pc)
+        x0,x1,y0,y1 = self.rect_region()
+        ax.set_xlim(x0,x1)
+        ax.set_ylim(y0,y1)
+        ax.set_aspect("equal")
+        ax.set_title("EX")
+        
+    def show(self):
+        """
+        Show matplotlib plots
+        """
+        import matplotlib.pyplot as plt
+        plt.show()
+    
     def calculate_deformed_factor(self):
         x0,x1,y0,y1 = self.rect_region()
         ux = np.array([n.ux for n in self.getNodes()])
