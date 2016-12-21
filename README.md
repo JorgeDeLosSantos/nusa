@@ -45,7 +45,7 @@ reaction forces at nodes 1 and 2, and (d) the forces in each spring. A force of 
 is applied at node 4 in the `x` direction. The spring constants are given in the figure.
 Nodes 1 and 2 are fixed.
 
-![](docs/nusa-theory/src/spring-element/example_01.PNG)
+![](docs/nusa-info/es/src/spring-element/example_01.PNG)
 
 ```python
 # -*- coding: utf-8 -*-
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 **Example 02**. For the beam and loading shown, determine the deflection at point C. 
 Use E = 29 x 10<sup>6</sup> psi.
 
-![](docs/nusa-theory/src/beam-element/P913_beer.PNG)
+![](docs/nusa-info/es/src/beam-element/P913_beer.PNG)
 
 ```python
 """
@@ -141,21 +141,21 @@ Tutorials (Jupyter notebooks):
 
 Spanish version (in progress):
 
-* [Introducción a NuSA](docs/nusa-theory/es/intro-nusa.ipynb)
-* [Elemento Spring](docs/nusa-theory/es/spring-element.ipynb)
-* [Elemento Bar](docs/nusa-theory/es/bar-element.ipynb)
-* [Elemento Beam](docs/nusa-theory/es/beam-element.ipynb)
-* [Elemento Truss](docs/nusa-theory/es/truss-element.ipynb)
-* [Elemento LinearTriangle](docs/nusa-theory/es/linear-triangle-element.ipynb)
+* [Introducción a NuSA](docs/nusa-info/es/intro-nusa.ipynb)
+* [Elemento Spring](docs/nusa-info/es/spring-element.ipynb)
+* [Elemento Bar](docs/nusa-info/es/bar-element.ipynb)
+* [Elemento Beam](docs/nusa-info/es/beam-element.ipynb)
+* [Elemento Truss](docs/nusa-info/es/truss-element.ipynb)
+* [Elemento LinearTriangle](docs/nusa-info/es/linear-triangle-element.ipynb)
 
 English version (TODO): 
 
-* [Introduction to NuSA](docs/nusa-theory/en/intro-nusa.ipynb)
-* [Spring element](docs/nusa-theory/en/spring-element.ipynb)
-* [Bar element](docs/nusa-theory/en/bar-element.ipynb)
-* [Beam element](docs/nusa-theory/en/beam-element.ipynb)
-* [Truss element](docs/nusa-theory/en/truss-element.ipynb)
-* [LinearTriangle element](docs/nusa-theory/en/linear-triangle-element.ipynb)
+* [Introduction to NuSA](docs/nusa-info/en/intro-nusa.ipynb)
+* [Spring element](docs/nusa-info/en/spring-element.ipynb)
+* [Bar element](docs/nusa-info/en/bar-element.ipynb)
+* [Beam element](docs/nusa-info/en/beam-element.ipynb)
+* [Truss element](docs/nusa-info/en/truss-element.ipynb)
+* [LinearTriangle element](docs/nusa-info/en/linear-triangle-element.ipynb)
 
 
 ## About...
