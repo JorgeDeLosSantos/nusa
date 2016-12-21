@@ -9,7 +9,7 @@ Current: **0.1.0.dev1**
 ## Requirements
 
 * NumPy
-* Matplotlib (Optional for post)
+* Matplotlib (Optional for postprocessing operations)
 
 
 ## Installation
@@ -20,12 +20,20 @@ Using pip:
 $ pip install nusa
 ```
 
-## Capabilities
+or from this repo:
 
-* Spring elements analysis
-* Bar elements analysis
-* 2D frames analysis
-* Beams analysis
+```
+$ pip install git+https://github.com/JorgeDeLosSantos/nusa.git
+```
+
+
+## Elements type supported
+
+* Spring
+* Bar
+* Truss
+* Beam
+* Linear triangle (currently, only plane stress)
 
 ## Mini-Demos
 
@@ -127,14 +135,28 @@ print n2.uy
 
 ## Documentation
 
+To build documentation based on docstrings execute the `docs/toHTML.py` script. (Sphinx required)
+
 Tutorials (Jupyter notebooks):
 
-* [Introduction to NuSA](docs/nusa-theory/intro-nusa.ipynb)
-* [Spring element](docs/nusa-theory/spring-element.ipynb)
-* [Bar element](docs/nusa-theory/bar-element.ipynb)
-* [Beam element](docs/nusa-theory/beam-element.ipynb)
+Spanish version (in progress):
 
-To build documentation based on docstrings execute the `docs/toHTML.py` script.
+* [Introducción a NuSA](docs/nusa-theory/es/intro-nusa.ipynb)
+* [Elemento Spring](docs/nusa-theory/es/spring-element.ipynb)
+* [Elemento Bar](docs/nusa-theory/es/bar-element.ipynb)
+* [Elemento Beam](docs/nusa-theory/es/beam-element.ipynb)
+* [Elemento Truss](docs/nusa-theory/es/truss-element.ipynb)
+* [Elemento LinearTriangle](docs/nusa-theory/es/linear-triangle-element.ipynb)
+
+English version (TODO): 
+
+* [Introduction to NuSA](docs/nusa-theory/en/intro-nusa.ipynb)
+* [Spring element](docs/nusa-theory/en/spring-element.ipynb)
+* [Bar element](docs/nusa-theory/en/bar-element.ipynb)
+* [Beam element](docs/nusa-theory/en/beam-element.ipynb)
+* [Truss element](docs/nusa-theory/en/truss-element.ipynb)
+* [LinearTriangle element](docs/nusa-theory/en/linear-triangle-element.ipynb)
+
 
 ## About...
 

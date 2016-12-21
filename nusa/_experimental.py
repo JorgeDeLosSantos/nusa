@@ -220,17 +220,20 @@ class TrussModel(Model):
         
         for elm in self.getElements():
             ni, nj = elm.getNodes()
-            ax.plot([ni.x,nj.x],[ni.y,nj.y],"k-")
+            ax.plot([ni.x,nj.x],[ni.y,nj.y],"b-")
             for nd in (ni,nj):
-                if nd.fx != 0: self._draw_xforce(ax,nd.x,nd.y)
-                if nd.fy != 0: self._draw_yforce(ax,nd.x,nd.y)
-                if nd.ux == 0 and nd.uy == 0: self._draw_xyconstraint(ax,nd.x,nd.y)
+                if nd.fx > 0: self._draw_xforce(ax,nd.x,nd.y,1)
+                if nd.fx < 0: self._draw_xforce(ax,nd.x,nd.y,-1)
+                if nd.fy > 0: self._draw_yforce(ax,nd.x,nd.y,1)
+                if nd.fy < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
+                if nd.ux == 0: self._draw_xconstraint(ax,nd.x,nd.y)
+                if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
         
         x0,x1,y0,y1 = self.rect_region()
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
 
-    def _draw_xforce(self,axes,x,y):
+    def _draw_xforce(self,axes,x,y,ddir=1):
         """
         Draw horizontal arrow -> Force in x-dir
         """
@@ -238,9 +241,9 @@ class TrussModel(Model):
         HW = dx/5.0
         HL = dx/3.0
         arrow_props = dict(head_width=HW, head_length=HL, fc='r', ec='r')
-        axes.arrow(x, y, dx, dy, **arrow_props)
+        axes.arrow(x, y, ddir*dx, dy, **arrow_props)
         
-    def _draw_yforce(self,axes,x,y):
+    def _draw_yforce(self,axes,x,y,ddir=1):
         """
         Draw vertical arrow -> Force in y-dir
         """
@@ -248,11 +251,13 @@ class TrussModel(Model):
         HW = dy/5.0
         HL = dy/3.0
         arrow_props = dict(head_width=HW, head_length=HL, fc='r', ec='r')
-        axes.arrow(x, y, dx, dy, **arrow_props)
+        axes.arrow(x, y, dx, ddir*dy, **arrow_props)
         
-    def _draw_xyconstraint(self,axes,x,y):
-        axes.plot(x, y, "gv", markersize=10, alpha=0.6)
+    def _draw_xconstraint(self,axes,x,y):
         axes.plot(x, y, "g<", markersize=10, alpha=0.6)
+    
+    def _draw_yconstraint(self,axes,x,y):
+        axes.plot(x, y, "gv", markersize=10, alpha=0.6)
         
     def _calculate_arrow_size(self):
         x0,x1,y0,y1 = self.rect_region(factor=10)
@@ -261,6 +266,33 @@ class TrussModel(Model):
         kfy = sf*(y1-y0)
         return np.mean([kfx,kfy])
         
+    def plot_deformed_shape(self,dfactor=1.0):
+        import matplotlib.pyplot as plt
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        df = dfactor*self._calculate_deformed_factor()
+        
+        for elm in self.getElements():
+            ni,nj = elm.getNodes()
+            x, y = [ni.x,nj.x], [ni.y,nj.y]
+            xx = [ni.x+ni.ux*df, nj.x+nj.ux*df]
+            yy = [ni.y+ni.uy*df, nj.y+nj.uy*df]
+            ax.plot(x,y,'bo-')
+            ax.plot(xx,yy,'ro--')
+
+        x0,x1,y0,y1 = self.rect_region()
+        ax.set_xlim(x0,x1)
+        ax.set_ylim(y0,y1)
+        
+    def _calculate_deformed_factor(self):
+        x0,x1,y0,y1 = self.rect_region()
+        ux = np.abs(np.array([n.ux for n in self.getNodes()]))
+        uy = np.abs(np.array([n.uy for n in self.getNodes()]))
+        sf = 1.5e-2
+        kfx = sf*(x1-x0)/ux.max()
+        kfy = sf*(y1-y0)/uy.max()
+        return np.mean([kfx,kfy])
 
     def show(self):
         import matplotlib.pyplot as plt
