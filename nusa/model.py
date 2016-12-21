@@ -587,7 +587,7 @@ class LinearTriangleModel(Model):
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
-        ax_title = "{0} (Max:{1:0.2f}, Min:{2:0.2f})".format(var,fsol.max(),fsol.min())
+        ax_title = "{0} (Max:{1}, Min:{2})".format(var,fsol.max(),fsol.min())
         ax.set_title(ax_title)
 
     def plot_esol(self,var="ux"):

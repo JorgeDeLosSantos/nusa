@@ -6,7 +6,7 @@
 #  License: MIT License
 # ***********************************
 import numpy as np
-from nusa._experimental import *
+from nusa import *
 
 n1 = Node((0,0))
 n2 = Node((0.5,0))

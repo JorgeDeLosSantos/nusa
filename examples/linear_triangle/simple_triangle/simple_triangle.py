@@ -5,8 +5,7 @@
 #  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
-import numpy as np
-from nusa._experimental import LinearTriangle, LinearTriangleModel, Node
+from nusa import *
 
 # Creando el modelo
 m = LinearTriangleModel()
@@ -22,12 +21,10 @@ m.addElement(e1)
 m.addConstraint(n1, ux=0, uy=0)
 m.addConstraint(n3, ux=0, uy=0)
 m.addForce(n2, (1000,0))
-#~ m.plot_model()
+m.plot_model()
 m.solve()
-m.plot_ux()
-m.plot_uy()
-m.plot_usum()
-import matplotlib.pyplot as plt
-plt.show()
+m.plot_nsol("ux")
+m.plot_nsol("sxx")
+m.show()
 #~ for n in m.getNodes():
     #~ print n.ux, n.uy

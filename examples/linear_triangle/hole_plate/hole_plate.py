@@ -6,7 +6,7 @@
 #  License: MIT License
 # ***********************************
 import numpy as np
-from nusa._experimental import *
+from nusa import *
 
 nc = np.loadtxt("nodos")
 ec = np.loadtxt("elementos")
@@ -34,9 +34,9 @@ for n in (1,22,32,33,34,35,36,37,38,39,40):
 for n in [2]+range(12,22):
     m.addForce(nodos[n-1], (1000/11.,0))
 
-m.plot_model()
+#~ m.plot_model()
 m.solve()
-#~ m.plot_esol("exy")
-m.plot_esol("exx")
-m.plot_nsol("exx")
+# Plotting
+m.plot_nsol("sxx")
+#~ m.plot_esol("sxx")
 m.show()

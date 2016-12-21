@@ -47,41 +47,7 @@ def test1():
     print("Node | Displacements | Forces")
     for node in m1.getNodes():
         print "{0}\t{1}\t{2}".format(node.label, node.ux, node.fx)
-        
-
-def test2():
-    """
-    Kattan, P.I. (2003). MATLAB guide to finite elements, an interactive approach.
-    Example 3.1, pp. 29
-    """
-    E = 210e6
-    A = 0.003
-    P = -10
-    L1, L2 = 1.5, 1
-    UX3 = 0.002
-    
-    m1 = BarModel("Bar model 02")
-    
-    n1 = Node((0,0))
-    n2 = Node((1.5,0))
-    n3 = Node((2.5,0))
-    
-    e1 = Bar((n1,n2),E,A,L1)
-    e2 = Bar((n2,n3),E,A,L2)
-    
-    for nd in (n1,n2,n3): m1.addNode(nd)
-    for el in (e1,e2): m1.addElement(el)
-    
-    m1.addForce(n2, (P,))
-    m1.addConstraint(n1, ux=0.0)
-    m1.addConstraint(n3, ux=UX3)
-    m1.solve()
-    
-    print m1.KG
-    print n1.ux, n2.ux, n3.ux
-    print n1.fx, n2.fx, n3.fx
-    print e1.sx, e2.sx
     
     
 if __name__ == '__main__':
-    test2()
+    test1()

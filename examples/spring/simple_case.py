@@ -1,0 +1,36 @@
+# -*- coding: utf-8 -*-
+# ***********************************
+#  Author: Pedro Jorge De Los Santos     
+#  E-mail: delossantosmfq@gmail.com 
+#  Web: labdls.blogspot.mx
+#  License: MIT License
+# ***********************************
+from nusa.core import *
+from nusa.model import *
+from nusa.element import *
+
+def simple_case():
+    P = 750
+    k = 300
+    # Model
+    ms = SpringModel("Simple")
+    # Nodes
+    n1 = Node((0,0))
+    n2 = Node((0,0))
+    # Elements
+    e1 = Spring((n1,n2),k)
+    
+    for nd in (n1,n2):
+        ms.addNode(nd)
+    ms.addElement(e1)
+    
+    ms.addForce(n2,(P,))
+    ms.addConstraint(n1,ux=0)
+    ms.solve()
+    
+    print("Node displacements")
+    for n in ms.getNodes():
+        print n.ux, n.uy
+
+if __name__ == '__main__':
+    simple_case()
