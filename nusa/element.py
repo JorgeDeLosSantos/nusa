@@ -172,7 +172,6 @@ class Bar(Element):
 
 
 
-
 class Beam(Element):
     """
     Beam element for finite element analysis
@@ -263,55 +262,162 @@ class Beam(Element):
 
 
 
-class Truss(Element):
+class LinearTriangle(Element):
     """
-    Truss element for finite element analysis
+    Linear triangle element for finite element analysis
     
-    *nodes* : :class:`~core.base.Node`
+    *nodes* : :class:`~nusa.core.Node`
         Connectivity for element
     
     *E* : float
-        Young modulus
+        Young's modulus
         
-    *A* : float
-        Area of element
+    *nu* : float
+        Poisson ratio
         
-    *L* : float
-        Length of element
-    
+    *t* : float
+        Thickness
     
     Example::
-    
-        n1 = Node((0,0),1)
-        n2 = Node((1,0),1)
-        e1 = Bar((n1,n2),200e9,0.02,1)
-    
+        n1 = Node((0,0))
+        n2 = Node((0.5,0))
+        n3 = Node((0.5,0.25))
+        e1 = LinearTriangle((n1,n2,n3),210e9, 0.3, 0.025)
     """
-    def __init__(self,nodes,E,A,L,theta,label=""):
-        Element.__init__(self,etype="truss",label=label)
+    def __init__(self,nodes,E,nu,t):
+        Element.__init__(self,etype="triangle")
         self.nodes = nodes
         self.E = E
-        self.A = A
-        self.L = L
-        self.theta = theta
+        self.nu = nu
+        self.t = t
+        self._sx = 0
+        self._sy = 0
+        self._sxy = 0
         
+    @property
+    def sx(self):
+        _sx,_sy,_sxy = self.getElementStresses()
+        self._sx = _sx
+        return self._sx
+    
+    @sx.setter
+    def sx(self,val):
+        self._sx = val
+        
+    @property
+    def sy(self):
+        _sx,_sy,_sxy = self.getElementStresses()
+        self._sy = _sy
+        return self._sy
+    
+    @sy.setter
+    def sy(self,val):
+        self._sy = val
+    
+    @property
+    def sxy(self):
+        _sx,_sy,_sxy = self.getElementStresses()
+        self._sxy = _sxy
+        return self._sxy
+    
+    @sxy.setter
+    def sxy(self,val):
+        self._sxy = val
+    
+    @property
+    def ex(self):
+        ex,ey,exy = self.getElementStrains()
+        self._ex = ex
+        return self._ex
+    
+    @ex.setter
+    def ex(self,val):
+        self._ex = val
+    
+    @property
+    def ey(self):
+        ex,ey,exy = self.getElementStrains()
+        self._ey = ey
+        return self._ey
+    
+    @ey.setter
+    def ey(self,val):
+        self._ey = val
+    
+    @property
+    def exy(self):
+        ex,ey,exy = self.getElementStrains()
+        self._exy = exy
+        return self._exy
+    
+    @exy.setter
+    def exy(self,val):
+        self._exy = val
+    
+    @property
+    def D(self):
+        """
+        Constitutive matrix 
+        
+        Currently only plane stress supported
+        """
+        nu, E = self.nu, self.E
+        D = (E/(1-nu**2))*np.array([[1, nu, 0],
+                            [nu, 1, 0],
+                            [0, 0, (1-nu)/2]
+                            ])
+        return D
+    
+    @property
+    def B(self):
+        ni, nj, nm = self.nodes
+        A = self.A
+        betai = nj.y - nm.y
+        betaj = nm.y - ni.y
+        betam = ni.y - nj.y
+        gammai = nm.x - nj.x
+        gammaj = ni.x - nm.x
+        gammam = nj.x - ni.x
+        B = (1/(2*A))*np.array([[betai, 0, betaj, 0, betam, 0],
+                                 [0, gammai, 0, gammaj, 0, gammam],
+                                 [gammai, betai, gammaj, betaj, gammam, betam]
+                                 ])
+        return B
+    
+    @property
+    def A(self):
+        n1, n2, n3 = self.nodes
+        xi, yi = n1.x, n1.y
+        xj, yj = n2.x, n2.y
+        xm, ym = n3.x, n3.y
+        A = (xi*(yj-ym) + xj*(ym-yi) + xm*(yi-yj))/2
+        return A
+    
     def getElementStiffness(self):
         """
         Get stiffness matrix for this element
         """
-        multiplier = (self.A*self.E/self.L)
-        C = np.cos(self.theta)
-        S = np.sin(self.theta)
-        CS = C*S
-        self._K = multiplier*np.array([[C**2 , CS   , -C**2, -CS  ],
-                                       [CS   , S**2 , -CS  , -S**2],
-                                       [-C**2, -CS  , C**2 , CS   ],
-                                       [-CS  , -S**2,  CS  , S**2 ]])
-        return self._K
+        ni, nj, nm = self.nodes
+        A, nu, t, E = self.A, self.nu, self.t, self.E
+        B, D = self.B, self.D
+        return t*A*np.dot(np.dot(B.T,D),B)
+        
+    def getElementStresses(self):
+        ni, nj, nm = self.nodes
+        A, nu, t, E = self.A, self.nu, self.t, self.E
+        u = np.array([ni.ux,ni.uy,nj.ux,nj.uy,nm.ux,nm.uy])
+        B, D = self.B, self.D
+        return np.dot(np.dot(D,B),u)
+        
+    def getElementStrains(self):
+        ni, nj, nm = self.nodes
+        A, nu, t, E = self.A, self.nu, self.t, self.E 
+        u = np.array([ni.ux,ni.uy,nj.ux,nj.uy,nm.ux,nm.uy])
+        B = self.B
+        return np.dot(B,u)
         
     def getNodes(self):
         return self.nodes
-
 
 
 
