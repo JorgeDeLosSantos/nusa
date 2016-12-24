@@ -225,7 +225,6 @@ class BeamModel(Model):
             self.KG[2*n2.label+1, 2*n1.label+1] += ku[3,1]
             self.KG[2*n2.label+1, 2*n2.label] += ku[3,2]
             self.KG[2*n2.label+1, 2*n2.label+1] += ku[3,3]
-            #~ print element.label, 2*n1.label, 2*n1.label+1, 2*n2.label, 2*n2.label+1
             
         self.buildForcesVector()
         self.buildDisplacementsVector()
@@ -334,6 +333,24 @@ class BeamModel(Model):
             cx = cx + L
         return X, S
         
+    def plot_disp(self):
+        import matplotlib.pyplot as plt
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        df = 1
+        for elm in self.getElements():
+            ni,nj = elm.getNodes()
+            xx = [ni.x, nj.x]
+            yy = [ni.y+ni.uy*df, nj.y+nj.uy*df]
+            ax.plot(xx, yy, "ro--")
+            
+        ax.axis("equal")
+    
+    def show(self):
+        import matplotlib.pyplot as plt
+        plt.show()
 
 
 #~ *********************************************************************

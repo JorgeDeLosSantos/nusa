@@ -10,10 +10,55 @@ The purpose of this module is to provide tools to build
 a model automatically from text files with coordinates 
 and connectivities.
 """
-#~ import numpy as np
-#~ from core import *
-#~ from element import *
-#~ from model import *
+import numpy as np
+import re
+
+FLOATS = "[-+]?([0-9]*\.[0-9]+|[0-9]+)"
+
+def read_file(filename):
+    mshfile = open(filename,"r")
+    msh = mshfile.readlines()
+    mshfile.close()
+    return msh
+
+def parse_nodes(line):
+    p = re.compile(FLOATS)
+    nd = [float(k) for k in p.findall(line)]
+    return nd[1::]
+    
+def parse_elements(line):
+    p = re.compile(FLOATS)
+    elm = [int(k) for k in p.findall(line)]
+    if len(elm) < 8: return []
+    enum = elm[0]
+    etype = elm[1]
+    elmtags = elm[2:5]
+    econn = elm[5::]
+    if etype == 2: return econn
+    else: return []
+    
+def isempty(iterable):
+    return True if len(iterable)==0 else False
+
+def read_msh(filename):
+    msh = read_file(filename)
+    APPEND_NODES = False
+    APPEND_ELEMENTS = False
+    nodes = []
+    elements = []
+    for line in msh:
+        if "$Nodes" in line: APPEND_NODES = True
+        if "$EndNodes" in line: APPEND_NODES = False
+        if "$Elements" in line: APPEND_ELEMENTS = True
+        if "$EndElements" in line: APPEND_ELEMENTS = False
+        if APPEND_NODES:
+            nc = parse_nodes(line)
+            if not isempty(nc): nodes.append(nc)
+        if APPEND_ELEMENTS:
+            ec = parse_elements(line)
+            if not isempty(ec): elements.append(ec)
+    return np.array(nodes), np.array(elements)
+
 
 
 def ModelFromFiles(nodesfile,elementsfile,model):

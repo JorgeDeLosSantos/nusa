@@ -24,10 +24,10 @@ def test1():
     m1 = BeamModel("Beam Model")
     # Nodes
     n1 = Node((0,0))
-    n2 = Node((0,10*12))
-    n3 = Node((0,20*12))
-    n4 = Node((0,30*12))
-    n5 = Node((0,40*12))
+    n2 = Node((10*12,0))
+    n3 = Node((20*12,0))
+    n4 = Node((30*12,0))
+    n5 = Node((40*12,0))
     # Elements
     e1 = Beam((n1,n2),E,I,L)
     e2 = Beam((n2,n3),E,I,L)
@@ -46,6 +46,8 @@ def test1():
     m1.addConstraint(n2, ur=0)
     m1.addConstraint(n4, ur=0)
     m1.solve() # Solve model
+    m1.plot_disp()
+    m1.show()
 
 
 if __name__ == '__main__':
