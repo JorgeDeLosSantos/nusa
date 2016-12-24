@@ -23,10 +23,6 @@ class Truss(Element):
         
     *A* : float
         Area of element
-        
-    *L* : float
-        Length of element
-    
     
     Example::
     
@@ -59,6 +55,11 @@ class Truss(Element):
     @property
     def f(self):
         return self._compute_force()
+    
+    @property
+    def s(self):
+        s = self.f/self.A
+        return s
         
     def _compute_force(self):
         theta = self.theta
@@ -69,8 +70,6 @@ class Truss(Element):
         u = np.array([ni.ux, ni.uy, nj.ux, nj.uy]).T
         F = (E*A/L)*np.dot(np.array([-C, -S, C, S]), u)
         return F
-        
-        
         
     def getElementStiffness(self):
         """
@@ -260,8 +259,8 @@ class TrussModel(Model):
         axes.plot(x, y, "gv", markersize=10, alpha=0.6)
         
     def _calculate_arrow_size(self):
-        x0,x1,y0,y1 = self.rect_region(factor=10)
-        sf = 8e-2
+        x0,x1,y0,y1 = self.rect_region(factor=50)
+        sf = 5e-2
         kfx = sf*(x1-x0)
         kfy = sf*(y1-y0)
         return np.mean([kfx,kfy])
@@ -290,8 +289,15 @@ class TrussModel(Model):
         ux = np.abs(np.array([n.ux for n in self.getNodes()]))
         uy = np.abs(np.array([n.uy for n in self.getNodes()]))
         sf = 1.5e-2
-        kfx = sf*(x1-x0)/ux.max()
-        kfy = sf*(y1-y0)/uy.max()
+        if ux.max()==0 and uy.max()!=0:
+            kfx = sf*(y1-y0)/uy.max()
+            kfy = sf*(y1-y0)/uy.max()
+        if uy.max()==0 and ux.max()!=0:
+            kfx = sf*(x1-x0)/ux.max()
+            kfy = sf*(x1-x0)/ux.max()
+        if ux.max()!=0 and uy.max()!=0:
+            kfx = sf*(x1-x0)/ux.max()
+            kfy = sf*(y1-y0)/uy.max()
         return np.mean([kfx,kfy])
 
     def show(self):
@@ -307,6 +313,74 @@ class TrussModel(Model):
         kx = (xmx-xmn)/factor
         ky = (ymx-ymn)/factor
         return xmn-kx, xmx+kx, ymn-ky, ymx+ky
+        
+    def simple_report(self,report_type="print",fname="nusa_rpt.txt"):
+        from templates import TRUSS_SIMPLE_REPORT
+        options = {"headers":"firstrow",
+                   "tablefmt":"rst",
+                   "numalign":"right"}
+        _str = TRUSS_SIMPLE_REPORT.format(
+                model_name=self.name,
+                nodes=self.getNumberOfNodes(),
+                elements=self.getNumberOfElements(),
+                nodal_displacements=self._get_ndisplacements(options),
+                nodal_forces=self._get_nforces(options),
+                element_forces=self._get_eforces(options),
+                element_stresses=self._get_estresses(options),
+                nodes_info=self._get_nodes_info(options),
+                elements_info=self._get_elements_info(options))
+        if report_type=="print": print(_str)
+        elif report_type=="write": self._write_report(_str, fname)
+        else: return _str
+        
+    def _write_report(self,txt,fname):
+        fobj = open(fname,"w")
+        fobj.write(txt)
+        fobj.close()
+        
+    def _get_ndisplacements(self,options):
+        from tabulate import tabulate
+        D = [["Node","UX","UY"]]
+        for n in self.getNodes():
+            D.append([n.label+1,n.ux,n.uy])
+        return tabulate(D, **options)
+        
+    def _get_nforces(self,options):
+        from tabulate import tabulate
+        F = [["Node","FX","FY"]]
+        for n in self.getNodes():
+            F.append([n.label+1,n.fx,n.fy])
+        return tabulate(F, **options)
+        
+    def _get_eforces(self,options):
+        from tabulate import tabulate
+        F = [["Element","F"]]
+        for elm in self.getElements():
+            F.append([elm.label+1, elm.f])
+        return tabulate(F, **options)
+        
+    def _get_estresses(self,options):
+        from tabulate import tabulate
+        S = [["Element","S"]]
+        for elm in self.getElements():
+            S.append([elm.label+1, elm.s])
+        return tabulate(S, **options)
+    
+    def _get_nodes_info(self,options):
+        from tabulate import tabulate
+        F = [["Node","X","Y"]]
+        for n in self.getNodes():
+            F.append([n.label+1, n.x, n.y])
+        return tabulate(F, **options)
+    
+    def _get_elements_info(self,options):
+        from tabulate import tabulate
+        S = [["Element","NI","NJ"]]
+        for elm in self.getElements():
+            ni, nj = elm.getNodes()
+            S.append([elm.label+1, ni.label+1, nj.label+1])
+        return tabulate(S, **options)
+        
 
         
 

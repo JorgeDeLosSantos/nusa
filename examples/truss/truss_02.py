@@ -39,10 +39,13 @@ for element in (e1,e2,e3,e4,e5,e6,e7,e8,e9): m.addElement(element)
 
 m.addConstraint(n1, ux=0, uy=0)
 m.addConstraint(n6, ux=0, uy=0)
-m.addForce(n2, (20e3, 0))
+m.addForce(n2, (20e3,0))
+#~ m.plot_model()
 m.solve()
-m.plot_deformed_shape(3)
-m.show()
+#~ m.plot_deformed_shape()
+#~ m.show()
+m.simple_report("write")
+
 
 #~ E, A = 200e9, 0.002
 #~ n1 = Node((0,0))
@@ -56,10 +59,10 @@ m.show()
 #~ for elm in (e1,e2,e3): m.addElement(elm)
 #~ m.addConstraint(n1, ux=0, uy=0)
 #~ m.addConstraint(n2, uy=0)
-#~ m.addForce(n3, (500,0))
+#~ m.addForce(n3, (-500,0))
 #~ m.plot_model()
 #~ m.solve()
-#~ m.plot_deformed()
+#~ m.plot_deformed_shape()
 #~ m.show()
 
 

@@ -38,6 +38,7 @@ m.addForce(n1,(0,-P))
 m.addConstraint(n2,ux=0,uy=0) # fixed 
 m.addConstraint(n3,ux=0,uy=0) # fixed
 m.addConstraint(n4,ux=0,uy=0) # fixed
+m.plot_model()
 m.solve() # Solve model
 m.plot_deformed_shape() # plot deformed shape
 m.show()

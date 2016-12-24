@@ -5,38 +5,35 @@
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
-MINI_REPORT_TEMPLATE = """
+
+TRUSS_SIMPLE_REPORT = """
 ==========================
-    NuSA {version}    
+    NuSA Simple Report
 ==========================
 
+Model: {model_name}
+Number of nodes: {nodes}
+Number of elements: {elements}
 
-Mini-Report for {model}
+NODAL DISPLACEMENTS
+{nodal_displacements}
 
-Model type: {mtype}
-Number of nodes: {nnodes}
-Number of elements: {nelements}
+NODAL FORCES
+{nodal_forces}
 
+ELEMENT FORCES
+{element_forces}
 
-=========
-Solutions
-=========
-
--------------------------------------------------------------
-Displacements:
-
-{displacements}
-
-
--------------------------------------------------------------
-Nodal forces:
-
-{nodalforces}
+ELEMENT STRESSES
+{element_stresses}
 
 
--------------------------------------------------------------
-Element forces:
+FINITE-ELEMENT MODEL INFO
 
-{elementforces}
+NODES:
+{nodes_info}
+
+ELEMENTS:
+{elements_info}
 
 """
