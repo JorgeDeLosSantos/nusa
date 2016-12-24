@@ -23,10 +23,6 @@ class Truss(Element):
         
     *A* : float
         Area of element
-    
-    Example::
-    
-    
     """
     def __init__(self,nodes,E,A):
         Element.__init__(self,etype="truss")
@@ -49,7 +45,7 @@ class Truss(Element):
         if x0==x1:
             theta = 90*(np.pi/180)
         else:
-            theta = np.arctan((y1-y0)/(x1-x0))
+            theta = np.arctan2((y1-y0),(x1-x0))
         return theta
     
     @property
@@ -95,7 +91,7 @@ class Truss(Element):
 #~ *********************************************************************
 class TrussModel(Model):
     """
-    Model for finite element analysis
+    Truss model for finite element analysis
     """
     def __init__(self,name="Truss Model 01"):
         Model.__init__(self,name=name,mtype="truss")
