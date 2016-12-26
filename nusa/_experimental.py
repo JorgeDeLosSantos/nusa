@@ -225,6 +225,7 @@ class TrussModel(Model):
                 if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
         
         x0,x1,y0,y1 = self.rect_region()
+        plt.axis('equal')
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
 
@@ -277,6 +278,7 @@ class TrussModel(Model):
             ax.plot(xx,yy,'ro--')
 
         x0,x1,y0,y1 = self.rect_region()
+        plt.axis('equal')
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
         
