@@ -21,6 +21,7 @@ Contents:
    _src/core.rst
    _src/model.rst
    _src/element.rst
+   _src/_experimental.rst
 
 Indices and tables
 ==================

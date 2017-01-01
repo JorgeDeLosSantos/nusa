@@ -15,7 +15,7 @@ class Truss(Element):
     """
     Truss element for finite element analysis
     
-    *nodes* : :class:`~core.base.Node`
+    *nodes* : Tuple of :class:`~nusa.core.Node`
         Connectivity for element
     
     *E* : float
@@ -29,10 +29,12 @@ class Truss(Element):
         self.nodes = nodes
         self.E = E
         self.A = A
-        #~ self.theta = theta
         
     @property
     def L(self):
+        """
+        Length of element
+        """
         ni,nj = self.getNodes()
         x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
         _l = np.sqrt( (x1-x0)**2 + (y1-y0)**2 )
@@ -40,6 +42,9 @@ class Truss(Element):
     
     @property
     def theta(self):
+        """
+        Element angle, measure from X-positive axis counter-clockwise.
+        """
         ni,nj = self.getNodes()
         x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
         if x0==x1:
@@ -50,10 +55,31 @@ class Truss(Element):
     
     @property
     def f(self):
+        r"""
+        Force in this element, given by
+        
+        .. math::
+        
+            f = \frac{EA}{L}\begin{bmatrix} C & S & -C & -S \end{bmatrix}\left\{u\right\}
+        
+        where:
+        
+            * E - Elastic modulus
+            * A - Cross-section
+            * L - Length
+            * C - :math:`\cos(\theta)`
+            * S - :math:`\sin(\theta)`
+            * u - Four-element vector of nodal displacements -> :math:`\left\{ ux_i; uy_i; ux_j; uy_j \right\}`
+        """
         return self._compute_force()
     
     @property
     def s(self):
+        """
+        Stress in this element, given by:
+        
+        s = f/A
+        """
         s = self.f/self.A
         return s
         
@@ -148,16 +174,21 @@ class TrussModel(Model):
     def addConstraint(self,node,**constraint):
         if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
         cs = constraint
-        if cs.has_key('ux') and cs.has_key("uy"): # 
+        if cs.has_key('ux') and cs.has_key("uy"): #
             ux = cs.get('ux')
             uy = cs.get('uy')
-            node.setDisplacements(ux=ux, uy=uy)
+            node.setDisplacements(ux=ux, uy=uy) # eqv to node.ux = ux, node.uy = uy
             self.U[node.label]["ux"] = ux
             self.U[node.label]["uy"] = uy
+        elif cs.has_key('ux'):
+            uy = cs.get('ux')
+            node.setDisplacements(ux=ux)
+            self.U[node.label]["ux"] = ux
         elif cs.has_key('uy'):
             uy = cs.get('uy')
             node.setDisplacements(uy=uy)
             self.U[node.label]["uy"] = uy
+        else: pass # todo
         
     def solve(self):
         # Solve LS
@@ -207,8 +238,6 @@ class TrussModel(Model):
         Plot the mesh model, including bcs
         """
         import matplotlib.pyplot as plt
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
         
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -378,8 +407,6 @@ class TrussModel(Model):
             ni, nj = elm.getNodes()
             S.append([elm.label+1, ni.label+1, nj.label+1])
         return tabulate(S, **options)
-        
-
         
 
 if __name__=='__main__':
