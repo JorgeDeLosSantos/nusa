@@ -53,9 +53,7 @@ Nodes 1 and 2 are fixed.
 ```python
 # -*- coding: utf-8 -*-
 # NuSA Demo
-from nusa.core import *
-from nusa.model import *
-from nusa.element import *
+from nusa import *
     
 def test1():
     """
@@ -106,6 +104,7 @@ Use E = 29 x 10<sup>6</sup> psi.
 Beer & Johnston. (2012) Mechanics of materials. 
 Problem 9.13 , pp. 568.
 """
+from nusa import *
 
 # Input data 
 E = 29e6
