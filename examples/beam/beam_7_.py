@@ -59,8 +59,9 @@ plt.plot(xa, da)
 plt.plot(xb, db)
 plt.axis("auto")
 plt.xlim(-1,L+1)
+plt.show()
 
-print nodos[4].uy-----------------------------------------
+print nodos[4].uy
 
 #~ m.show()
 

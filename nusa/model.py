@@ -5,6 +5,7 @@
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
+from __future__ import division
 import re
 import numpy as np
 import numpy.linalg as la
@@ -25,7 +26,7 @@ class SpringModel(Model):
         self.dof = 1 # 1 DOF per Node
         self.IS_KG_BUILDED = False
 
-    def buildGlobalMatrix(self):
+    def _buildGlobalMatrix(self):
         msz = (self.dof)*self.getNumberOfNodes() # Matrix size
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
@@ -36,6 +37,16 @@ class SpringModel(Model):
             self.KG[n2.label, n1.label] += ku[1,0]
             self.KG[n2.label, n2.label] += ku[1,1]
         
+        self.buildForcesVector()
+        self.buildDisplacementsVector()
+        self.IS_KG_BUILDED = True
+        
+    def buildGlobalMatrix(self):
+        msz = (self.dof)*self.getNumberOfNodes() # Matrix size
+        self.KG = np.zeros((msz,msz))
+        for element in self.getElements():
+            self.KG += element.get_global_stiffness(msz)
+            
         self.buildForcesVector()
         self.buildDisplacementsVector()
         self.IS_KG_BUILDED = True
@@ -175,9 +186,6 @@ class BarModel(Model):
             nd, var = self.index2key(ic, ("fx",))
             self.NF[nd][var] = nf_calc[k]
             self.nodes[ic].fx = nf_calc[k]
-        
-        
-        
 
     def index2key(self,idx,opts=("ux",)):
         node = idx
@@ -241,10 +249,12 @@ class BeamModel(Model):
     def addForce(self,node,force):
         if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
         self.F[node.label]["fy"] = force[0]
+        node.fy = force[0]
         
     def addMoment(self,node,moment):
         if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
         self.F[node.label]["m"] = moment[0]
+        node.m = moment[0]
         
     def addConstraint(self,node,**constraint):
         if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
@@ -305,11 +315,114 @@ class BeamModel(Model):
                 self.nodes[cnlab].m = nf_calc[k]
             
     def index2key(self,idx,opts=("uy","ur")):
-        node = idx/2
+        node = idx//2
         var = opts[0] if ((-1)**idx)==1 else opts[1]
         return node,var
         
-    def getDataForMomentDiagram(self):
+    def plot_model(self):
+        import matplotlib.pyplot as plt
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        for elm in self.getElements():
+            ni,nj = elm.getNodes()
+            xx = [ni.x, nj.x]
+            yy = [ni.y, nj.y]
+            ax.plot(xx, yy, "r.-")
+            for nd in (ni,nj):
+                if nd.fx > 0: self._draw_xforce(ax,nd.x,nd.y,1)
+                if nd.fx < 0: self._draw_xforce(ax,nd.x,nd.y,-1)
+                if nd.fy > 0: self._draw_yforce(ax,nd.x,nd.y,1)
+                if nd.fy < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
+                if nd.ux == 0: self._draw_xconstraint(ax,nd.x,nd.y)
+                if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
+            
+        ax.axis("equal")
+        x0,x1,y0,y1 = self.rect_region()
+        ax.set_xlim(x0,x1)
+        ax.set_ylim(y0,y1)
+
+    def _draw_xforce(self,axes,x,y,ddir=1):
+        """
+        Draw horizontal arrow -> Force in x-dir
+        """
+        dx, dy = self._calculate_arrow_size(), 0
+        HW = dx/5.0
+        HL = dx/3.0
+        arrow_props = dict(head_width=HW, head_length=HL, fc='r', ec='r')
+        axes.arrow(x, y, ddir*dx, dy, **arrow_props)
+        
+    def _draw_yforce(self,axes,x,y,ddir=1):
+        """
+        Draw vertical arrow -> Force in y-dir
+        """
+        dx,dy = 0, self._calculate_arrow_size()
+        HW = dy/5.0
+        HL = dy/3.0
+        arrow_props = dict(head_width=HW, head_length=HL, fc='r', ec='r')
+        axes.arrow(x, y, dx, ddir*dy, **arrow_props)
+        
+    def _draw_xconstraint(self,axes,x,y):
+        axes.plot(x, y, "g<", markersize=10, alpha=0.6)
+    
+    def _draw_yconstraint(self,axes,x,y):
+        axes.plot(x, y, "gv", markersize=10, alpha=0.6)
+        
+    def _calculate_arrow_size(self):
+        x0,x1,y0,y1 = self.rect_region(factor=10)
+        sf = 5e-2
+        kfx = sf*(x1-x0)
+        kfy = sf*(y1-y0)
+        return np.mean([kfx,kfy])
+
+    def rect_region(self,factor=7.0):
+        nx,ny = [],[]
+        for n in self.getNodes():
+            nx.append(n.x)
+            ny.append(n.y)
+        xmn,xmx,ymn,ymx = min(nx),max(nx),min(ny),max(ny)
+        kx = (xmx-xmn)/factor
+        if ymx==0 and ymn==0:
+            ky = 1.0/factor
+        else:
+            ky = (ymx-ymn)/factor
+        return xmn-kx, xmx+kx, ymn-ky, ymx+ky
+        
+    def plot_disp(self):
+        import matplotlib.pyplot as plt
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        df = 1000
+        for elm in self.getElements():
+            ni,nj = elm.getNodes()
+            xx = [ni.x, nj.x]
+            yy = [ni.y+ni.uy*df, nj.y+nj.uy*df]
+            ax.plot(xx, yy, "ro--")
+            
+        ax.axis("equal")
+        
+    def plot_moment_diagram(self):
+        import matplotlib.pyplot as plt
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        X,M = self._get_data_for_moment_diagram()
+        ax.plot(X, M)
+        
+    def plot_shear_diagram(self):
+        import matplotlib.pyplot as plt
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        X,S = self._get_data_for_shear_diagram()
+        ax.plot(X, S)
+        
+    def _get_data_for_moment_diagram(self):
         cx = 0
         X, M = [], []
         for el in self.getElements():
@@ -321,32 +434,17 @@ class BeamModel(Model):
             cx = cx + L
         return X, M
         
-    def getDataForShearDiagram(self):
+    def _get_data_for_shear_diagram(self):
         cx = 0
         X, S = [], []
         for el in self.getElements():
-            L = el.L
+            L = el.L # element length
             X = np.concatenate((X, np.array([cx, cx+L])))
             fel = el.fy.squeeze()
             fel[-1] = - fel[-1]
             S = np.concatenate((S, fel))
             cx = cx + L
         return X, S
-        
-    def plot_disp(self):
-        import matplotlib.pyplot as plt
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        df = 1
-        for elm in self.getElements():
-            ni,nj = elm.getNodes()
-            xx = [ni.x, nj.x]
-            yy = [ni.y+ni.uy*df, nj.y+nj.uy*df]
-            ax.plot(xx, yy, "ro--")
-            
-        ax.axis("equal")
     
     def show(self):
         import matplotlib.pyplot as plt

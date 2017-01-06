@@ -64,6 +64,13 @@ class Spring(Element):
         self._KE = np.array([[self.k,-self.k],[-self.k,self.k]])
         return self._KE
     
+    def get_global_stiffness(self,msz):
+        ni, nj = self.getNodes()
+        self.keg = np.zeros((msz,msz))
+        idx = np.ix_([ni.label, nj.label],[ni.label, nj.label])
+        self.keg[idx] = self.getElementStiffness()
+        return self.keg
+    
     def getNodes(self):
         """
         Returns a tuple of nodes

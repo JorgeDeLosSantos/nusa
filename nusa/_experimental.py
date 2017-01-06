@@ -181,7 +181,7 @@ class TrussModel(Model):
             self.U[node.label]["ux"] = ux
             self.U[node.label]["uy"] = uy
         elif cs.has_key('ux'):
-            uy = cs.get('ux')
+            ux = cs.get('ux')
             node.setDisplacements(ux=ux)
             self.U[node.label]["ux"] = ux
         elif cs.has_key('uy'):
@@ -358,6 +358,7 @@ class TrussModel(Model):
                 elements_info=self._get_elements_info(options))
         if report_type=="print": print(_str)
         elif report_type=="write": self._write_report(_str, fname)
+        elif report_type=="string": return _str
         else: return _str
         
     def _write_report(self,txt,fname):

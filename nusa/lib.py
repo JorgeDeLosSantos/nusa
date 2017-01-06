@@ -6,34 +6,20 @@
 #  License: MIT License
 # ***********************************
 """
-Defining some common materials.
+Defining some common materials and other "things"
 """
-
-class Material(object):
-    def __init__(self,name,**kwargs):
-        """
-        
-        Parameters
-        ----------
-        
-        name :    Name of material
-        
-        
-        **kwargs:
-        
-        E       :    Elastic modulus
-        nu      :    Poisson ratio
-        density :    Density
-        
-        """
-        self.name = name
-        self.__dict__ = kwargs # add all properties
-    
-    def __str__(self):
-        return self.name
+from _lib import *
 
 ## ================== Materials ======================
 
 STEEL_1018 = Material("1018 Steel", E=205e9, nu=0.3)
 ALUMINIUM_6061 = Material("6061 Aluminium Alloy", E=69e9, nu=0.33)
 
+        
+if __name__=='__main__':
+    s1 = RectangularSection(0.1,0.2)
+    s2 = CircularSection(0.1)
+    print s1.A, s1.I
+    print s2.A, s2.I
+    
+    

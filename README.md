@@ -1,20 +1,23 @@
 # NuSA
 
-Numerical Structural Analysis in Python
+A Python library for structural analysis using the finite element method, designed for academic purposes.
 
-## Version / Status
+## Versions
 
-Current: **0.1.0.dev1** 
+Latter (PyPi): **0.1.0.dev1** (Initial pre-alpha release)
+
+Dev: (This repository): **0.2.0**
 
 ## Requirements
 
 * NumPy
-* Matplotlib (Optional for postprocessing operations)
+* Tabulate
+* Matplotlib
 
 
 ## Installation
 
-Using pip:
+Using pip: 
 
 ```
 $ pip install nusa

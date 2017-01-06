@@ -5,6 +5,7 @@
 #  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
+from __future__ import division
 import numpy as np
 from nusa import *
 import itertools
@@ -19,11 +20,11 @@ def pairwise(iterable):
 
 # Input data 
 E = 29e6 # psi
-I = 10.0
+I = 10
 L = 10
 P = 10e3
 
-nelm = 50.
+nelm = 3
 parts = np.linspace(0,L,nelm)
 
 nodos = []
