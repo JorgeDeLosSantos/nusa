@@ -86,7 +86,7 @@ class Modeler(object):
             polygon = Polygon(zip(_x,_y), True)
             patches.append(polygon)
             
-        pc = PatchCollection(patches, color="#7CE7FF", edgecolor="k", alpha=0.4)
+        pc = PatchCollection(patches, color="#61C141", edgecolor="k", alpha=0.4)
         ax.add_collection(pc)
         x0,x1,y0,y1 = self._rect_region()
         ax.set_xlim(x0,x1)

@@ -10,9 +10,8 @@ from nusa import *
 from nusa.mesh import *
 
 m = Modeler()
-a = m.add_rectangle((0,0),(2,1), 0.2)
-b = m.add_rectangle((0.3,0.3),(0.7,0.7), 0.02)
-#~ b = m.add_circle((0.5,0.5), 0.1, 0.02)
+a = m.add_rectangle((0,0),(1,1), esize=0.2)
+b = m.add_circle((0.5,0.5),0.15, esize=0.02)
 m.substract_surfaces(a,b)
 nc, ec = m.generate_mesh()
 x,y = nc[:,0], nc[:,1]
@@ -27,7 +26,7 @@ for k,nd in enumerate(nc):
 for k,elm in enumerate(ec):
     i,j,m = int(elm[0]),int(elm[1]),int(elm[2])
     ni,nj,nm = nodos[i],nodos[j],nodos[m]
-    ce = LinearTriangle((ni,nj,nm),200e9,0.3,1)
+    ce = LinearTriangle((ni,nj,nm),200e9, 0.3, 0.1)
     elementos.append(ce)
 
 m = LinearTriangleModel()
@@ -41,10 +40,10 @@ for node in nodos:
     if node.x == minx:
         m.addConstraint(node, ux=0, uy=0)
     if node.x == maxx:
-        m.addForce(node, (1e4,0))
+        m.addForce(node, (1e3,0))
 
 m.plot_model()
 m.solve()
 # Plotting
-m.plot_nsol("sxy")
+m.plot_nsol("seqv")
 m.show()
