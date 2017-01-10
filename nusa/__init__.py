@@ -15,6 +15,10 @@ from nusa.core import *
 from nusa.element import *
 from nusa.model import *
 from _experimental import *
+from nusa.mesh import *
+
+import matplotlib as mpl
+mpl.rc("axes", titlesize=6)
 
 # Print NUSA info
 #~ print("NuSA %s\n%s\n"%(__version__,10*"_"))

@@ -7,9 +7,14 @@
 # ***********************************
 import numpy as np
 from nusa import *
+from nusa.mesh import *
 
-nc = np.loadtxt("nodos")
-ec = np.loadtxt("elementos")
+m = Modeler()
+a = m.add_rectangle((0,0),(2,1), 0.2)
+b = m.add_rectangle((0.3,0.3),(0.7,0.7), 0.02)
+#~ b = m.add_circle((0.5,0.5), 0.1, 0.02)
+m.substract_surfaces(a,b)
+nc, ec = m.generate_mesh()
 x,y = nc[:,0], nc[:,1]
 
 nodos = []
@@ -20,7 +25,7 @@ for k,nd in enumerate(nc):
     nodos.append(cn)
     
 for k,elm in enumerate(ec):
-    i,j,m = int(elm[0]-1),int(elm[1]-1),int(elm[2]-1)
+    i,j,m = int(elm[0]),int(elm[1]),int(elm[2])
     ni,nj,nm = nodos[i],nodos[j],nodos[m]
     ce = LinearTriangle((ni,nj,nm),200e9,0.3,1)
     elementos.append(ce)
@@ -29,14 +34,17 @@ m = LinearTriangleModel()
 for node in nodos: m.addNode(node)
 for elm in elementos: m.addElement(elm)
 
-for n in (1,22,32,33,34,35,36,37,38,39,40):
-    m.addConstraint(nodos[n-1], ux=0, uy=0)
-for n in [2]+range(12,22):
-    m.addForce(nodos[n-1], (1000/11.,0))
+minx = min(x)
+maxx = max(x)
 
-#~ m.plot_model()
+for node in nodos:
+    if node.x == minx:
+        m.addConstraint(node, ux=0, uy=0)
+    if node.x == maxx:
+        m.addForce(node, (1e4,0))
+
+m.plot_model()
 m.solve()
 # Plotting
-m.plot_nsol("sxx")
-#~ m.plot_esol("sxx")
+m.plot_nsol("sxy")
 m.show()

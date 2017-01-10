@@ -208,6 +208,9 @@ class BeamModel(Model):
         self.dof = 2 # 2 DOF for beam element
         self.IS_KG_BUILDED = False
         
+        # Setting MPL params
+        mpl.rc("axes", titlesize=6)
+        
     def buildGlobalMatrix(self):
         msz = (self.dof)*self.getNumberOfNodes()
         self.KG = np.zeros((msz,msz))
@@ -548,7 +551,12 @@ class LinearTriangleModel(Model):
             node.setDisplacements(uy=uy)
             self.U[node.label]["uy"] = uy
         
+    def _check_nodes(self):
+        for node in self.getNodes():
+            if node._elements == []: self.addConstraint(node, ux=0, uy=0)
+        
     def solve(self):
+        self._check_nodes()
         # Solve LS
         self.VU = [node[key] for node in self.U.values() for key in ("ux","uy")]
         self.VF = [node[key] for node in self.F.values() for key in ("fx","fy")]
@@ -558,7 +566,12 @@ class LinearTriangleModel(Model):
         self.F2S = np.delete(self.VF,knw,0)
         
         # For displacements
-        self.solved_u = la.solve(self.K2S,self.F2S)
+        try:
+            self.solved_u = la.solve(self.K2S,self.F2S)
+        except:
+            print("Solved using LSTSQ")
+            self.solved_u = la.lstsq(self.K2S, self.F2S)[0]
+            
         for k,ic in enumerate(unknw):
             nd, var = self.index2key(ic)
             self.U[nd][var] = self.solved_u[k]

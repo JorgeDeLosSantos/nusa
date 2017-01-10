@@ -55,7 +55,6 @@ class Model(object):
         # Assign this element to "xxxx" 
         for node in element.getNodes():
             node._elements.append(element)
-        
 
     def getNumberOfNodes(self):
         """
@@ -262,7 +261,10 @@ class Node(object):
     @property
     def sx(self):
         elements = self._elements
-        self._sx = sum([el.sx for el in elements])/len(elements)
+        if elements == []:
+            self._sx = 0.0
+        else:
+            self._sx = sum([el.sx for el in elements])/len(elements)
         return self._sx
     
     @sx.setter
@@ -272,7 +274,10 @@ class Node(object):
     @property
     def sy(self):
         elements = self._elements
-        self._sy = sum([el.sy for el in elements])/len(elements)
+        if elements == []:
+            self._sy = 0
+        else:
+            self._sy = sum([el.sy for el in elements])/len(elements)
         return self._sy
     
     @sy.setter
@@ -282,7 +287,10 @@ class Node(object):
     @property
     def sxy(self):
         elements = self._elements
-        self._sxy = sum([el.sxy for el in elements])/len(elements)
+        if elements == []:
+            self._sxy = 0
+        else:
+            self._sxy = sum([el.sxy for el in elements])/len(elements)
         return self._sxy
     
     @sxy.setter
@@ -298,7 +306,10 @@ class Node(object):
     @property
     def ex(self):
         elements = self._elements
-        self._ex = sum([el.ex for el in elements])/len(elements)
+        if elements == []:
+            self._ex = 0
+        else:
+            self._ex = sum([el.ex for el in elements])/len(elements)
         return self._ex
     
     @ex.setter
@@ -308,7 +319,10 @@ class Node(object):
     @property
     def ey(self):
         elements = self._elements
-        self._ey = sum([el.ey for el in elements])/len(elements)
+        if elements == []:
+            self._ey = 0
+        else:
+            self._ey = sum([el.ey for el in elements])/len(elements)
         return self._ey
     
     @ey.setter
@@ -318,7 +332,10 @@ class Node(object):
     @property
     def exy(self):
         elements = self._elements
-        self._exy = sum([el.exy for el in elements])/len(elements)
+        if elements == []:
+            self._exy = 0
+        else:
+            self._exy = sum([el.exy for el in elements])/len(elements)
         return self._exy
     
     @exy.setter

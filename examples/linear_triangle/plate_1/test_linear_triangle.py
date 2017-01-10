@@ -28,8 +28,5 @@ m.solve()
 #~ for node in m.getNodes():
     #~ print node.label, node.fx, node.fy
 #~ m.plot_model()
-m.plot_nsxx()
-m.plot_sxx()
-#~ m.plot_syy()
-#~ m.plot_seqv()
+m.plot_nsol("ux")
 m.show()
