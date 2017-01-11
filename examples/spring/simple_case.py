@@ -21,16 +21,17 @@ def simple_case():
     e1 = Spring((n1,n2),k)
     
     for nd in (n1,n2):
-        ms.addNode(nd)
-    ms.addElement(e1)
+        ms.add_node(nd)
+    ms.add_element(e1)
     
-    ms.addForce(n2,(P,))
-    ms.addConstraint(n1,ux=0)
+    ms.add_force(n2,(P,))
+    ms.add_constraint(n1,ux=0)
     ms.solve()
     
     print("Node displacements")
-    for n in ms.getNodes():
+    for n in ms.get_nodes():
         print n.ux, n.uy
 
 if __name__ == '__main__':
     simple_case()
+

@@ -40,15 +40,15 @@ def test5():
     e2 = Beam((n2,n3),E,I,L2)
 
     # Add elements 
-    for nd in (n1,n2,n3): m1.addNode(nd)
-    for el in (e1,e2): m1.addElement(el)
+    for nd in (n1,n2,n3): m1.add_node(nd)
+    for el in (e1,e2): m1.add_element(el)
         
-    m1.addForce(n1, (P1,))
-    m1.addForce(n2, (P2,))
-    m1.addForce(n3, (P3,))
-    m1.addMoment(n2, (M2,))
-    m1.addMoment(n3, (M3,))
-    m1.addConstraint(n3, ux=0, uy=0, ur=0) # fixed
+    m1.add_force(n1, (P1,))
+    m1.add_force(n2, (P2,))
+    m1.add_force(n3, (P3,))
+    m1.add_moment(n2, (M2,))
+    m1.add_moment(n3, (M3,))
+    m1.add_constraint(n3, ux=0, uy=0, ur=0) # fixed
     m1.solve() # Solve model
     
     # Slope and deflection in n1

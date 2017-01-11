@@ -27,15 +27,15 @@ def test3():
     e2 = Spring((n2,n3),k)
     
     for nd in (n1,n2,n3):
-        m3.addNode(nd)
+        m3.add_node(nd)
     for el in (e1,e2):
-        m3.addElement(el)
+        m3.add_element(el)
     
-    m3.addForce(n3,(P,))
-    m3.addConstraint(n1,ux=0)
+    m3.add_force(n3,(P,))
+    m3.add_constraint(n1,ux=0)
     m3.solve()
     
-    for n in m3.getNodes():
+    for n in m3.get_nodes():
         print n.ux, n.uy
         
 

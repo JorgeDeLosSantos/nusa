@@ -19,7 +19,7 @@ class Model(object):
         self.nodes = {} # Dictionary for nodes {number: NodeObject}
         self.elements = {} # Dictionary for elements {number: ElementObject}
         
-    def addNode(self,node):
+    def add_node(self,node):
         """
         Add node to current model
         
@@ -27,12 +27,12 @@ class Model(object):
             Node instance
         
         """
-        current_label = self.getNumberOfNodes()
+        current_label = self.get_number_of_nodes()
         if node.label is "":
-            node.setLabel(current_label)
+            node.set_label(current_label)
         self.nodes[node.label] = node
         
-    def addElement(self,element):
+    def add_element(self,element):
         """
         Add element to current model
         
@@ -43,46 +43,46 @@ class Model(object):
         
             m1 = Model()
             e1 = Bar(Node((0,0),0),Node((1,0),0))
-            m1.addElement(e1)
+            m1.add_element(e1)
         
         """
         if self.mtype != element.etype:
             raise ValueError("Element type must be "+self.mtype)
-        current_label = self.getNumberOfElements()
+        current_label = self.get_number_of_elements()
         if element.label is "":
-            element.setLabel(current_label)
+            element.set_label(current_label)
         self.elements[element.label] = element
         # Assign this element to "xxxx" 
-        for node in element.getNodes():
+        for node in element.get_nodes():
             node._elements.append(element)
 
-    def getNumberOfNodes(self):
+    def get_number_of_nodes(self):
         """
         Returns the number of nodes
         """
         return len(self.nodes)
         
-    def getNumberOfElements(self):
+    def get_number_of_elements(self):
         """
         Returns the number of nodes
         """
         return len(self.elements)
         
-    def getNodes(self):
+    def get_nodes(self):
         """
         Returns a list of Node objects
         """
         return self.nodes.values()
         
-    def getElements(self):
+    def get_elements(self):
         """
         Returns a list of Element objects
         """
         return self.elements.values()
     
     def __str__(self):
-        custom_str = ("Model: "+self.name+"\nNodes: "+str(self.getNumberOfNodes())+
-        "\nElements: "+str(self.getNumberOfElements()))
+        custom_str = ("Model: "+self.name+"\nNodes: "+str(self.get_number_of_nodes())+
+        "\nElements: "+str(self.get_number_of_elements()))
         return custom_str
             
 
@@ -117,7 +117,7 @@ class Element(object):
     def fy(self,val):
         self._fy = val
         
-    def setLabel(self,label):
+    def set_label(self,label):
         """
         Set the label property
         
@@ -126,7 +126,7 @@ class Element(object):
         """
         self.label = label
         
-    def setElementForces(self,fx=0.0,fy=0.0):
+    def set_element_forces(self,fx=0.0,fy=0.0):
         """
         Set element forces
         
@@ -141,11 +141,14 @@ class Element(object):
         self._fx = fx
         self._fy = fy
         
-    def getElementForces(self):
+    def get_element_forces(self):
         """
         Returns a tuple with element forces:  (fx, fy)
         """
         return self._fx, self._fy
+        
+    def get_nodes(self):
+        return self.nodes
         
     def __str__(self):
         _str = str(self.__class__)
@@ -342,24 +345,24 @@ class Node(object):
     def exy(self,val):
         self._exy = val
 
-    def getLabel(self):
+    def get_label(self):
         return self._label
     
-    def setLabel(self,label):
+    def set_label(self,label):
         self._label = label
     
-    def getDisplacements(self):
+    def get_displacements(self):
         return self._ux,self._uy,self._ur
         
-    def setDisplacements(self,ux=np.nan, uy=np.nan, ur=np.nan):
+    def set_displacements(self,ux=np.nan, uy=np.nan, ur=np.nan):
         self._ux = ux
         self._uy = uy
         self._ur = ur
     
-    def getForces(self):
+    def get_forces(self):
         return (self._fx,self._fy)
     
-    def setForces(self,fx=np.nan,fy=np.nan):
+    def set_forces(self,fx=np.nan,fy=np.nan):
         self._fx = fx
         self._fy = fy
         

@@ -29,12 +29,12 @@ def test2():
     e1 = Bar((n1,n2),E,A,L1)
     e2 = Bar((n2,n3),E,A,L2)
     
-    for nd in (n1,n2,n3): m1.addNode(nd)
-    for el in (e1,e2): m1.addElement(el)
+    for nd in (n1,n2,n3): m1.add_node(nd)
+    for el in (e1,e2): m1.add_element(el)
     
-    m1.addForce(n2, (P,))
-    m1.addConstraint(n1, ux=0.0)
-    m1.addConstraint(n3, ux=UX3)
+    m1.add_force(n2, (P,))
+    m1.add_constraint(n1, ux=0.0)
+    m1.add_constraint(n3, ux=UX3)
     m1.solve()
     
     

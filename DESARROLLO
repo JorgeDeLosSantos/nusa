@@ -5,6 +5,11 @@ proyecto, tales como las características por implementar, las
 que estarán en evaluación o aquellas dentro de la wish-list.
 ========================================================================
 
+10-01-2016 20:00 -------------------------------------------------------
+
+Se han cambiado los nombres de los métodos de la forma "mixedUp" a 
+"lower_case_with_underscores", recomendado por el PEP8.
+
 01-06-2016 13:10 -------------------------------------------------------
 
 Se ha actualizado los contenedores (lista a diccionario) para modelos 
@@ -17,10 +22,3 @@ Los desplazamientos y fuerzas se cambiarán a contenerse en un
 diccionario que permita tener un mejor control sobre las componentes y 
 sobre todo una legibilidad superior que a la permitida por las listas.
 Por ahora, esto se ha implementado solamente en las vigas (BeamModel).
-
-
-
-
-
-
-

@@ -35,16 +35,16 @@ def test1():
     e4 = Beam((n4,n5),E,I,L)
 
     # Add elements 
-    for nd in (n1,n2,n3,n4,n5): m1.addNode(nd)
-    for el in (e1,e2,e3,e4): m1.addElement(el)
+    for nd in (n1,n2,n3,n4,n5): m1.add_node(nd)
+    for el in (e1,e2,e3,e4): m1.add_element(el)
 
-    m1.addForce(n2,(-P,))
-    m1.addForce(n4,(-P,))
-    m1.addConstraint(n1, ux=0,uy=0,ur=0) # fixed 
-    m1.addConstraint(n5, ux=0,uy=0,ur=0) # fixed
-    m1.addConstraint(n3, uy=0, ur=0) # fixed
-    m1.addConstraint(n2, ur=0)
-    m1.addConstraint(n4, ur=0)
+    m1.add_force(n2,(-P,))
+    m1.add_force(n4,(-P,))
+    m1.add_constraint(n1, ux=0,uy=0,ur=0) # fixed 
+    m1.add_constraint(n5, ux=0,uy=0,ur=0) # fixed
+    m1.add_constraint(n3, uy=0, ur=0) # fixed
+    m1.add_constraint(n2, ur=0)
+    m1.add_constraint(n4, ur=0)
     m1.solve() # Solve model
     m1.plot_disp()
     m1.show()

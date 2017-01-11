@@ -35,7 +35,7 @@ class Truss(Element):
         """
         Length of element
         """
-        ni,nj = self.getNodes()
+        ni,nj = self.get_nodes()
         x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
         _l = np.sqrt( (x1-x0)**2 + (y1-y0)**2 )
         return _l
@@ -45,7 +45,7 @@ class Truss(Element):
         """
         Element angle, measure from X-positive axis counter-clockwise.
         """
-        ni,nj = self.getNodes()
+        ni,nj = self.get_nodes()
         x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
         if x0==x1:
             theta = 90*(np.pi/180)
@@ -88,12 +88,12 @@ class Truss(Element):
         E, A, L = self.E, self.A, self.L
         C = np.cos(theta)
         S = np.sin(theta)
-        ni, nj = self.getNodes()
+        ni, nj = self.get_nodes()
         u = np.array([ni.ux, ni.uy, nj.ux, nj.uy]).T
         F = (E*A/L)*np.dot(np.array([-C, -S, C, S]), u)
         return F
         
-    def getElementStiffness(self):
+    def get_element_stiffness(self):
         """
         Get stiffness matrix for this element
         """
@@ -107,7 +107,7 @@ class Truss(Element):
                                        [-CS  , -S**2,  CS  , S**2 ]])
         return self._K
         
-    def getNodes(self):
+    def get_nodes(self):
         return self.nodes
 
 
@@ -126,12 +126,12 @@ class TrussModel(Model):
         self.dof = 2 # 2 DOF for truss element
         self.IS_KG_BUILDED = False
         
-    def buildGlobalMatrix(self):
-        msz = (self.dof)*self.getNumberOfNodes()
+    def build_global_matrix(self):
+        msz = (self.dof)*self.get_number_of_nodes()
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
-            ku = element.getElementStiffness()
-            n1,n2 = element.getNodes()
+            ku = element.get_element_stiffness()
+            n1,n2 = element.get_nodes()
             self.KG[2*n1.label, 2*n1.label] += ku[0,0]
             self.KG[2*n1.label, 2*n1.label+1] += ku[0,1]
             self.KG[2*n1.label, 2*n2.label] += ku[0,2]
@@ -152,41 +152,41 @@ class TrussModel(Model):
             self.KG[2*n2.label+1, 2*n2.label] += ku[3,2]
             self.KG[2*n2.label+1, 2*n2.label+1] += ku[3,3]
             
-        self.buildForcesVector()
-        self.buildDisplacementsVector()
+        self.build_forces_vector()
+        self.build_displacements_vector()
         self.IS_KG_BUILDED = True
         
-    def buildForcesVector(self):
+    def build_forces_vector(self):
         for node in self.nodes.values():
             self.F[node.label] = {"fx":0, "fy":0}
         
-    def buildDisplacementsVector(self):
+    def build_displacements_vector(self):
         for node in self.nodes.values():
             self.U[node.label] = {"ux":np.nan, "uy":np.nan}
     
-    def addForce(self,node,force):
-        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
+    def add_force(self,node,force):
+        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         self.F[node.label]["fx"] = force[0]
         self.F[node.label]["fy"] = force[1]
         node.fx = force[0]
         node.fy = force[1]
         
-    def addConstraint(self,node,**constraint):
-        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
+    def add_constraint(self,node,**constraint):
+        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         cs = constraint
         if cs.has_key('ux') and cs.has_key("uy"): #
             ux = cs.get('ux')
             uy = cs.get('uy')
-            node.setDisplacements(ux=ux, uy=uy) # eqv to node.ux = ux, node.uy = uy
+            node.set_displacements(ux=ux, uy=uy) # eqv to node.ux = ux, node.uy = uy
             self.U[node.label]["ux"] = ux
             self.U[node.label]["uy"] = uy
         elif cs.has_key('ux'):
             ux = cs.get('ux')
-            node.setDisplacements(ux=ux)
+            node.set_displacements(ux=ux)
             self.U[node.label]["ux"] = ux
         elif cs.has_key('uy'):
             uy = cs.get('uy')
-            node.setDisplacements(uy=uy)
+            node.set_displacements(uy=uy)
             self.U[node.label]["uy"] = uy
         else: pass # todo
         
@@ -216,7 +216,7 @@ class TrussModel(Model):
         self.NF = self.F.copy()
         self.VU = [node[key] for node in self.U.values() for key in ("ux","uy")]
         nf_calc = np.dot(self.KG, self.VU)
-        for k in range(2*self.getNumberOfNodes()):
+        for k in range(2*self.get_number_of_nodes()):
             nd, var = self.index2key(k, ("fx","fy"))
             self.NF[nd][var] = nf_calc[k]
             cnlab = np.floor(k/float(self.dof))
@@ -242,8 +242,8 @@ class TrussModel(Model):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         
-        for elm in self.getElements():
-            ni, nj = elm.getNodes()
+        for elm in self.get_elements():
+            ni, nj = elm.get_nodes()
             ax.plot([ni.x,nj.x],[ni.y,nj.y],"b-")
             for nd in (ni,nj):
                 if nd.fx > 0: self._draw_xforce(ax,nd.x,nd.y,1)
@@ -298,8 +298,8 @@ class TrussModel(Model):
         
         df = dfactor*self._calculate_deformed_factor()
         
-        for elm in self.getElements():
-            ni,nj = elm.getNodes()
+        for elm in self.get_elements():
+            ni,nj = elm.get_nodes()
             x, y = [ni.x,nj.x], [ni.y,nj.y]
             xx = [ni.x+ni.ux*df, nj.x+nj.ux*df]
             yy = [ni.y+ni.uy*df, nj.y+nj.uy*df]
@@ -313,8 +313,8 @@ class TrussModel(Model):
         
     def _calculate_deformed_factor(self):
         x0,x1,y0,y1 = self.rect_region()
-        ux = np.abs(np.array([n.ux for n in self.getNodes()]))
-        uy = np.abs(np.array([n.uy for n in self.getNodes()]))
+        ux = np.abs(np.array([n.ux for n in self.get_nodes()]))
+        uy = np.abs(np.array([n.uy for n in self.get_nodes()]))
         sf = 1.5e-2
         if ux.max()==0 and uy.max()!=0:
             kfx = sf*(y1-y0)/uy.max()
@@ -333,7 +333,7 @@ class TrussModel(Model):
         
     def rect_region(self,factor=7.0):
         nx,ny = [],[]
-        for n in self.getNodes():
+        for n in self.get_nodes():
             nx.append(n.x)
             ny.append(n.y)
         xmn,xmx,ymn,ymx = min(nx),max(nx),min(ny),max(ny)
@@ -348,8 +348,8 @@ class TrussModel(Model):
                    "numalign":"right"}
         _str = TRUSS_SIMPLE_REPORT.format(
                 model_name=self.name,
-                nodes=self.getNumberOfNodes(),
-                elements=self.getNumberOfElements(),
+                nodes=self.get_number_of_nodes(),
+                elements=self.get_number_of_elements(),
                 nodal_displacements=self._get_ndisplacements(options),
                 nodal_forces=self._get_nforces(options),
                 element_forces=self._get_eforces(options),
@@ -369,43 +369,43 @@ class TrussModel(Model):
     def _get_ndisplacements(self,options):
         from tabulate import tabulate
         D = [["Node","UX","UY"]]
-        for n in self.getNodes():
+        for n in self.get_nodes():
             D.append([n.label+1,n.ux,n.uy])
         return tabulate(D, **options)
         
     def _get_nforces(self,options):
         from tabulate import tabulate
         F = [["Node","FX","FY"]]
-        for n in self.getNodes():
+        for n in self.get_nodes():
             F.append([n.label+1,n.fx,n.fy])
         return tabulate(F, **options)
         
     def _get_eforces(self,options):
         from tabulate import tabulate
         F = [["Element","F"]]
-        for elm in self.getElements():
+        for elm in self.get_elements():
             F.append([elm.label+1, elm.f])
         return tabulate(F, **options)
         
     def _get_estresses(self,options):
         from tabulate import tabulate
         S = [["Element","S"]]
-        for elm in self.getElements():
+        for elm in self.get_elements():
             S.append([elm.label+1, elm.s])
         return tabulate(S, **options)
     
     def _get_nodes_info(self,options):
         from tabulate import tabulate
         F = [["Node","X","Y"]]
-        for n in self.getNodes():
+        for n in self.get_nodes():
             F.append([n.label+1, n.x, n.y])
         return tabulate(F, **options)
     
     def _get_elements_info(self,options):
         from tabulate import tabulate
         S = [["Element","NI","NJ"]]
-        for elm in self.getElements():
-            ni, nj = elm.getNodes()
+        for elm in self.get_elements():
+            ni, nj = elm.get_nodes()
             S.append([elm.label+1, ni.label+1, nj.label+1])
         return tabulate(S, **options)
         

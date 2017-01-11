@@ -30,13 +30,13 @@ def test1():
 
     # Add elements 
     for nd in (n1,n2,n3,n4):
-        m1.addNode(nd)
+        m1.add_node(nd)
     for el in (e1,e2,e3):
-        m1.addElement(el)
+        m1.add_element(el)
 
-    m1.addForce(n4,(P,))
-    m1.addConstraint(n1,ux=0)
-    m1.addConstraint(n2,ux=0)
+    m1.add_force(n4,(P,))
+    m1.add_constraint(n1,ux=0)
+    m1.add_constraint(n2,ux=0)
     m1.solve()
     
     # a) Global matrix

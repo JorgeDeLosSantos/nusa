@@ -34,36 +34,17 @@ e9 = Truss((n5,n6),E,A)
 
 m = TrussModel("Example 02")
 
-for node in (n1,n2,n3,n4,n5,n6): m.addNode(node)
-for element in (e1,e2,e3,e4,e5,e6,e7,e8,e9): m.addElement(element)
+for node in (n1,n2,n3,n4,n5,n6): m.add_node(node)
+for element in (e1,e2,e3,e4,e5,e6,e7,e8,e9): m.add_element(element)
 
-m.addConstraint(n1, ux=0, uy=0)
-m.addConstraint(n6, ux=0, uy=0)
-m.addForce(n2, (20e3,0))
+m.add_constraint(n1, ux=0, uy=0)
+m.add_constraint(n6, ux=0, uy=0)
+m.add_force(n2, (20e3,0))
 m.plot_model()
 m.solve()
-#~ m.plot_deformed_shape()
+m.plot_deformed_shape()
 m.show()
-#~ m.simple_report("write")
 
-
-#~ E, A = 200e9, 0.002
-#~ n1 = Node((0,0))
-#~ n2 = Node((2,0))
-#~ n3 = Node((0,2))
-#~ e1 = Truss((n1,n2),E,A)
-#~ e2 = Truss((n2,n3),E,A)
-#~ e3 = Truss((n1,n3),E,A)
-#~ m = TrussModel()
-#~ for node in (n1,n2,n3): m.addNode(node)
-#~ for elm in (e1,e2,e3): m.addElement(elm)
-#~ m.addConstraint(n1, ux=0, uy=0)
-#~ m.addConstraint(n2, uy=0)
-#~ m.addForce(n3, (-500,0))
-#~ m.plot_model()
-#~ m.solve()
-#~ m.plot_deformed_shape()
-#~ m.show()
 
 
 

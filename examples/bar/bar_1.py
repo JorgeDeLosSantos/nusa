@@ -35,17 +35,17 @@ def test1():
 
     # Add elements 
     for nd in (n1,n2,n3,n4):
-        m1.addNode(nd)
+        m1.add_node(nd)
     for el in (e1,e2,e3):
-        m1.addElement(el)
+        m1.add_element(el)
 
-    m1.addForce(n2,(P,))
-    m1.addConstraint(n1,ux=0) # fixed 
-    m1.addConstraint(n4,ux=0) # fixed
+    m1.add_force(n2,(P,))
+    m1.add_constraint(n1,ux=0) # fixed 
+    m1.add_constraint(n4,ux=0) # fixed
     m1.solve() # Solve model
     
     print("Node | Displacements | Forces")
-    for node in m1.getNodes():
+    for node in m1.get_nodes():
         print "{0}\t{1}\t{2}".format(node.label, node.ux, node.fx)
     
     

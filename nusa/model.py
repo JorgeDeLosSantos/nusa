@@ -26,51 +26,51 @@ class SpringModel(Model):
         self.dof = 1 # 1 DOF per Node
         self.IS_KG_BUILDED = False
 
-    def _buildGlobalMatrix(self):
-        msz = (self.dof)*self.getNumberOfNodes() # Matrix size
+    def _build_global_matrix(self):
+        msz = (self.dof)*self.get_number_of_nodes() # Matrix size
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
-            ku = element.getElementStiffness()
-            n1,n2 = element.getNodes()
+            ku = element.get_element_stiffness()
+            n1,n2 = element.get_nodes()
             self.KG[n1.label, n1.label] += ku[0,0]
             self.KG[n1.label, n2.label] += ku[0,1]
             self.KG[n2.label, n1.label] += ku[1,0]
             self.KG[n2.label, n2.label] += ku[1,1]
         
-        self.buildForcesVector()
-        self.buildDisplacementsVector()
+        self.build_forces_vector()
+        self.build_displacements_vector()
         self.IS_KG_BUILDED = True
         
-    def buildGlobalMatrix(self):
-        msz = (self.dof)*self.getNumberOfNodes() # Matrix size
+    def build_global_matrix(self):
+        msz = (self.dof)*self.get_number_of_nodes() # Matrix size
         self.KG = np.zeros((msz,msz))
-        for element in self.getElements():
+        for element in self.get_elements():
             self.KG += element.get_global_stiffness(msz)
             
-        self.buildForcesVector()
-        self.buildDisplacementsVector()
+        self.build_forces_vector()
+        self.build_displacements_vector()
         self.IS_KG_BUILDED = True
         
-    def buildForcesVector(self):
+    def build_forces_vector(self):
         for node in self.nodes.values():
             self.F[node.label] = {"fx":0, "fy":0}
         
-    def buildDisplacementsVector(self):
+    def build_displacements_vector(self):
         for node in self.nodes.values():
             self.U[node.label] = {"ux":np.nan, "uy":np.nan}
         
-    def addForce(self,node,force):
-        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
+    def add_force(self,node,force):
+        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         self.F[node.label]["fx"] = force[0]
         
-    def addConstraint(self,node,**constraint):
+    def add_constraint(self,node,**constraint):
         """
         Only displacement in x-dir 
         """
-        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
+        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         if constraint.has_key("ux"):
             ux = constraint.get("ux")
-            node.setDisplacements(ux=ux)
+            node.set_displacements(ux=ux)
             self.U[node.label]["ux"] = ux
         
     def solve(self):
@@ -93,7 +93,7 @@ class SpringModel(Model):
         self.NF = self.F.copy()
         self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
         nf_calc = np.dot(self.KG, self.VU)
-        for k,ic in enumerate(range(self.getNumberOfNodes())):
+        for k,ic in enumerate(range(self.get_number_of_nodes())):
             nd, var = self.index2key(ic, ("fx",))
             self.NF[nd][var] = nf_calc[k]
             self.nodes[ic].fx = nf_calc[k]
@@ -119,37 +119,37 @@ class BarModel(Model):
         self.dof = 1 # 1 DOF for bar element (per node)
         self.IS_KG_BUILDED = False
         
-    def buildForcesVector(self):
+    def build_forces_vector(self):
         for node in self.nodes.values():
             self.F[node.label] = {"fx":0, "fy":0}
         
-    def buildGlobalMatrix(self):
-        msz = (self.dof)*self.getNumberOfNodes()
+    def build_global_matrix(self):
+        msz = (self.dof)*self.get_number_of_nodes()
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
-            ku = element.getElementStiffness()
-            n1,n2 = element.getNodes()
+            ku = element.get_element_stiffness()
+            n1,n2 = element.get_nodes()
             self.KG[n1.label, n1.label] += ku[0,0]
             self.KG[n1.label, n2.label] += ku[0,1]
             self.KG[n2.label, n1.label] += ku[1,0]
             self.KG[n2.label, n2.label] += ku[1,1]
-        self.buildForcesVector()
-        self.buildDisplacementsVector()
+        self.build_forces_vector()
+        self.build_displacements_vector()
         self.IS_KG_BUILDED = True
         
-    def buildDisplacementsVector(self):
+    def build_displacements_vector(self):
         for node in self.nodes.values():
             self.U[node.label] = {"ux":np.nan, "uy":np.nan}
         
-    def addForce(self,node,force):
-        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
+    def add_force(self,node,force):
+        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         self.F[node.label]["fx"] = force[0]
         
-    def addConstraint(self,node,**constraint):
-        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
+    def add_constraint(self,node,**constraint):
+        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         if constraint.has_key('ux'):
             ux = constraint.get('ux')
-            node.setDisplacements(ux=ux)
+            node.set_displacements(ux=ux)
             self.U[node.label]["ux"] = ux
         
     def solve(self):
@@ -182,7 +182,7 @@ class BarModel(Model):
         self.NF = self.F.copy()
         self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
         nf_calc = np.dot(self.KG, self.VU)
-        for k,ic in enumerate(range(self.getNumberOfNodes())):
+        for k,ic in enumerate(range(self.get_number_of_nodes())):
             nd, var = self.index2key(ic, ("fx",))
             self.NF[nd][var] = nf_calc[k]
             self.nodes[ic].fx = nf_calc[k]
@@ -208,15 +208,12 @@ class BeamModel(Model):
         self.dof = 2 # 2 DOF for beam element
         self.IS_KG_BUILDED = False
         
-        # Setting MPL params
-        mpl.rc("axes", titlesize=6)
-        
-    def buildGlobalMatrix(self):
-        msz = (self.dof)*self.getNumberOfNodes()
+    def build_global_matrix(self):
+        msz = (self.dof)*self.get_number_of_nodes()
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
-            ku = element.getElementStiffness()
-            n1,n2 = element.getNodes()
+            ku = element.get_element_stiffness()
+            n1,n2 = element.get_nodes()
             self.KG[2*n1.label, 2*n1.label] += ku[0,0]
             self.KG[2*n1.label, 2*n1.label+1] += ku[0,1]
             self.KG[2*n1.label, 2*n2.label] += ku[0,2]
@@ -237,48 +234,48 @@ class BeamModel(Model):
             self.KG[2*n2.label+1, 2*n2.label] += ku[3,2]
             self.KG[2*n2.label+1, 2*n2.label+1] += ku[3,3]
             
-        self.buildForcesVector()
-        self.buildDisplacementsVector()
+        self.build_forces_vector()
+        self.build_displacements_vector()
         self.IS_KG_BUILDED = True
     
-    def buildForcesVector(self):
+    def build_forces_vector(self):
         for node in self.nodes.values():
             self.F[node.label] = {"fy":0.0, "m":0.0} # (fy, m)
             
-    def buildDisplacementsVector(self):
+    def build_displacements_vector(self):
         for node in self.nodes.values():
             self.U[node.label] = {"uy":np.nan, "ur":np.nan} # (uy, r)
     
-    def addForce(self,node,force):
-        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
+    def add_force(self,node,force):
+        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         self.F[node.label]["fy"] = force[0]
         node.fy = force[0]
         
-    def addMoment(self,node,moment):
-        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
+    def add_moment(self,node,moment):
+        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         self.F[node.label]["m"] = moment[0]
         node.m = moment[0]
         
-    def addConstraint(self,node,**constraint):
-        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
+    def add_constraint(self,node,**constraint):
+        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         cs = constraint
         if cs.has_key('ux') and cs.has_key("uy") and cs.has_key('ur'): # 
             ux = cs.get('ux')
             uy = cs.get('uy')
             ur = cs.get('ur')
-            node.setDisplacements(ux=ux, uy=uy, ur=ur)
+            node.set_displacements(ux=ux, uy=uy, ur=ur)
             #~ print("Encastre")
             self.U[node.label]["uy"] = uy
             self.U[node.label]["ur"] = ur
         elif cs.has_key('ux') and cs.has_key("uy"): # 
             ux = cs.get('ux')
             uy = cs.get('uy')
-            node.setDisplacements(ux=ux, uy=uy)
+            node.set_displacements(ux=ux, uy=uy)
             #~ print("Fixed")
             self.U[node.label]["uy"] = uy
         elif cs.has_key('uy'):
             uy = cs.get('uy')
-            node.setDisplacements(uy=uy)
+            node.set_displacements(uy=uy)
             #~ print("Simple support")
             self.U[node.label]["uy"] = uy
         
@@ -308,7 +305,7 @@ class BeamModel(Model):
         self.NF = self.F.copy()
         self.VU = [node[key] for node in self.U.values() for key in ("uy","ur")]
         nf_calc = np.dot(self.KG, self.VU)
-        for k in range(2*self.getNumberOfNodes()):
+        for k in range(2*self.get_number_of_nodes()):
             nd, var = self.index2key(k, ("fy","m"))
             self.NF[nd][var] = nf_calc[k]
             cnlab = np.floor(k/float(self.dof))
@@ -328,8 +325,8 @@ class BeamModel(Model):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         
-        for elm in self.getElements():
-            ni,nj = elm.getNodes()
+        for elm in self.get_elements():
+            ni,nj = elm.get_nodes()
             xx = [ni.x, nj.x]
             yy = [ni.y, nj.y]
             ax.plot(xx, yy, "r.-")
@@ -381,7 +378,7 @@ class BeamModel(Model):
 
     def rect_region(self,factor=7.0):
         nx,ny = [],[]
-        for n in self.getNodes():
+        for n in self.get_nodes():
             nx.append(n.x)
             ny.append(n.y)
         xmn,xmx,ymn,ymx = min(nx),max(nx),min(ny),max(ny)
@@ -399,8 +396,8 @@ class BeamModel(Model):
         ax = fig.add_subplot(111)
         
         df = 1000
-        for elm in self.getElements():
-            ni,nj = elm.getNodes()
+        for elm in self.get_elements():
+            ni,nj = elm.get_nodes()
             xx = [ni.x, nj.x]
             yy = [ni.y+ni.uy*df, nj.y+nj.uy*df]
             ax.plot(xx, yy, "ro--")
@@ -428,7 +425,7 @@ class BeamModel(Model):
     def _get_data_for_moment_diagram(self):
         cx = 0
         X, M = [], []
-        for el in self.getElements():
+        for el in self.get_elements():
             L = el.L
             X = np.concatenate((X, np.array([cx, cx+L])))
             mel = el.m.squeeze()
@@ -440,7 +437,7 @@ class BeamModel(Model):
     def _get_data_for_shear_diagram(self):
         cx = 0
         X, S = [], []
-        for el in self.getElements():
+        for el in self.get_elements():
             L = el.L # element length
             X = np.concatenate((X, np.array([cx, cx+L])))
             fel = el.fy.squeeze()
@@ -468,15 +465,15 @@ class LinearTriangleModel(Model):
         self.dof = 2 # 2 DOF for triangle element (per node)
         self.IS_KG_BUILDED = False
         
-    def buildGlobalMatrix(self):
+    def build_global_matrix(self):
         """
         Build global matrix -> KG
         """
-        msz = (self.dof)*self.getNumberOfNodes()
+        msz = (self.dof)*self.get_number_of_nodes()
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
-            ku = element.getElementStiffness()
-            n1,n2,n3 = element.getNodes()
+            ku = element.get_element_stiffness()
+            n1,n2,n3 = element.get_nodes()
             i, j, m = n1.label, n2.label, n3.label
             self.KG[2*i,2*i] += ku[0,0]
             self.KG[2*i,2*i+1] += ku[0,1]
@@ -515,45 +512,45 @@ class LinearTriangleModel(Model):
             self.KG[2*m+1,2*m] += ku[5,4]
             self.KG[2*m+1,2*m+1] += ku[5,5]
             
-        self.buildForcesVector()
-        self.buildDisplacementsVector()
+        self.build_forces_vector()
+        self.build_displacements_vector()
         self.IS_KG_BUILDED = True
     
-    def buildForcesVector(self):
+    def build_forces_vector(self):
         for node in self.nodes.values():
             self.F[node.label] = {"fx":0.0, "fy":0.0} # (fy, m)
             
-    def buildDisplacementsVector(self):
+    def build_displacements_vector(self):
         for node in self.nodes.values():
             self.U[node.label] = {"ux":np.nan, "uy":np.nan} # (uy, r)
     
-    def addForce(self,node,force):
-        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
+    def add_force(self,node,force):
+        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         self.F[node.label]["fx"] = force[0]
         self.F[node.label]["fy"] = force[1]
         node.fx = force[0]
         node.fy = force[1]
         
-    def addMoment(self,node,moment):
+    def add_moment(self,node,moment):
         pass
         
-    def addConstraint(self,node,**constraint):
-        if not(self.IS_KG_BUILDED): self.buildGlobalMatrix()
+    def add_constraint(self,node,**constraint):
+        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         cs = constraint
         if cs.has_key('ux') and cs.has_key("uy"): # 
             ux = cs.get('ux')
             uy = cs.get('uy')
-            node.setDisplacements(ux=ux, uy=uy)
+            node.set_displacements(ux=ux, uy=uy)
             self.U[node.label]["ux"] = ux
             self.U[node.label]["uy"] = uy
         elif cs.has_key('uy'):
             uy = cs.get('uy')
-            node.setDisplacements(uy=uy)
+            node.set_displacements(uy=uy)
             self.U[node.label]["uy"] = uy
         
     def _check_nodes(self):
-        for node in self.getNodes():
-            if node._elements == []: self.addConstraint(node, ux=0, uy=0)
+        for node in self.get_nodes():
+            if node._elements == []: self.add_constraint(node, ux=0, uy=0)
         
     def solve(self):
         self._check_nodes()
@@ -587,7 +584,7 @@ class LinearTriangleModel(Model):
         self.NF = self.F.copy()
         self.VU = [node[key] for node in self.U.values() for key in ("ux","uy")]
         nf_calc = np.dot(self.KG, self.VU)
-        for k in range(2*self.getNumberOfNodes()):
+        for k in range(2*self.get_number_of_nodes()):
             nd, var = self.index2key(k, ("fx","fy"))
             self.NF[nd][var] = nf_calc[k]
             cnlab = np.floor(k/float(self.dof))
@@ -617,7 +614,7 @@ class LinearTriangleModel(Model):
 
         _x,_y = [],[]
         patches = []
-        for k,elm in enumerate(self.getElements()):
+        for k,elm in enumerate(self.get_elements()):
             _x,_y,_ux,_uy = [],[],[],[]
             for nd in elm.nodes:
                 if nd.fx != 0: self._draw_xforce(ax,nd.x,nd.y)
@@ -671,13 +668,13 @@ class LinearTriangleModel(Model):
         import matplotlib.tri as tri
         
         _x,_y = [],[]
-        for n in self.getNodes():
+        for n in self.get_nodes():
             _x.append(n.x)
             _y.append(n.y)
             
         tg = []
-        for e in self.getElements():
-            ni,nj,nm = e.getNodes()
+        for e in self.get_elements():
+            ni,nj,nm = e.get_nodes()
             tg.append([ni.label, nj.label, nm.label])
             
         tr = tri.Triangulation(_x,_y, triangles=tg)
@@ -691,16 +688,16 @@ class LinearTriangleModel(Model):
         ax = fig.add_subplot(111)
         
         solutions = {
-             "ux": [n.ux for n in self.getNodes()],
-             "uy": [n.uy for n in self.getNodes()],
-             "usum": [np.sqrt(n.ux**2 + n.uy**2) for n in self.getNodes()],
-             "sxx": [n.sx for n in self.getNodes()],
-             "syy": [n.sy for n in self.getNodes()],
-             "sxy": [n.sxy for n in self.getNodes()],
-             "seqv": [n.seqv for n in self.getNodes()],
-             "exx": [n.ex for n in self.getNodes()],
-             "eyy": [n.ey for n in self.getNodes()],
-             "exy": [n.exy for n in self.getNodes()]
+             "ux": [n.ux for n in self.get_nodes()],
+             "uy": [n.uy for n in self.get_nodes()],
+             "usum": [np.sqrt(n.ux**2 + n.uy**2) for n in self.get_nodes()],
+             "sxx": [n.sx for n in self.get_nodes()],
+             "syy": [n.sy for n in self.get_nodes()],
+             "sxy": [n.sxy for n in self.get_nodes()],
+             "seqv": [n.seqv for n in self.get_nodes()],
+             "exx": [n.ex for n in self.get_nodes()],
+             "eyy": [n.ey for n in self.get_nodes()],
+             "exy": [n.exy for n in self.get_nodes()]
              }
         
         tr = self._get_tri()
@@ -729,7 +726,7 @@ class LinearTriangleModel(Model):
 
         _x,_y = [],[]
         patches = []
-        for k,elm in enumerate(self.getElements()):
+        for k,elm in enumerate(self.get_elements()):
             _x,_y,_ux,_uy = [],[],[],[]
             for nd in elm.nodes:
                 _x.append(nd.x)
@@ -739,12 +736,12 @@ class LinearTriangleModel(Model):
             
         pc = PatchCollection(patches, cmap="jet", alpha=1)
         solutions = {
-             "sxx": [e.sx for e in self.getElements()],
-             "syy": [e.sy for e in self.getElements()],
-             "sxy": [e.sxy for e in self.getElements()],
-             "exx": [e.ex for e in self.getElements()],
-             "eyy": [e.ey for e in self.getElements()],
-             "exy": [e.exy for e in self.getElements()]
+             "sxx": [e.sx for e in self.get_elements()],
+             "syy": [e.sy for e in self.get_elements()],
+             "sxy": [e.sxy for e in self.get_elements()],
+             "exx": [e.ex for e in self.get_elements()],
+             "eyy": [e.ey for e in self.get_elements()],
+             "exy": [e.exy for e in self.get_elements()]
              }
         fsol = np.array(solutions.get(var.lower()))
         pc.set_array(fsol)
@@ -766,8 +763,8 @@ class LinearTriangleModel(Model):
     
     def calculate_deformed_factor(self):
         x0,x1,y0,y1 = self.rect_region()
-        ux = np.array([n.ux for n in self.getNodes()])
-        uy = np.array([n.uy for n in self.getNodes()])
+        ux = np.array([n.ux for n in self.get_nodes()])
+        uy = np.array([n.uy for n in self.get_nodes()])
         sf = 1.5e-2
         kfx = sf*(x1-x0)/ux.max()
         kfy = sf*(y1-y0)/uy.max()
@@ -775,7 +772,7 @@ class LinearTriangleModel(Model):
                 
     def rect_region(self,factor=7.0):
         nx,ny = [],[]
-        for n in self.getNodes():
+        for n in self.get_nodes():
             nx.append(n.x)
             ny.append(n.y)
         xmn,xmx,ymn,ymx = min(nx),max(nx),min(ny),max(ny)

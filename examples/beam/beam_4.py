@@ -32,20 +32,17 @@ def test4():
     e2 = Beam((n2,n3),E,I,L2)
 
     # Add elements 
-    for nd in (n1,n2,n3): m1.addNode(nd)
-    for el in (e1,e2): m1.addElement(el)
+    for nd in (n1,n2,n3): m1.add_node(nd)
+    for el in (e1,e2): m1.add_element(el)
         
-    m1.addForce(n2, (-P,))
-    m1.addConstraint(n1, ux=0, uy=0) # fixed 
-    m1.addConstraint(n3, uy=0) # fixed
+    m1.add_force(n2, (-P,))
+    m1.add_constraint(n1, ux=0, uy=0) # fixed 
+    m1.add_constraint(n3, uy=0) # fixed
     m1.solve() # Solve model
     # Displacement at C point
     print n2.uy
-    x,m = m1.getDataForMomentDiagram()
-    print max(m)
-    import matplotlib.pyplot as plt
-    plt.plot(x,m)
-    plt.show()
+    m1.plot_moment_diagram()
+    m1.show()
 
 
 

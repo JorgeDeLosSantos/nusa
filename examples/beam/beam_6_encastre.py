@@ -40,11 +40,11 @@ for x in pairwise(nodos):
 
 m = BeamModel()
 
-for n in nodos: m.addNode(n)
-for e in elementos: m.addElement(e)
+for n in nodos: m.add_node(n)
+for e in elementos: m.add_element(e)
 
-m.addConstraint(nodos[0], ux=0, uy=0, ur=0)
-m.addForce(nodos[-1], (-P,))
+m.add_constraint(nodos[0], ux=0, uy=0, ur=0)
+m.add_force(nodos[-1], (-P,))
 m.solve()
 
 m.plot_disp()

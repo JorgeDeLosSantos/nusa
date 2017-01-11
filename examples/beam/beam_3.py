@@ -31,12 +31,12 @@ def test3():
     e2 = Beam((n2,n3),E,I,L)
 
     # Add elements 
-    for nd in (n1,n2,n3): m1.addNode(nd)
-    for el in (e1,e2): m1.addElement(el)
+    for nd in (n1,n2,n3): m1.add_node(nd)
+    for el in (e1,e2): m1.add_element(el)
         
-    m1.addForce(n2, (-P,))
-    m1.addConstraint(n1, ux=0, uy=0, ur=0) # fixed 
-    m1.addConstraint(n3, ux=0, uy=0) # fixed
+    m1.add_force(n2, (-P,))
+    m1.add_constraint(n1, ux=0, uy=0, ur=0) # fixed 
+    m1.add_constraint(n3, ux=0, uy=0) # fixed
     m1.solve() # Solve model
     #~ print m1.KG
     #~ print m1.U

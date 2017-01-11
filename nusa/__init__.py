@@ -18,8 +18,9 @@ from _experimental import *
 from nusa.mesh import *
 
 import matplotlib as mpl
-#~ mpl.rc("axes", titlesize=6)
-mpl.rc("font", size=8)
+mpl.rc("figure", facecolor="#F9F9F9", titleweight="bold")
+mpl.rc("axes", facecolor="#FFFFFF")
+mpl.rc("font", size=10)
 
 # Print NUSA info
 #~ print("NuSA %s\n%s\n"%(__version__,10*"_"))

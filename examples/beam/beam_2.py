@@ -33,14 +33,14 @@ def test2():
 
     # Add elements 
     for nd in (n1,n2,n3):
-        m1.addNode(nd)
+        m1.add_node(nd)
     for el in (e1,e2):
-        m1.addElement(el)
+        m1.add_element(el)
         
-    m1.addForce(n2, (-P,))
-    m1.addMoment(n2, (M,))
-    m1.addConstraint(n1, ux=0, uy=0, ur=0) # fixed 
-    m1.addConstraint(n3, ux=0, uy=0, ur=0) # fixed
+    m1.add_force(n2, (-P,))
+    m1.add_moment(n2, (M,))
+    m1.add_constraint(n1, ux=0, uy=0, ur=0) # fixed 
+    m1.add_constraint(n3, ux=0, uy=0, ur=0) # fixed
     m1.solve() # Solve model
     print m1.KG
     print m1.U

@@ -30,14 +30,14 @@ e3 = Truss((n1,n4),E,A)
 
 # Add elements 
 for nd in (n1,n2,n3,n4):
-    m.addNode(nd)
+    m.add_node(nd)
 for el in (e1,e2,e3):
-    m.addElement(el)
+    m.add_element(el)
 
-m.addForce(n1,(0,-P))
-m.addConstraint(n2,ux=0,uy=0) # fixed 
-m.addConstraint(n3,ux=0,uy=0) # fixed
-m.addConstraint(n4,ux=0,uy=0) # fixed
+m.add_force(n1,(0,-P))
+m.add_constraint(n2,ux=0,uy=0) # fixed 
+m.add_constraint(n3,ux=0,uy=0) # fixed
+m.add_constraint(n4,ux=0,uy=0) # fixed
 m.plot_model()
 m.solve() # Solve model
 m.plot_deformed_shape() # plot deformed shape

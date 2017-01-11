@@ -10,6 +10,7 @@ import numpy as np
 from core import Element
 import templates as tmp
 
+
 class Spring(Element):
     """
     Spring element for finite element analysis
@@ -35,8 +36,8 @@ class Spring(Element):
     
     @property
     def fx(self):
-        ke = self.getElementStiffness() # Element stiffness
-        n1, n2 = self.getNodes()
+        ke = self.get_element_stiffness() # Element stiffness
+        n1, n2 = self.get_nodes()
         un = np.array([[n1.ux],[n2.ux]]) # Nodal displacements
         return np.dot(ke, un) # Return  {fxe} = [Ke]{uxe}
         
@@ -44,7 +45,7 @@ class Spring(Element):
     def fx(self,val):
         self._fx = val
         
-    def getElementStiffness(self):
+    def get_element_stiffness(self):
         r"""
         Get stiffness matrix for this element.
         
@@ -65,13 +66,13 @@ class Spring(Element):
         return self._KE
     
     def get_global_stiffness(self,msz):
-        ni, nj = self.getNodes()
+        ni, nj = self.get_nodes()
         self.keg = np.zeros((msz,msz))
         idx = np.ix_([ni.label, nj.label],[ni.label, nj.label])
-        self.keg[idx] = self.getElementStiffness()
+        self.keg[idx] = self.get_element_stiffness()
         return self.keg
     
-    def getNodes(self):
+    def get_nodes(self):
         """
         Returns a tuple of nodes
         """
@@ -115,8 +116,8 @@ class Bar(Element):
         """
         Compute force in x-dir (axial-dir)
         """
-        ke = self.getElementStiffness() # Element stiffness
-        n1, n2 = self.getNodes()
+        ke = self.get_element_stiffness() # Element stiffness
+        n1, n2 = self.get_nodes()
         un = np.array([[n1.ux],[n2.ux]]) # Nodal displacements
         return np.dot(ke, un) # Return  {fxe} = [Ke]{uxe}
         
@@ -141,8 +142,8 @@ class Bar(Element):
         * u - Nodal displacements
         * A - Cross-section of element
         """
-        ke = self.getElementStiffness() # Element stiffness
-        na, nb = self.getNodes()
+        ke = self.get_element_stiffness() # Element stiffness
+        na, nb = self.get_nodes()
         u = np.array([na.ux, nb.ux]) # Nodes displacements
         sx = np.dot(ke, u/self.A) # matrix multiplication
         return sx
@@ -152,7 +153,7 @@ class Bar(Element):
         self._sx = val
         
         
-    def getElementStiffness(self):
+    def get_element_stiffness(self):
         r"""
         Get stiffness matrix for this element
         
@@ -171,7 +172,7 @@ class Bar(Element):
         self._KE = (self.A*self.E/self.L)*np.array([[1,-1],[-1,1]])
         return self._KE
         
-    def getNodes(self):
+    def get_nodes(self):
         """
         Returns a tuple of nodes
         """
@@ -212,7 +213,7 @@ class Beam(Element):
         self.I = I
         self.L = L
         
-    def getElementStiffness(self):
+    def get_element_stiffness(self):
         """
         Get stiffness matrix for this element
         
@@ -233,8 +234,8 @@ class Beam(Element):
         
         Set fy and m properties.
         """
-        ke = self.getElementStiffness() # Element stiffness
-        n1, n2 = self.getNodes()
+        ke = self.get_element_stiffness() # Element stiffness
+        n1, n2 = self.get_nodes()
         un = np.array([[n1.uy, n1.ur, n2.uy, n2.ur]]).transpose() # Nodal displacements
         EF = np.dot(ke, un) # Return  {fxe} = [Ke]{uxe}
         self.fy = EF[::2] # Set fy
@@ -264,7 +265,7 @@ class Beam(Element):
     def m(self,val):
         self._m = val
         
-    def getNodes(self):
+    def get_nodes(self):
         return self.nodes
 
 
@@ -303,7 +304,7 @@ class LinearTriangle(Element):
         
     @property
     def sx(self):
-        _sx,_sy,_sxy = self.getElementStresses()
+        _sx,_sy,_sxy = self.get_element_stresses()
         self._sx = _sx
         return self._sx
     
@@ -313,7 +314,7 @@ class LinearTriangle(Element):
         
     @property
     def sy(self):
-        _sx,_sy,_sxy = self.getElementStresses()
+        _sx,_sy,_sxy = self.get_element_stresses()
         self._sy = _sy
         return self._sy
     
@@ -323,7 +324,7 @@ class LinearTriangle(Element):
     
     @property
     def sxy(self):
-        _sx,_sy,_sxy = self.getElementStresses()
+        _sx,_sy,_sxy = self.get_element_stresses()
         self._sxy = _sxy
         return self._sxy
     
@@ -333,7 +334,7 @@ class LinearTriangle(Element):
     
     @property
     def ex(self):
-        ex,ey,exy = self.getElementStrains()
+        ex,ey,exy = self.get_element_strains()
         self._ex = ex
         return self._ex
     
@@ -343,7 +344,7 @@ class LinearTriangle(Element):
     
     @property
     def ey(self):
-        ex,ey,exy = self.getElementStrains()
+        ex,ey,exy = self.get_element_strains()
         self._ey = ey
         return self._ey
     
@@ -353,7 +354,7 @@ class LinearTriangle(Element):
     
     @property
     def exy(self):
-        ex,ey,exy = self.getElementStrains()
+        ex,ey,exy = self.get_element_strains()
         self._exy = exy
         return self._exy
     
@@ -400,7 +401,7 @@ class LinearTriangle(Element):
         A = (xi*(yj-ym) + xj*(ym-yi) + xm*(yi-yj))/2
         return A
     
-    def getElementStiffness(self):
+    def get_element_stiffness(self):
         """
         Get stiffness matrix for this element
         """
@@ -409,21 +410,21 @@ class LinearTriangle(Element):
         B, D = self.B, self.D
         return t*A*np.dot(np.dot(B.T,D),B)
         
-    def getElementStresses(self):
+    def get_element_stresses(self):
         ni, nj, nm = self.nodes
         A, nu, t, E = self.A, self.nu, self.t, self.E
         u = np.array([ni.ux,ni.uy,nj.ux,nj.uy,nm.ux,nm.uy])
         B, D = self.B, self.D
         return np.dot(np.dot(D,B),u)
         
-    def getElementStrains(self):
+    def get_element_strains(self):
         ni, nj, nm = self.nodes
         A, nu, t, E = self.A, self.nu, self.t, self.E 
         u = np.array([ni.ux,ni.uy,nj.ux,nj.uy,nm.ux,nm.uy])
         B = self.B
         return np.dot(B,u)
         
-    def getNodes(self):
+    def get_nodes(self):
         return self.nodes
 
 

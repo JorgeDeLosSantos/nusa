@@ -19,11 +19,11 @@ def test2():
     # Model
     m2 = SpringModel("Spring Model 02")
     # Nodes
-    n1 = Node((0,0),0)
-    n2 = Node((0,0),1)
-    n3 = Node((0,0),2)
-    n4 = Node((0,0),3)
-    n5 = Node((0,0),4)
+    n1 = Node((0,0))
+    n2 = Node((0,0))
+    n3 = Node((0,0))
+    n4 = Node((0,0))
+    n5 = Node((0,0))
     # Elements
     e1 = Spring((n1,n2),k)
     e2 = Spring((n2,n3),k)
@@ -31,16 +31,15 @@ def test2():
     e4 = Spring((n4,n5),k)
     
     for nd in (n1,n2,n3,n4,n5):
-        m2.addNode(nd)
+        m2.add_node(nd)
     for el in (e1,e2,e3,e4):
-        m2.addElement(el)
+        m2.add_element(el)
     
-    m2.addForce(n4,(P,))
-    m2.addConstraint(n1,ux=0)
-    m2.addConstraint(n5,ux=0.02)
-    
+    m2.add_force(n4,(P,))
+    m2.add_constraint(n1,ux=0)
+    m2.add_constraint(n5,ux=0.02)
     m2.solve()
-
+    
 
 if __name__ == '__main__':
-    test_2()
+    test2()
