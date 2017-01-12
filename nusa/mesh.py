@@ -30,7 +30,10 @@ class Modeler(object):
         return loop,surf
         
     def add_poly(self,*points,**kw):
-        n = 0.1
+        if "esize" in kw:
+            n = kw["esize"]
+        else:
+            n = 0.1
         pts = []
         for pt in points:
             cpt = self.geom.add_point((pt[0],pt[1],0),n)
@@ -56,6 +59,19 @@ class Modeler(object):
         pc = self.geom.add_point((xc,yc,0), n)
         pa = self.geom.add_point((xa,ya,0), n)
         c = self.geom.add_circle(pc,pa)
+        loop = self.geom.add_line_loop(c)
+        surf = self.geom.add_plane_surface(loop)
+        return loop,surf
+        
+    def add_arc_circle(self,p0,p1,p2,esize=0.1):
+        n = esize
+        x0,y0 = p0[0],p0[1] # Center point
+        x1,y1 = p1[0],p1[1] # Start point
+        x2,y2 = p2[0],p2[1] # End point
+        p0_ = self.geom.add_point((x0,y0,0), n)
+        p1_ = self.geom.add_point((x1,y1,0), n)
+        p2_ = self.geom.add_point((x2,y2,0), n)
+        c = self.geom.add_circle(p0_,p1_,p2_)
         loop = self.geom.add_line_loop(c)
         surf = self.geom.add_plane_surface(loop)
         return loop,surf
@@ -86,7 +102,7 @@ class Modeler(object):
             polygon = Polygon(zip(_x,_y), True)
             patches.append(polygon)
             
-        pc = PatchCollection(patches, color="#61C141", edgecolor="k", alpha=0.4)
+        pc = PatchCollection(patches, color="#25CDCD", edgecolor="#435959", alpha=0.8, lw=0.5)
         ax.add_collection(pc)
         x0,x1,y0,y1 = self._rect_region()
         ax.set_xlim(x0,x1)

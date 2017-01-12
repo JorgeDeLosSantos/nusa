@@ -26,7 +26,7 @@ class SpringModel(Model):
         self.dof = 1 # 1 DOF per Node
         self.IS_KG_BUILDED = False
 
-    def _build_global_matrix(self):
+    def build_global_matrix(self):
         msz = (self.dof)*self.get_number_of_nodes() # Matrix size
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
@@ -41,15 +41,24 @@ class SpringModel(Model):
         self.build_displacements_vector()
         self.IS_KG_BUILDED = True
         
-    def build_global_matrix(self):
+    def _build_global_matrix(self):
         msz = (self.dof)*self.get_number_of_nodes() # Matrix size
         self.KG = np.zeros((msz,msz))
-        for element in self.get_elements():
-            self.KG += element.get_global_stiffness(msz)
-            
+        for element in self.elements.values():
+            ku = element.get_element_stiffness()
+            n1,n2 = element.get_nodes()
+            for ii,jj in self._nodal_index(n1.label,n2.label):
+                self.KG[ii[0],ii[1]] += ku[jj[0],jj[1]]
+        
         self.build_forces_vector()
         self.build_displacements_vector()
         self.IS_KG_BUILDED = True
+        
+    def _nodal_index(self,ii,jj):
+        from itertools import product,izip
+        iter1 = product((ii,jj),repeat=2)
+        iter2 = product((0,1),repeat=2)
+        return izip(iter1,iter2)
         
     def build_forces_vector(self):
         for node in self.nodes.values():
@@ -209,6 +218,36 @@ class BeamModel(Model):
         self.IS_KG_BUILDED = False
         
     def build_global_matrix(self):
+        msz = (self.dof)*self.get_number_of_nodes()
+        self.KG = np.zeros((msz,msz))
+        for element in self.elements.values():
+            ku = element.get_element_stiffness()
+            n1,n2 = element.get_nodes()
+            self.KG[2*n1.label, 2*n1.label] += ku[0,0]
+            self.KG[2*n1.label, 2*n1.label+1] += ku[0,1]
+            self.KG[2*n1.label, 2*n2.label] += ku[0,2]
+            self.KG[2*n1.label, 2*n2.label+1] += ku[0,3]
+            
+            self.KG[2*n1.label+1, 2*n1.label] += ku[1,0]
+            self.KG[2*n1.label+1, 2*n1.label+1] += ku[1,1]
+            self.KG[2*n1.label+1, 2*n2.label] += ku[1,2]
+            self.KG[2*n1.label+1, 2*n2.label+1] += ku[1,3]
+            
+            self.KG[2*n2.label, 2*n1.label] += ku[2,0]
+            self.KG[2*n2.label, 2*n1.label+1] += ku[2,1]
+            self.KG[2*n2.label, 2*n2.label] += ku[2,2]
+            self.KG[2*n2.label, 2*n2.label+1] += ku[2,3]
+            
+            self.KG[2*n2.label+1, 2*n1.label] += ku[3,0]
+            self.KG[2*n2.label+1, 2*n1.label+1] += ku[3,1]
+            self.KG[2*n2.label+1, 2*n2.label] += ku[3,2]
+            self.KG[2*n2.label+1, 2*n2.label+1] += ku[3,3]
+            
+        self.build_forces_vector()
+        self.build_displacements_vector()
+        self.IS_KG_BUILDED = True
+    
+    def _build_global_matrix(self):
         msz = (self.dof)*self.get_number_of_nodes()
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():

@@ -29,10 +29,13 @@ class SimpleGMSH(object):
         self.GMSH_CODE.append("Line({0}) = {{ {1},{2} }};".format(name,p0,p1))
         return name
         
-    def add_circle(self,p0,p1):
+    def add_circle(self,p0,p1,p2=None):
         self.ID_CIRCLE += 1
         name = "{0}".format(self.ID_CIRCLE)
-        self.GMSH_CODE.append("Circle({0}) = {{ {1},{2},{1} }};".format(name,p1,p0))
+        if p2 is None:
+            self.GMSH_CODE.append("Circle({0}) = {{ {1},{2},{1} }};".format(name,p1,p0))
+        else:
+            self.GMSH_CODE.append("Circle({0}) = {{ {1},{2},{3} }};".format(name,p1,p0,p2))
         return name
         
     def add_line_loop(self,*lines):

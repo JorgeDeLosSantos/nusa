@@ -9,7 +9,7 @@ from __future__ import division
 import numpy as np
 from core import Element
 import templates as tmp
-
+from scipy.sparse import csr_matrix
 
 class Spring(Element):
     """
@@ -66,11 +66,16 @@ class Spring(Element):
         return self._KE
     
     def get_global_stiffness(self,msz):
-        ni, nj = self.get_nodes()
-        self.keg = np.zeros((msz,msz))
-        idx = np.ix_([ni.label, nj.label],[ni.label, nj.label])
-        self.keg[idx] = self.get_element_stiffness()
-        return self.keg
+        pass
+        #~ ni, nj = self.get_nodes()
+        #~ self.keg = np.zeros((msz,msz))
+        #~ idx = np.ix_([ni.label, nj.label],[ni.label, nj.label])
+        #~ row = np.array([ni.label, ni.label, nj.label, nj.label])
+        #~ col = np.array([ni.label, nj.label, ni.label, nj.label])
+        #~ data = self.get_element_stiffness().reshape(-1)
+        #~ print data, row, col
+        #~ self.keg =  csr_matrix((data, (row, col)), shape=(msz,msz)).toarray()
+        #~ return self.keg
     
     def get_nodes(self):
         """
@@ -92,24 +97,12 @@ class Bar(Element):
         
     *A* : float
         Area of element
-        
-    *L* : float
-        Length of element
-    
-    
-    Example::
-    
-        n1 = Node((0,0))
-        n2 = Node((1,0))
-        e1 = Bar((n1,n2),200e9,0.02,1)
-    
     """
-    def __init__(self,nodes,E,A,L):
+    def __init__(self,nodes,E,A):
         Element.__init__(self,etype="bar")
         self.nodes = nodes
         self.E = E # Elastic modulus
         self.A = A # Cross-section
-        self.L = L # Length
         
     @property
     def fx(self):
@@ -151,8 +144,17 @@ class Bar(Element):
     @sx.setter
     def sx(self,val):
         self._sx = val
-        
-        
+    
+    @property
+    def L(self):
+        """
+        Length of element
+        """
+        ni,nj = self.get_nodes()
+        x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
+        _l = np.sqrt( (x1-x0)**2 + (y1-y0)**2 )
+        return _l
+
     def get_element_stiffness(self):
         r"""
         Get stiffness matrix for this element
@@ -192,26 +194,13 @@ class Beam(Element):
         
     *I* : float
         Moment of inertia
-        
-    *L* : float
-        Length of element
-    
-    Example::
-    
-        E = 30e6
-        I = 500.0
-        L = 100
-        n1 = Node((0,0))
-        n2 = Node((1,0))
-        e1 = Bar((n1,n2),E,I,L)
     
     """
-    def __init__(self,nodes,E,I,L):
+    def __init__(self,nodes,E,I):
         Element.__init__(self,etype="beam")
         self.nodes = nodes
         self.E = E
         self.I = I
-        self.L = L
         
     def get_element_stiffness(self):
         """
@@ -264,6 +253,16 @@ class Beam(Element):
     @m.setter
     def m(self,val):
         self._m = val
+
+    @property
+    def L(self):
+        """
+        Length of element
+        """
+        ni,nj = self.get_nodes()
+        x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
+        _l = np.sqrt( (x1-x0)**2 + (y1-y0)**2 )
+        return _l
         
     def get_nodes(self):
         return self.nodes
