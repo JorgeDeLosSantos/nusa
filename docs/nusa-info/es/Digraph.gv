@@ -1,8 +1,0 @@
-// The Round Table
-digraph {
-		NuSA -> core
-		NuSA -> element
-		NuSA -> model
-		NuSA -> lib
-		NuSA -> io
-}
