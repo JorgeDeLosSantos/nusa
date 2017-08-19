@@ -745,7 +745,7 @@ class LinearTriangleModel(Model):
         except:
             return None
         if isinstance(fsol,list): fsol = np.array(fsol)
-        tp = ax.tricontourf(tr, fsol, cmap="jet")
+        tp = ax.tricontourf(tr, fsol, cmap="viridis")
         fig.colorbar(tp)
         x0,x1,y0,y1 = self.rect_region()
         ax.set_xlim(x0,x1)

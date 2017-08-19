@@ -78,13 +78,13 @@ def test1():
 
     # Adding elements and nodes to the model
     for nd in (n1,n2,n3,n4):
-        m1.addNode(nd)
+        m1.add_node(nd)
     for el in (e1,e2,e3):
-        m1.addElement(el)
+        m1.add_element(el)
 
-    m1.addForce(n4, (P,))
-    m1.addConstraint(n1, ux=0)
-    m1.addConstraint(n2, ux=0)
+    m1.add_force(n4, (P,))
+    m1.add_constraint(n1, ux=0)
+    m1.add_constraint(n2, ux=0)
     m1.solve()
 
 if __name__ == '__main__':
@@ -123,12 +123,12 @@ e1 = Beam((n1,n2),E,I,L1)
 e2 = Beam((n2,n3),E,I,L2)
 
 # Add elements 
-for nd in (n1,n2,n3): m1.addNode(nd)
-for el in (e1,e2): m1.addElement(el)
+for nd in (n1,n2,n3): m1.add_node(nd)
+for el in (e1,e2): m1.add_element(el)
     
-m1.addForce(n2, (-P,))
-m1.addConstraint(n1, ux=0, uy=0) # fixed 
-m1.addConstraint(n3, uy=0) # fixed
+m1.add_force(n2, (-P,))
+m1.add_constraint(n1, ux=0, uy=0) # fixed 
+m1.add_constraint(n3, uy=0) # fixed
 m1.solve() # Solve model
 
 # Displacement at C point
