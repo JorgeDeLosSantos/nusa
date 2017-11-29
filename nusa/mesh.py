@@ -5,7 +5,7 @@
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
-import _mesh as msh
+import nusa._mesh as msh
 
 class Modeler(object):
     def __init__(self):

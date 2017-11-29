@@ -8,7 +8,7 @@
 """
 Defining some common materials and other "things"
 """
-from _lib import *
+from ._lib import *
 
 ## ================== Materials ======================
 

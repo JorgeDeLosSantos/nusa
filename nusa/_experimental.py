@@ -8,7 +8,7 @@
 from __future__ import division
 import numpy as np
 import numpy.linalg as la
-from core import Element, Node, Model
+from .core import Element, Node, Model
 
 
 class Truss(Element):

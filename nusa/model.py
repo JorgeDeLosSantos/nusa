@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
-from __future__ import division
 import re
 import numpy as np
 import numpy.linalg as la
-import templates as tmp
-from core import Model
+import nusa.templates as tmp
+from .core import Model
 
 #~ *********************************************************************
 #~ ****************************  SpringModel ***************************
@@ -77,7 +75,7 @@ class SpringModel(Model):
         Only displacement in x-dir 
         """
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        if constraint.has_key("ux"):
+        if "ux" in constraint:
             ux = constraint.get("ux")
             node.set_displacements(ux=ux)
             self.U[node.label]["ux"] = ux
@@ -156,7 +154,7 @@ class BarModel(Model):
         
     def add_constraint(self,node,**constraint):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        if constraint.has_key('ux'):
+        if "ux" in constraint:
             ux = constraint.get('ux')
             node.set_displacements(ux=ux)
             self.U[node.label]["ux"] = ux
@@ -298,7 +296,7 @@ class BeamModel(Model):
     def add_constraint(self,node,**constraint):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
         cs = constraint
-        if cs.has_key('ux') and cs.has_key("uy") and cs.has_key('ur'): # 
+        if "ux" in cs and "uy" in cs and "ur" in cs: # 
             ux = cs.get('ux')
             uy = cs.get('uy')
             ur = cs.get('ur')
@@ -306,13 +304,13 @@ class BeamModel(Model):
             #~ print("Encastre")
             self.U[node.label]["uy"] = uy
             self.U[node.label]["ur"] = ur
-        elif cs.has_key('ux') and cs.has_key("uy"): # 
+        elif "ux" in cs and "uy" in cs: # 
             ux = cs.get('ux')
             uy = cs.get('uy')
             node.set_displacements(ux=ux, uy=uy)
             #~ print("Fixed")
             self.U[node.label]["uy"] = uy
-        elif cs.has_key('uy'):
+        elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
             #~ print("Simple support")
@@ -576,13 +574,13 @@ class LinearTriangleModel(Model):
     def add_constraint(self,node,**constraint):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
         cs = constraint
-        if cs.has_key('ux') and cs.has_key("uy"): # 
+        if "ux" in cs and "uy" in cs: # 
             ux = cs.get('ux')
             uy = cs.get('uy')
             node.set_displacements(ux=ux, uy=uy)
             self.U[node.label]["ux"] = ux
             self.U[node.label]["uy"] = uy
-        elif cs.has_key('uy'):
+        elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
             self.U[node.label]["uy"] = uy
