@@ -2,7 +2,7 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
+#  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
 from nusa.core import *
@@ -29,9 +29,9 @@ def test1():
     n3 = Node((60,0))
     n4 = Node((90,0))
     # Elements
-    e1 = Bar((n1,n2),E1,A1,L)
-    e2 = Bar((n2,n3),E1,A1,L)
-    e3 = Bar((n3,n4),E2,A2,L)
+    e1 = Bar((n1,n2),E1,A1)
+    e2 = Bar((n2,n3),E1,A1)
+    e3 = Bar((n3,n4),E2,A2)
 
     # Add elements 
     for nd in (n1,n2,n3,n4):
@@ -46,7 +46,7 @@ def test1():
     
     print("Node | Displacements | Forces")
     for node in m1.get_nodes():
-        print "{0}\t{1}\t{2}".format(node.label, node.ux, node.fx)
+        print("{0}\t{1}\t{2}".format(node.label, node.ux, node.fx)) 
     
     
 if __name__ == '__main__':
