@@ -127,4 +127,5 @@ class Modeler(object):
 
     
 if __name__=='__main__':
-    pass
+    geom = msh.SimpleGMSH()
+    nc,ec = geom.generate_mesh()
