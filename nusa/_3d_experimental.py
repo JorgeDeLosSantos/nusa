@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 # ***********************************
 #  Author: Pedro Jorge De Los Santos    
 #  E-mail: delossantosmfq@gmail.com 
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
-from __future__ import division
 from nusa.core import Element, Model
 import nusa.core as nc
 import numpy as np

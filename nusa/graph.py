@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
-
 """
 Frozen development
 """

@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
-from __future__ import division
 
 class Material(object):
     def __init__(self,name,**kwargs):

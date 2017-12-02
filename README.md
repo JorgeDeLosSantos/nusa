@@ -4,15 +4,15 @@ A Python library for structural analysis using the finite element method, design
 
 ## Versions
 
-Latter (PyPi): **0.1.0.dev1** (Initial pre-alpha release)
-
-Dev: (This repository): **0.2.0**
+* **0.1.0.dev1** (Initial pre-alpha release)
+* Developer version (This repository): **0.2.0**
 
 ## Requirements
 
 * NumPy
 * Tabulate
 * Matplotlib
+* [GMSH](http://gmsh.info/)
 
 
 ## Installation

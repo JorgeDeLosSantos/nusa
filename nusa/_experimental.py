@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 # ***********************************
 #  Author: Pedro Jorge De Los Santos    
 #  E-mail: delossantosmfq@gmail.com 
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
-from __future__ import division
 import numpy as np
 import numpy.linalg as la
 from .core import Element, Node, Model
