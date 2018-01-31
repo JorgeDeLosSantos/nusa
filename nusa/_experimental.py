@@ -172,17 +172,17 @@ class TrussModel(Model):
     def add_constraint(self,node,**constraint):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
         cs = constraint
-        if cs.has_key('ux') and cs.has_key("uy"): #
+        if "ux" in cs and "uy" in cs: #
             ux = cs.get('ux')
             uy = cs.get('uy')
             node.set_displacements(ux=ux, uy=uy) # eqv to node.ux = ux, node.uy = uy
             self.U[node.label]["ux"] = ux
             self.U[node.label]["uy"] = uy
-        elif cs.has_key('ux'):
+        elif "ux" in cs:
             ux = cs.get('ux')
             node.set_displacements(ux=ux)
             self.U[node.label]["ux"] = ux
-        elif cs.has_key('uy'):
+        elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
             self.U[node.label]["uy"] = uy
