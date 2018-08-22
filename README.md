@@ -85,8 +85,8 @@ m.solve()
 m.plot_nsol("seqv")
 ```
 
-![](docs/nusa-info/es/src/linear-triangle-element/model_plot.PNG)
-![](docs/nusa-info/es/src/linear-triangle-element/nsol.PNG)
+![](docs/nusa-info/es/src/linear-triangle-element/model_plot.png)
+![](docs/nusa-info/es/src/linear-triangle-element/nsol.png)
 
 
 ### Spring element
