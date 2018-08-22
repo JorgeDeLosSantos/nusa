@@ -748,7 +748,7 @@ class LinearTriangleModel(Model):
         x0,x1,y0,y1 = self.rect_region()
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
-        ax.set_aspect("auto")
+        ax.set_aspect("equal")
         ax_title = "{0} (Max:{1}, Min:{2})".format(var,fsol.max(),fsol.min())
         ax.set_title(ax_title)
 

@@ -5,6 +5,7 @@
 #  License: MIT License
 # ***********************************
 import nusa._mesh as msh
+import meshio
 
 class Modeler(object):
     def __init__(self):
@@ -98,7 +99,7 @@ class Modeler(object):
             for nd in elm:
                 _x.append(self.nc[nd,0])
                 _y.append(self.nc[nd,1])
-            polygon = Polygon(zip(_x,_y), True)
+            polygon = Polygon(list(zip(_x,_y)), True)
             patches.append(polygon)
             
         pc = PatchCollection(patches, color="#25CDCD", edgecolor="#435959", alpha=0.8, lw=0.5)
@@ -123,6 +124,17 @@ class Modeler(object):
         self.nc = nc
         self.ec = ec
         return nc,ec
+
+    def generate_mesh_from_file(self,filename):
+        mesh = meshio.read(filename)
+        self.nc = mesh.points
+        self.x, self.y = self.nc[:,0], self.nc[:,1]
+        self.ec = mesh.cells["triangle"]
+        return mesh.points, mesh.cells["triangle"]
+    
+    
+
+
 
     
 if __name__=='__main__':

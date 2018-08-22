@@ -81,6 +81,5 @@ class SimpleGMSH(object):
         return mesh.points, mesh.cells["triangle"]
 
 
-    
 if __name__=='__main__':
     pass

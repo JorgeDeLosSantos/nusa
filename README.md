@@ -17,13 +17,13 @@ A Python library for structural analysis using the finite element method, design
 
 ## Installation
 
-Using pip: 
+From PyPI (0.1.0 version):
 
 ```
 $ pip install nusa
 ```
 
-or from this repo:
+or from this repo (developer version):
 
 ```
 $ pip install git+https://github.com/JorgeDeLosSantos/nusa.git
@@ -39,6 +39,55 @@ $ pip install git+https://github.com/JorgeDeLosSantos/nusa.git
 * Linear triangle (currently, only plane stress)
 
 ## Mini-Demos
+
+### Linear Triangle Element
+
+```python
+from nusa import *
+import nusa.mesh as nmsh
+
+md = nmsh.Modeler()
+a = md.add_rectangle((0,0),(1,1), esize=0.1)
+b = md.add_circle((0.5,0.5), 0.1, esize=0.05)
+md.substract_surfaces(a,b)
+nc, ec = md.generate_mesh()
+x,y = nc[:,0], nc[:,1]
+
+nodos = []
+elementos = []
+
+for k,nd in enumerate(nc):
+    cn = Node((x[k],y[k]))
+    nodos.append(cn)
+    
+for k,elm in enumerate(ec):
+    i,j,m = int(elm[0]),int(elm[1]),int(elm[2])
+    ni,nj,nm = nodos[i],nodos[j],nodos[m]
+    ce = LinearTriangle((ni,nj,nm),200e9,0.3,0.1)
+    elementos.append(ce)
+
+m = LinearTriangleModel()
+for node in nodos: m.add_node(node)
+for elm in elementos: m.add_element(elm)
+    
+# Boundary conditions and loads
+minx, maxx = min(x), max(x)
+miny, maxy = min(y), max(y)
+
+for node in nodos:
+    if node.x == minx:
+        m.add_constraint(node, ux=0, uy=0)
+    if node.x == maxx:
+        m.add_force(node, (10e3,0))
+
+m.plot_model()
+m.solve()
+m.plot_nsol("seqv")
+```
+
+![](docs/nusa-info/es/src/linear-triangle-element/model_plot.PNG)
+![](docs/nusa-info/es/src/linear-triangle-element/nsol.PNG)
+
 
 ### Spring element
 
@@ -132,7 +181,7 @@ m1.add_constraint(n3, uy=0) # fixed
 m1.solve() # Solve model
 
 # Displacement at C point
-print n2.uy
+print(n2.uy)
 ```
 
 ## Documentation
