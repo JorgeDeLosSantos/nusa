@@ -118,7 +118,7 @@ class Modeler(object):
         
     def generate_mesh(self):
         nc, ec = self.geom.generate_mesh()
-        ec = ec["triangle"]
+        # ec = ec["triangle"]
         self.x, self.y = nc[:,0], nc[:,1]
         self.nc = nc
         self.ec = ec

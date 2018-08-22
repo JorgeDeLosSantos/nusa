@@ -659,7 +659,7 @@ class LinearTriangleModel(Model):
                 if nd.ux == 0 and nd.uy == 0: self._draw_xyconstraint(ax,nd.x,nd.y)
                 _x.append(nd.x)
                 _y.append(nd.y)
-            polygon = Polygon(zip(_x,_y), True)
+            polygon = Polygon(list(zip(_x,_y)), True)
             patches.append(polygon)
 
         pc = PatchCollection(patches, color="#7CE7FF", edgecolor="k", alpha=0.4)
@@ -743,12 +743,12 @@ class LinearTriangleModel(Model):
         except:
             return None
         if isinstance(fsol,list): fsol = np.array(fsol)
-        tp = ax.tricontourf(tr, fsol, cmap="viridis")
+        tp = ax.tricontourf(tr, fsol, cmap="jet")
         fig.colorbar(tp)
         x0,x1,y0,y1 = self.rect_region()
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
-        ax.set_aspect("equal")
+        ax.set_aspect("auto")
         ax_title = "{0} (Max:{1}, Min:{2})".format(var,fsol.max(),fsol.min())
         ax.set_title(ax_title)
 
@@ -768,7 +768,7 @@ class LinearTriangleModel(Model):
             for nd in elm.nodes:
                 _x.append(nd.x)
                 _y.append(nd.y)
-            polygon = Polygon(zip(_x,_y), True)
+            polygon = Polygon(list(zip(_x,_y)), True)
             patches.append(polygon)
             
         pc = PatchCollection(patches, cmap="jet", alpha=1)
