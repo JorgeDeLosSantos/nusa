@@ -8,6 +8,7 @@ import re
 import numpy as np
 import numpy.linalg as la
 import nusa.templates as tmp
+import matplotlib.pyplot as plt
 from .core import Model
 
 #~ *********************************************************************
@@ -426,18 +427,20 @@ class BeamModel(Model):
             ky = (ymx-ymn)/factor
         return xmn-kx, xmx+kx, ymn-ky, ymx+ky
         
-    def plot_disp(self):
-        import matplotlib.pyplot as plt
-        
+    def plot_disp(self, df = 1000, **kwargs):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         
-        df = 1000
+        xx = []
+        yy = []
         for elm in self.get_elements():
             ni,nj = elm.get_nodes()
-            xx = [ni.x, nj.x]
-            yy = [ni.y+ni.uy*df, nj.y+nj.uy*df]
-            ax.plot(xx, yy, "ro--")
+            xx.append( ni.x )
+            xx.append( nj.x )
+            yy.append( ni.y+ni.uy*df )
+            yy.append( nj.y+nj.uy*df )
+        
+        ax.plot(xx, yy, "ro--", **kwargs)
             
         ax.axis("equal")
         

@@ -2,7 +2,6 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
 from nusa.core import *

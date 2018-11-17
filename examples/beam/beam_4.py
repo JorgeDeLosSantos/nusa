@@ -2,7 +2,6 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
 import numpy as np
@@ -28,8 +27,8 @@ def test4():
     n2 = Node((L1,0))
     n3 = Node((L1+L2,0))
     # Elements
-    e1 = Beam((n1,n2),E,I,L1)
-    e2 = Beam((n2,n3),E,I,L2)
+    e1 = Beam((n1,n2),E,I)
+    e2 = Beam((n2,n3),E,I)
 
     # Add elements 
     for nd in (n1,n2,n3): m1.add_node(nd)
@@ -40,10 +39,10 @@ def test4():
     m1.add_constraint(n3, uy=0) # fixed
     m1.solve() # Solve model
     # Displacement at C point
-    print n2.uy
+    print("Displacement at point C: {0}".format(n2.uy))
     m1.plot_moment_diagram()
+    m1.plot_shear_diagram()
     m1.show()
-
 
 
 if __name__ == '__main__':

@@ -2,7 +2,6 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
 import numpy as np
@@ -36,8 +35,8 @@ def test5():
     n3 = Node((L1+L2,0))
     
     # Elements
-    e1 = Beam((n1,n2),E,I,L1)
-    e2 = Beam((n2,n3),E,I,L2)
+    e1 = Beam((n1,n2),E,I)
+    e2 = Beam((n2,n3),E,I)
 
     # Add elements 
     for nd in (n1,n2,n3): m1.add_node(nd)
@@ -52,7 +51,7 @@ def test5():
     m1.solve() # Solve model
     
     # Slope and deflection in n1
-    print n1.uy, n1.ur
+    print("Displacement in node 1: {0}\nSlope in node 1: {1}".format(n1.uy, n1.ur))
 
 
 if __name__ == '__main__':

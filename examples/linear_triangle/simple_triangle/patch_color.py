@@ -18,7 +18,6 @@ vtx = (20,20,10)
 
 plt.subplot(111)
 triang = tri.Triangulation(x, y)
-print dir(triang)
 plt.tricontourf(x, y, vtx, cmap="jet")
 
 plt.show()

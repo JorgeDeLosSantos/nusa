@@ -2,7 +2,6 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
 from nusa.core import *
@@ -26,8 +25,8 @@ def test2():
     n2 = Node((1.5,0))
     n3 = Node((2.5,0))
     
-    e1 = Bar((n1,n2),E,A,L1)
-    e2 = Bar((n2,n3),E,A,L2)
+    e1 = Bar((n1,n2),E,A)
+    e2 = Bar((n2,n3),E,A)
     
     for nd in (n1,n2,n3): m1.add_node(nd)
     for el in (e1,e2): m1.add_element(el)
@@ -36,6 +35,7 @@ def test2():
     m1.add_constraint(n1, ux=0.0)
     m1.add_constraint(n3, ux=UX3)
     m1.solve()
+    print(m1.U)
     
     
 if __name__ == '__main__':

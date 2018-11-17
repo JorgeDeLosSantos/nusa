@@ -5,7 +5,7 @@
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
-from nusa._experimental import *
+from nusa import *
 
 """
 Kattan, P. (2003). MATLAB Guide to Finite Elements an interactive approach.

@@ -2,7 +2,6 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
 import numpy as np
@@ -28,8 +27,8 @@ def test2():
     n2 = Node((3,0))
     n3 = Node((6,0))
     # Elements
-    e1 = Beam((n1,n2),E,I,L)
-    e2 = Beam((n2,n3),E,I,L)
+    e1 = Beam((n1,n2),E,I)
+    e2 = Beam((n2,n3),E,I)
 
     # Add elements 
     for nd in (n1,n2,n3):
@@ -42,9 +41,9 @@ def test2():
     m1.add_constraint(n1, ux=0, uy=0, ur=0) # fixed 
     m1.add_constraint(n3, ux=0, uy=0, ur=0) # fixed
     m1.solve() # Solve model
-    print m1.KG
-    print m1.U
-    print m1.NF
+    print(m1.KG)
+    print(m1.U)
+    print(m1.NF)
 
 
 if __name__ == '__main__':

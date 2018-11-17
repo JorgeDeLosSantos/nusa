@@ -5,7 +5,7 @@
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
-from nusa._experimental import *
+from nusa import *
 
 """
 Logan, D. (2007). A first course in the finite element analysis.
