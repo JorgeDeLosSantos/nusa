@@ -451,7 +451,8 @@ class BeamModel(Model):
         ax = fig.add_subplot(111)
         
         X,M = self._get_data_for_moment_diagram()
-        ax.plot(X, M)
+        ax.plot(X, M, "r")
+        ax.fill_between(X, M, facecolor="#EE5B5B")
         
     def plot_shear_diagram(self):
         import matplotlib.pyplot as plt
@@ -460,7 +461,8 @@ class BeamModel(Model):
         ax = fig.add_subplot(111)
         
         X,S = self._get_data_for_shear_diagram()
-        ax.plot(X, S)
+        ax.plot(X, S, "b")
+        ax.fill_between(X, S, facecolor="#559EE5")
         
     def _get_data_for_moment_diagram(self):
         cx = 0
@@ -720,7 +722,7 @@ class LinearTriangleModel(Model):
         tr = tri.Triangulation(_x,_y, triangles=tg)
         return tr
         
-    def plot_nsol(self,var="ux"):
+    def plot_nsol(self,var="ux",units="Pa"):
         import matplotlib.pyplot as plt
         import numpy as np
         
@@ -752,7 +754,7 @@ class LinearTriangleModel(Model):
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
-        ax_title = "{0} (Max:{1}, Min:{2})".format(var,fsol.max(),fsol.min())
+        ax_title = "{0} (Max:{1:0.3e}, Min:{2:0.3e}) Units: {3}  ".format(var,fsol.max(),fsol.min(),units)
         ax.set_title(ax_title)
 
     def plot_esol(self,var="ux"):

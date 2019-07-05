@@ -2,7 +2,7 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
+#  Web: numython.github.io
 #  License: MIT License
 # ***********************************
 from setuptools import setup
@@ -15,7 +15,7 @@ setup(name='nusa',
       author='Pedro Jorge De Los Santos',
       author_email='delossantosmfq@gmail.com',
       license = "MIT",
-      keywords=["Structural Analysis","FEA","Mechanical Engineering"],
+      keywords=["Structural Analysis","Finite Element Analysis","Mechanical Engineering"],
       url='https://github.com/JorgeDeLosSantos/nusa',
       packages=['nusa'],
       classifiers=[
@@ -25,7 +25,7 @@ setup(name='nusa',
       "License :: OSI Approved :: MIT License",
       "Operating System :: OS Independent",
       "Programming Language :: Python",
-      "Programming Language :: Python :: 2.7",
+      "Programming Language :: Python :: 3",
       "Programming Language :: Python :: Implementation :: CPython",
       ]
       )

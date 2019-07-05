@@ -45,10 +45,10 @@ class Truss(Element):
         """
         ni,nj = self.get_nodes()
         x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
-        if x0==x1:
-            theta = 90*(np.pi/180)
-        else:
-            theta = np.arctan2((y1-y0),(x1-x0))
+        # ~ if x0==x1:
+            # ~ theta = 90*(np.pi/180)
+        # ~ else:
+        theta = np.arctan2((y1-y0),(x1-x0))
         return theta
     
     @property
@@ -340,7 +340,7 @@ class TrussModel(Model):
         return xmn-kx, xmx+kx, ymn-ky, ymx+ky
         
     def simple_report(self,report_type="print",fname="nusa_rpt.txt"):
-        from templates import TRUSS_SIMPLE_REPORT
+        from .templates import TRUSS_SIMPLE_REPORT
         options = {"headers":"firstrow",
                    "tablefmt":"rst",
                    "numalign":"right"}

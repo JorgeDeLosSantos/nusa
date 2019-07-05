@@ -89,7 +89,7 @@ if __name__=='__main__':
         nd = Node((x,y,z))
         nodos.append(nd)
     e1 = LT3D4(nodos,E,nu)
-    print e1.V, e1.D
+    print(e1.V, e1.D)
     
     
     

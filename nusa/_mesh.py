@@ -77,6 +77,7 @@ class SimpleGMSH(object):
             print(out.decode())
         #points,cells = meshio.read(outname)
         mesh = meshio.read(outname)
+        # ~ print(dir(mesh))
         #return points, cells
         return mesh.points, mesh.cells["triangle"]
 

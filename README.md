@@ -168,8 +168,8 @@ n1 = Node((0,0))
 n2 = Node((L1,0))
 n3 = Node((L1+L2,0))
 # Elements
-e1 = Beam((n1,n2),E,I,L1)
-e2 = Beam((n2,n3),E,I,L2)
+e1 = Beam((n1,n2),E,I)
+e2 = Beam((n2,n3),E,I)
 
 # Add elements 
 for nd in (n1,n2,n3): m1.add_node(nd)

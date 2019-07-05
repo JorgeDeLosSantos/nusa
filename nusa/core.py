@@ -12,6 +12,14 @@ class Model(object):
     Superclass for all FEA models
     """
     def __init__(self,name,mtype):
+        """
+        Parameters
+        ----------
+        name : str
+            Name of model
+        mtype : str
+            Type of model 
+        """
         self.mtype = mtype # Model type
         self.name = name # Name 
         self.nodes = {} # Dictionary for nodes {number: NodeObject}
@@ -21,9 +29,14 @@ class Model(object):
         """
         Add node to current model
         
-        *node* :   :class:`~nusa.core.Node`
+        Parameters
+        ----------
+        node : :class:`~nusa.core.Node`
             Node instance
         
+        Returns
+        -------
+        None
         """
         current_label = self.get_number_of_nodes()
         if node.label is "":
@@ -39,8 +52,11 @@ class Model(object):
         
         ::
         
-            m1 = Model()
-            e1 = Bar(Node((0,0),0),Node((1,0),0))
+            m1 = BarModel()
+            E, A = 200e9, 0.001
+            n1 = Node((0,0))
+            n2 = Node((1,0))
+            e1 = Bar((n1,n2), E, A)
             m1.add_element(e1)
         
         """
@@ -62,7 +78,7 @@ class Model(object):
         
     def get_number_of_elements(self):
         """
-        Returns the number of nodes
+        Returns the number of elements
         """
         return len(self.elements)
         

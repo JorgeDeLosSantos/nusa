@@ -22,3 +22,10 @@ Los desplazamientos y fuerzas se cambiarán a contenerse en un
 diccionario que permita tener un mejor control sobre las componentes y 
 sobre todo una legibilidad superior que a la permitida por las listas.
 Por ahora, esto se ha implementado solamente en las vigas (BeamModel).
+
+16-11-2018 22:20 -------------------------------------------------------
+
+Se han corregido bugs menores en los ejemplos de vigas, mismos que estaban 
+desactualizados respecto a la versión.
+
+

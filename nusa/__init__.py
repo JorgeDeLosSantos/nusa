@@ -15,6 +15,7 @@ from .element import *
 from .model import *
 from ._experimental import *
 from .mesh import *
+from .io import *
 
 import matplotlib as mpl
 mpl.rc("figure", facecolor="#F9F9F9", titleweight="bold")
