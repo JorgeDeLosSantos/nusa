@@ -4,8 +4,9 @@ A Python library for structural analysis using the finite element method, design
 
 ## Versions
 
-* **0.1.0.dev1** (Initial pre-alpha release)
-* Developer version (This repository): **0.2.0**
+* **0.1.0.dev1** (Initial pre-alpha release 16/11/2016)
+* **0.2.0** (Alpha release 14/07/2019)
+* Developer version (This repository)
 
 ## Requirements
 
@@ -17,7 +18,7 @@ A Python library for structural analysis using the finite element method, design
 
 ## Installation
 
-From PyPI (0.1.0 version):
+From PyPI (0.2.0 version):
 
 ```
 $ pip install nusa
