@@ -23,10 +23,10 @@ class Material(object):
         
         """
         self.name = name
-        self.__dict__ = kwargs # add all properties
+        self.__dict__.update(kwargs) # add all properties
     
     def __str__(self):
-        return self.name
+        return self.name 
         
 
 class Section(object):

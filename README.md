@@ -4,9 +4,9 @@ A Python library for structural analysis using the finite element method, design
 
 ## Versions
 
-* **0.1.0.dev1** (Initial pre-alpha release 16/11/2016)
-* **0.2.0** (Alpha release 14/07/2019)
-* Developer version (This repository)
+* **0.1.0** (16/11/2016)
+* **0.2.0** (14/07/2019)
+* **0.2.dev1** Development version 
 
 ## Requirements
 
@@ -24,7 +24,7 @@ From PyPI (0.2.0 version):
 $ pip install nusa
 ```
 
-or from this repo (developer version):
+or from this repo (development version):
 
 ```
 $ pip install git+https://github.com/JorgeDeLosSantos/nusa.git
@@ -215,5 +215,4 @@ English version (TODO):
 ```
 Developer: Pedro Jorge De Los Santos
 E-mail: delossantosmfq@gmail.com
-Blog: numython.github.io // jorgedelossantos.github.io
 ```
