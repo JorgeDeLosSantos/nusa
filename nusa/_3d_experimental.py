@@ -69,10 +69,10 @@ class LT3D4(Element):
         a2 = np.array([[x2,y2,z2], [x3,y3,z3], [x4,y4,z4]])
         
         
-    def getElementStiffness(self):
+    def get_element_stiffness(self):
         pass
         
-    def getNodes(self):
+    def get_nodes(self):
         return self.nodes
         
 

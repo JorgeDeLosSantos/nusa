@@ -1,12 +1,12 @@
 """
-NuSA 0.2.0 (Numerical Structural Analysis in Python)
+NuSA (Numerical Structural Analysis in Python)
 Author: Pedro Jorge De Los Santos
 E-mail: delossantosmfq@gmail.com
 Blog: jorgedelossantos.github.io // numython.github.io
 License: MIT License
 """
+from .version import __version__
 
-__version__ = "0.2.0"
 __author__ = "P.J. De Los Santos"
 __email__ = "delossantosmfq@gmail.com"
 

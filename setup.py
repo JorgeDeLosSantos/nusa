@@ -5,12 +5,19 @@
 #  Web: numython.github.io
 #  License: MIT License
 # ***********************************
+import os
 from setuptools import setup
 
-# Current status: pre-alpha
 
+dir_setup = os.path.dirname(os.path.realpath(__file__))
+
+with open(os.path.join(dir_setup, 'nusa', 'version.py')) as f:
+    # Defines __version__
+    exec(f.read())
+
+# Current status: pre-alpha
 setup(name='nusa',
-      version='0.2.0',
+      version=__version__,
       description='Numerical Structural Analysis in Python using the FEM',
       author='Pedro Jorge De Los Santos',
       author_email='delossantosmfq@gmail.com',
