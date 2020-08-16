@@ -2,9 +2,9 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
+
 from nusa.core import *
 from nusa.model import *
 from nusa.element import *
@@ -39,6 +39,9 @@ def test2():
     m2.add_constraint(n1,ux=0)
     m2.add_constraint(n5,ux=0.02)
     m2.solve()
+
+    for nd in m2.get_nodes():
+        print(nd.ux)
     
 
 if __name__ == '__main__':

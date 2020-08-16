@@ -2,9 +2,9 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
+
 from nusa.core import *
 from nusa.model import *
 from nusa.element import *
@@ -36,7 +36,7 @@ def test3():
     m3.solve()
     
     for n in m3.get_nodes():
-        print n.ux, n.uy
+        print(n.ux, n.uy)
         
 
 if __name__ == '__main__':

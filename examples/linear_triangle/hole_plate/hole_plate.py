@@ -49,6 +49,7 @@ m.plot_model()
 m.solve()
 # Plotting
 m.plot_esol("sxx")
+m.plot_nsol("sxx")
 m.show()
 
 w,d,t = 1, 0.3, 0.1

@@ -2,7 +2,6 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
 from nusa.core import *
@@ -30,7 +29,7 @@ def simple_case():
     
     print("Node displacements")
     for n in ms.get_nodes():
-        print n.ux, n.uy
+        print(n.ux, n.uy)
 
 if __name__ == '__main__':
     simple_case()

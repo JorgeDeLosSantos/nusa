@@ -17,7 +17,7 @@ import matplotlib.collections as collections
 class GSpring(lines.Line2D):
     def __init__(self,init,**kwargs):
         lines.Line2D.__init__(self,[],[],**kwargs)
-        self.xdata = np.array([0,1/5.0,2/5.,3/5.,4/5.,1])+init
+        self.xdata = np.array([0,1/5,2/5,3/5,4/5,1])+init
         self.ydata = np.array([0,0,0.05,-0.05,0,0])
         # Set data
         self.set_xdata(self.xdata)
@@ -33,9 +33,9 @@ class GFixedNode(collections.PatchCollection):
         _xdata2 = np.array([xcoord-tol,xcoord,xcoord-tol])
         _ydata2 = np.array([ycoord-tol,ycoord,ycoord+tol])
         # Polygons
-        p1 = patches.Polygon(zip(_xdata1,_ydata1))
+        p1 = patches.Polygon(list(zip(_xdata1,_ydata1)))
         p1.set_color("r")
-        p2 = patches.Polygon(zip(_xdata2,_ydata2))
+        p2 = patches.Polygon(list(zip(_xdata2,_ydata2)))
         #print p1,p2
         #p2.set_color("g")
         # Set data
@@ -43,7 +43,7 @@ class GFixedNode(collections.PatchCollection):
         self.set_color("k")
         #self.set_marker("-")
         #self.set_mfc('r')
-        #self.set_ms(10)
+        # self.set_ms(10)
         
 def plot_spring_model(model):
     GRAPH_TOL = 0.1
@@ -55,7 +55,7 @@ def plot_spring_model(model):
     
     #~ # BCs
     for k,v in model.U.items():
-        if v==0:
+        if v["ux"]==0:
             ax.add_collection(GFixedNode(k,0))
     
     max_x = len(model.elements)
@@ -97,4 +97,4 @@ def ylim(model):
 
 
 if __name__ == '__main__':
-    plot_truss_model()
+    plot_spring_model()

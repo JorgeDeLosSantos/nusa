@@ -39,6 +39,7 @@ $ pip install git+https://github.com/JorgeDeLosSantos/nusa.git
 * Beam
 * Linear triangle (currently, only plane stress)
 
+
 ## Mini-Demos
 
 ### Linear Triangle Element
@@ -184,6 +185,11 @@ m1.solve() # Solve model
 # Displacement at C point
 print(n2.uy)
 ```
+
+## GUIs based on NuSA
+
+* [wxTruss](https://github.com/JorgeDeLosSantos/wxtruss)
+
 
 ## Documentation
 

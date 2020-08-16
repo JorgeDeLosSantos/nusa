@@ -2,12 +2,13 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos     
 #  E-mail: delossantosmfq@gmail.com 
-#  Web: labdls.blogspot.mx
 #  License: MIT License
 # ***********************************
+
 from nusa.core import *
 from nusa.model import *
 from nusa.element import *
+from nusa.graph import *
 
 def test1():
     """
@@ -40,21 +41,20 @@ def test1():
     m1.solve()
     
     # a) Global matrix
-    print "a) Global matrix:\n {0}".format(m1.KG)
+    print("a) Global matrix:\n {0}".format(m1.KG))
     # b) Nodal displacement -> 3 and 4
-    print "\nb) Nodal displacement (3 and 4)"
-    print "UX3: {0}".format(n3.ux)
-    print "UX4: {0}".format(n4.ux)
+    print("\nb) Nodal displacement (3 and 4)")
+    print("UX3: {0}".format(n3.ux))
+    print("UX4: {0}".format(n4.ux))
     # c) Reaction forces (1 and 2)
-    print "\nc) Nodal forces (1 and 2)"
-    print "FX1: {0}".format(n1.fx)
-    print "FX2: {0}".format(n2.fx)
+    print("\nc) Nodal forces (1 and 2)")
+    print("FX1: {0}".format(n1.fx))
+    print("FX2: {0}".format(n2.fx))
     # d) Forces in each spring
-    print "\nd) Element forces"
-    print "FE1:\n {0}".format(e1.fx)
-    print "FE2:\n {0}".format(e2.fx)
-    print "FE3:\n {0}".format(e3.fx)
-    
+    print("\nd) Element forces")
+    print("FE1:\n {0}".format(e1.fx))
+    print("FE2:\n {0}".format(e2.fx))
+    print("FE3:\n {0}".format(e3.fx))
 
 if __name__ == '__main__':
     test1()

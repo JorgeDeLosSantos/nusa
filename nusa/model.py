@@ -14,6 +14,7 @@ from .core import Model
 #~ *********************************************************************
 #~ ****************************  SpringModel ***************************
 #~ *********************************************************************
+
 class SpringModel(Model):
     """
     Spring Model for finite element analysis
@@ -725,7 +726,7 @@ class LinearTriangleModel(Model):
         tr = tri.Triangulation(_x,_y, triangles=tg)
         return tr
         
-    def plot_nsol(self,var="ux",units="m"):
+    def plot_nsol(self,var="ux"):
         import matplotlib.pyplot as plt
         import numpy as np
         
@@ -757,7 +758,7 @@ class LinearTriangleModel(Model):
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
-        ax_title = "{0} (Max:{1:0.3e}, Min:{2:0.3e}) Units: {3}  ".format(var,fsol.max(),fsol.min(),units)
+        ax_title = "{0} (Max:{1:0.3e}, Min:{2:0.3e}) Units: {3}  ".format(var,fsol.max(),fsol.min())
         ax.set_title(ax_title, fontsize=8)
 
     def plot_esol(self,var="ux"):
@@ -797,7 +798,7 @@ class LinearTriangleModel(Model):
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
         ax_title = "{0} (Max:{1}, Min:{2})".format(var,fsol.max(),fsol.min())
-        ax.set_title(ax_title)
+        ax.set_title(ax_title, fontsize=8)
         
     def show(self):
         """

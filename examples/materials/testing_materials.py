@@ -1,3 +1,8 @@
-from nusa.lib import *
+# -*- coding: utf-8 -*-
+# ***********************************
+#  Author: Pedro Jorge De Los Santos     
+#  E-mail: delossantosmfq@gmail.com 
+#  License: MIT License
+# ***********************************
 
-print(STEEL_1018.nu)
+# TODO
