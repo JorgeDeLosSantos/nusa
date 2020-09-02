@@ -112,6 +112,32 @@ class SpringModel(Model):
         var = opts[0]
         return node,var
 
+    def simple_report(self,report_type="print",fname="nusa_rpt.txt"):
+        from .templates import SPRING_SIMPLE_REPORT
+        options = {"headers":"firstrow",
+                   "tablefmt":"rst",
+                   "numalign":"right"}
+        _str = SPRING_SIMPLE_REPORT.format(
+                model_name=self.name,
+                nodes=self.get_number_of_nodes(),
+                elements=self.get_number_of_elements(),
+                nodal_displacements=self._get_ndisplacements(options),
+                nodal_forces=self._get_nforces(options),
+                element_forces=self._get_eforces(options),
+                nodes_info=self._get_nodes_info(options),
+                elements_info=self._get_elements_info(options))
+        if report_type=="print": print(_str)
+        elif report_type=="write": self._write_report(_str, fname)
+        elif report_type=="string": return _str
+        else: return _str
+
+    def _get_eforces(self,options):
+        from tabulate import tabulate
+        F = [["Element","F"]]
+        for elm in self.get_elements():
+            F.append([elm.label+1, elm.fx])
+        return tabulate(F, **options)
+        
 
 
 #~ *********************************************************************
@@ -758,7 +784,7 @@ class LinearTriangleModel(Model):
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
-        ax_title = "{0} (Max:{1:0.3e}, Min:{2:0.3e}) Units: {3}  ".format(var,fsol.max(),fsol.min())
+        ax_title = "{0} (Max:{1:0.3e}, Min:{2:0.3e})".format(var,fsol.max(),fsol.min())
         ax.set_title(ax_title, fontsize=8)
 
     def plot_esol(self,var="ux"):

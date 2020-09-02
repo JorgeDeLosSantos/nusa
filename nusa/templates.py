@@ -5,6 +5,39 @@
 #  License: MIT License
 # ***********************************
 
+SPRING_SIMPLE_REPORT = """
+==========================
+    NuSA Simple Report
+==========================
+
+Model: {model_name}
+Number of nodes: {nodes}
+Number of elements: {elements}
+
+RESULTS
+
+NODAL DISPLACEMENTS
+{nodal_displacements}
+
+NODAL FORCES
+{nodal_forces}
+
+ELEMENT FORCES
+{element_forces}
+
+FINITE ELEMENT MODEL INFO
+
+NODES
+{nodes_info}
+
+ELEMENTS
+{elements_info}
+"""
+
+
+
+
+
 TRUSS_SIMPLE_REPORT = """
 ==========================
     NuSA Simple Report
@@ -13,6 +46,8 @@ TRUSS_SIMPLE_REPORT = """
 Model: {model_name}
 Number of nodes: {nodes}
 Number of elements: {elements}
+
+RESULTS
 
 NODAL DISPLACEMENTS
 {nodal_displacements}
@@ -26,8 +61,7 @@ ELEMENT FORCES
 ELEMENT STRESSES
 {element_stresses}
 
-
-FINITE-ELEMENT MODEL INFO
+FINITE ELEMENT MODEL INFO
 
 NODES:
 {nodes_info}

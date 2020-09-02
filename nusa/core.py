@@ -98,6 +98,57 @@ class Model(object):
         custom_str = ("Model: "+self.name+"\nNodes: "+str(self.get_number_of_nodes())+
         "\nElements: "+str(self.get_number_of_elements()))
         return custom_str
+
+    def simple_report(self,report_type="print",fname="nusa_rpt.txt"):
+        pass
+        
+    def _write_report(self,txt,fname):
+        fobj = open(fname,"w")
+        fobj.write(txt)
+        fobj.close()
+        
+    def _get_ndisplacements(self,options):
+        from tabulate import tabulate
+        D = [["Node","UX","UY"]]
+        for n in self.get_nodes():
+            D.append([n.label+1,n.ux,n.uy])
+        return tabulate(D, **options)
+        
+    def _get_nforces(self,options):
+        from tabulate import tabulate
+        F = [["Node","FX","FY"]]
+        for n in self.get_nodes():
+            F.append([n.label+1,n.fx,n.fy])
+        return tabulate(F, **options)
+        
+    def _get_eforces(self,options):
+        from tabulate import tabulate
+        F = [["Element","F"]]
+        for elm in self.get_elements():
+            F.append([elm.label+1, elm.f])
+        return tabulate(F, **options)
+        
+    def _get_estresses(self,options):
+        from tabulate import tabulate
+        S = [["Element","S"]]
+        for elm in self.get_elements():
+            S.append([elm.label+1, elm.s])
+        return tabulate(S, **options)
+    
+    def _get_nodes_info(self,options):
+        from tabulate import tabulate
+        F = [["Node","X","Y"]]
+        for n in self.get_nodes():
+            F.append([n.label+1, n.x, n.y])
+        return tabulate(F, **options)
+    
+    def _get_elements_info(self,options):
+        from tabulate import tabulate
+        S = [["Element","NI","NJ"]]
+        for elm in self.get_elements():
+            ni, nj = elm.get_nodes()
+            S.append([elm.label+1, ni.label+1, nj.label+1])
+        return tabulate(S, **options)
             
 
 #~ =========================== ELEMENT ===========================

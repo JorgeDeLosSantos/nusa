@@ -48,8 +48,8 @@ for node in nodos:
 m.plot_model()
 m.solve()
 # Plotting
-m.plot_esol("sxx")
-m.plot_nsol("sxx")
+m.plot_esol("sxx") # element solution
+m.plot_nsol("sxx") # nodal solution
 m.show()
 
 w,d,t = 1, 0.3, 0.1

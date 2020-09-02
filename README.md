@@ -1,8 +1,6 @@
-# NuSA
+![](nusa/img/nusa-logo.png)
 
 A Python library for structural analysis using the finite element method, designed for academic purposes.
-
-![](nusa/img/nusa-logo.png)
 
 ## Versions
 

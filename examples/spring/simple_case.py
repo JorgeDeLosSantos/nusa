@@ -27,9 +27,11 @@ def simple_case():
     ms.add_constraint(n1,ux=0)
     ms.solve()
     
-    print("Node displacements")
-    for n in ms.get_nodes():
-        print(n.ux, n.uy)
+    # print("Node displacements")
+    # for n in ms.get_nodes():
+    #     print(n.ux, n.uy)
+
+    print(ms.simple_report())
 
 if __name__ == '__main__':
     simple_case()

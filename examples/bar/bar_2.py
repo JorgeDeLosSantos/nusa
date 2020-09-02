@@ -35,7 +35,11 @@ def test2():
     m1.add_constraint(n1, ux=0.0)
     m1.add_constraint(n3, ux=UX3)
     m1.solve()
-    print(m1.U)
+
+    print(f"1. Global stiffness matrix:\n\n {m1.KG}")
+    print(f"2. Displacement in node 2: {n2.ux:0.6f}")
+    print(f"3. Reactions at nodes 1 and 3: R1={n1.fx:0.2f} R3={n3.fx:0.2f}")
+    print(f"4. Stress in each bar:\n Element 1: {e1.sx} \n Element 2: {e2.sx}")
     
     
 if __name__ == '__main__':

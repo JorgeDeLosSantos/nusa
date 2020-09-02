@@ -45,7 +45,7 @@ def test1():
     
     print("Node | Displacements | Forces")
     for node in m1.get_nodes():
-        print("{0}\t{1}\t{2}".format(node.label, node.ux, node.fx)) 
+        print("{0}\t{1:0.6f}\t{2}".format(node.label, node.ux, node.fx)) 
     
     
 if __name__ == '__main__':

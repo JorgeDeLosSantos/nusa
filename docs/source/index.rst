@@ -8,8 +8,7 @@ Welcome to NuSA documentation
 
 What is NuSA ?
 
-NuSA (Numerical Structural Analysis with Python) is a mini-toolkit for solve simple and common 
-structural analysis problems.
+NuSA (Numerical Structural Analysis) is a Python library for structural analysis using the finite element method, designed for academic purposes.
 
 Code: https://github.com/JorgeDeLosSantos/nusa
 
