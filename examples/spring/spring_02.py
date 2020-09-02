@@ -40,8 +40,10 @@ def test2():
     m2.add_constraint(n5,ux=0.02)
     m2.solve()
 
-    for nd in m2.get_nodes():
-        print(nd.ux)
+    print(f"Global stiffness matrix:\n\n{m2.KG}")
+    print(f"Displacements of nodes 2,3 and 4: \n\t{n2.ux}\n\t{n3.ux}\n\t{n4.ux}")
+    print(f"Nodal forces: \n\t{n1.fx}\n\t{n2.fx}\n\t{n3.fx}\n\t{n4.fx}\n\t{n5.fx} ")
+    print(f"Element forces: \n{e1.fx}\n{e2.fx}\n{e3.fx}\n{e4.fx}")
     
 
 if __name__ == '__main__':

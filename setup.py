@@ -23,6 +23,7 @@ setup(name='nusa',
       author_email='delossantosmfq@gmail.com',
       license = "MIT",
       keywords=["Structural Analysis","Finite Element Analysis","Mechanical Engineering"],
+      install_requires=["matplotlib","numpy","tabulate","meshio"],
       url='https://github.com/JorgeDeLosSantos/nusa',
       packages=['nusa'],
       classifiers=[

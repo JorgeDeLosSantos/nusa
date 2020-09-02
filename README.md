@@ -11,8 +11,8 @@ A Python library for structural analysis using the finite element method, design
 ## Requirements
 
 * NumPy
-* Tabulate
 * Matplotlib
+* Tabulate
 * [GMSH](http://gmsh.info/)
 
 
