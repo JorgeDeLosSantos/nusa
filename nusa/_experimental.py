@@ -13,13 +13,13 @@ from nusa import *
 #   def __init__(self,filename):
 #       self.filename = filename
 
-def read_model(filename,model_type="spring"):
-    if model_type == "spring":
+def read_model(filename,mtype="spring"):
+    if mtype == "spring":
         return _read_spring_model(filename)
-    elif model_type == "truss":
+    elif mtype == "truss":
         return _read_truss_model(filename)
     else:
-        raise ValueError("model_type must be a valid model type (spring, truss, bar, beam, lineartriangle)")
+        raise ValueError("mtype must be a valid model type (spring, truss, bar, beam, lineartriangle)")
 
 
 def _read_truss_model(filename):
@@ -111,7 +111,7 @@ def _read_spring_model(filename):
 
 def _dicts2array(listofdicts):
     """
-    Convierte una lista de diccionarios a un array
+    Convert a list of dicts to numpy array [internal purposes only]
     """
     nel = len(listofdicts) 
     nch = len(listofdicts[0])
@@ -137,9 +137,8 @@ def _get_data_from_json(filename):
     return nodes_data,elements_data,constraints_data,forces_data
 
 
-
 if __name__=='__main__':
-    fname = "data/truss_model.nusa"
-    m1 = read_model(fname, "lineartriangle")
+    fname = "data/truss_model01.nusa"
+    m1 = read_model(fname, "truss")
     m1.solve()
     m1.simple_report()

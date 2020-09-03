@@ -6,6 +6,12 @@ proyecto, tales como las características implementadas en cada versión.
 
 ===================================== 0.3.dev0 =====================================
 
+02/09/2020  ------------------------------------------------------------
+
+* Se crea la función model_reader, cuya utilidad será generar modelos a partir 
+de archivos de texto con estructura JSON. Por ahora está implementada  
+para modelos de elementos tipo Spring y Truss.
+
 01/09/2020  ------------------------------------------------------------
 
 * Se ha agregado simple_report para el elemento de tipo Spring.
