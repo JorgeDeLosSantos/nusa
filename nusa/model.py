@@ -1050,7 +1050,8 @@ class LinearTriangleModel(Model):
             
         tr = tri.Triangulation(_x,_y, triangles=tg)
         return tr
-        
+
+
     def plot_nsol(self,var="ux"):
         import matplotlib.pyplot as plt
         import numpy as np
@@ -1059,21 +1060,21 @@ class LinearTriangleModel(Model):
         ax = fig.add_subplot(111)
         
         solutions = {
-             "ux": [n.ux for n in self.get_nodes()],
-             "uy": [n.uy for n in self.get_nodes()],
-             "usum": [np.sqrt(n.ux**2 + n.uy**2) for n in self.get_nodes()],
-             "sxx": [n.sx for n in self.get_nodes()],
-             "syy": [n.sy for n in self.get_nodes()],
-             "sxy": [n.sxy for n in self.get_nodes()],
-             "seqv": [n.seqv for n in self.get_nodes()],
-             "exx": [n.ex for n in self.get_nodes()],
-             "eyy": [n.ey for n in self.get_nodes()],
-             "exy": [n.exy for n in self.get_nodes()]
+             "ux": (n.ux for n in self.get_nodes()),
+             "uy": (n.uy for n in self.get_nodes()),
+             "usum": (np.sqrt(n.ux**2 + n.uy**2) for n in self.get_nodes()),
+             "sxx": (n.sx for n in self.get_nodes()),
+             "syy": (n.sy for n in self.get_nodes()),
+             "sxy": (n.sxy for n in self.get_nodes()),
+             "seqv": (n.seqv for n in self.get_nodes()),
+             "exx": (n.ex for n in self.get_nodes()),
+             "eyy": (n.ey for n in self.get_nodes()),
+             "exy": (n.exy for n in self.get_nodes())
              }
         
         tr = self._get_tri()
         try:
-            fsol = solutions.get(var)
+            fsol = list(solutions.get(var))
         except:
             return None
         if isinstance(fsol,list): fsol = np.array(fsol)
@@ -1085,6 +1086,7 @@ class LinearTriangleModel(Model):
         ax.set_aspect("equal")
         ax_title = "{0} (Max:{1:0.3e}, Min:{2:0.3e})".format(var,fsol.max(),fsol.min())
         ax.set_title(ax_title, fontsize=8)
+
 
     def plot_esol(self,var="ux"):
         import matplotlib.pyplot as plt
@@ -1107,14 +1109,14 @@ class LinearTriangleModel(Model):
             
         pc = PatchCollection(patches, cmap="jet", alpha=1)
         solutions = {
-             "sxx": [e.sx for e in self.get_elements()],
-             "syy": [e.sy for e in self.get_elements()],
-             "sxy": [e.sxy for e in self.get_elements()],
-             "exx": [e.ex for e in self.get_elements()],
-             "eyy": [e.ey for e in self.get_elements()],
-             "exy": [e.exy for e in self.get_elements()]
+             "sxx": (e.sx for e in self.get_elements()),
+             "syy": (e.sy for e in self.get_elements()),
+             "sxy": (e.sxy for e in self.get_elements()),
+             "exx": (e.ex for e in self.get_elements()),
+             "eyy": (e.ey for e in self.get_elements()),
+             "exy": (e.exy for e in self.get_elements())
              }
-        fsol = np.array(solutions.get(var.lower()))
+        fsol = np.array(list(solutions.get(var.lower())))
         pc.set_array(fsol)
         ax.add_collection(pc)
         plt.colorbar(pc)
@@ -1122,7 +1124,7 @@ class LinearTriangleModel(Model):
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
-        ax_title = "{0} (Max:{1}, Min:{2})".format(var,fsol.max(),fsol.min())
+        ax_title = "{0} (Max:{1:0.3e}, Min:{2:0.3e})".format(var,fsol.max(),fsol.min())
         ax.set_title(ax_title, fontsize=8)
         
     def show(self):
