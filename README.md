@@ -6,7 +6,7 @@ A Python library for structural analysis using the finite element method, design
 
 * **0.1.0** (16/11/2016)
 * **0.2.0** (14/07/2019)
-* **0.2.dev1** Development version 
+* **0.3.dev0** Development version 
 
 ## Requirements
 

@@ -180,6 +180,109 @@ class Bar(Element):
 
 
 
+
+
+class Truss(Element):
+    """
+    Truss element for finite element analysis
+    
+    *nodes* : Tuple of :class:`~nusa.core.Node`
+        Connectivity for element
+    
+    *E* : float
+        Young modulus
+        
+    *A* : float
+        Area of element
+    """
+    def __init__(self,nodes,E,A):
+        Element.__init__(self,etype="truss")
+        self.nodes = nodes
+        self.E = E
+        self.A = A
+        
+    @property
+    def L(self):
+        """
+        Length of element
+        """
+        ni,nj = self.get_nodes()
+        x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
+        _l = np.sqrt( (x1-x0)**2 + (y1-y0)**2 )
+        return _l
+    
+    @property
+    def theta(self):
+        """
+        Element angle, measure from X-positive axis counter-clockwise.
+        """
+        ni,nj = self.get_nodes()
+        x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
+        # ~ if x0==x1:
+            # ~ theta = 90*(np.pi/180)
+        # ~ else:
+        theta = np.arctan2((y1-y0),(x1-x0))
+        return theta
+    
+    @property
+    def f(self):
+        r"""
+        Force in this element, given by
+        
+        .. math::
+        
+            f = \frac{EA}{L}\begin{bmatrix} C & S & -C & -S \end{bmatrix}\left\{u\right\}
+        
+        where:
+        
+            * E - Elastic modulus
+            * A - Cross-section
+            * L - Length
+            * C - :math:`\cos(\theta)`
+            * S - :math:`\sin(\theta)`
+            * u - Four-element vector of nodal displacements -> :math:`\left\{ ux_i; uy_i; ux_j; uy_j \right\}`
+        """
+        return self._compute_force()
+    
+    @property
+    def s(self):
+        """
+        Stress in this element, given by:
+        
+        s = f/A
+        """
+        s = self.f/self.A
+        return s
+        
+    def _compute_force(self):
+        theta = self.theta
+        E, A, L = self.E, self.A, self.L
+        C = np.cos(theta)
+        S = np.sin(theta)
+        ni, nj = self.get_nodes()
+        u = np.array([ni.ux, ni.uy, nj.ux, nj.uy]).T
+        F = (E*A/L)*np.dot(np.array([-C, -S, C, S]), u)
+        return F
+        
+    def get_element_stiffness(self):
+        """
+        Get stiffness matrix for this element
+        """
+        multiplier = (self.A*self.E/self.L)
+        C = np.cos(self.theta)
+        S = np.sin(self.theta)
+        CS = C*S
+        self._K = multiplier*np.array([[C**2 , CS   , -C**2, -CS  ],
+                                       [CS   , S**2 , -CS  , -S**2],
+                                       [-C**2, -CS  , C**2 , CS   ],
+                                       [-CS  , -S**2,  CS  , S**2 ]])
+        return self._K
+        
+    def get_nodes(self):
+        return self.nodes
+
+
+
 class Beam(Element):
     """
     Beam element for finite element analysis

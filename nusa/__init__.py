@@ -18,6 +18,6 @@ from .mesh import *
 from .io import *
 
 import matplotlib as mpl
-mpl.rc("figure", facecolor="#F9F9F9", titleweight="bold")
+mpl.rc("figure", facecolor="#FAFAFA", titleweight="bold")
 mpl.rc("axes", facecolor="#FFFFFF")
 mpl.rc("font", size=9)
