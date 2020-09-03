@@ -13,16 +13,17 @@ from nusa import *
 #   def __init__(self,filename):
 #       self.filename = filename
 
-def read_truss_model(filename):
-    json_file = filename
-    with open(json_file, 'r') as myfile:
-        data=myfile.read()
-    obj = json.loads(data)
+def read_model(filename,model_type="spring"):
+    if model_type == "spring":
+        return _read_spring_model(filename)
+    elif model_type == "truss":
+        return _read_truss_model(filename)
+    else:
+        raise ValueError("model_type must be a valid model type (spring, truss, bar, beam, lineartriangle)")
 
-    nodes_data = _get_nodes(obj)
-    elements_data = _get_elements(obj)
-    constraints_data = _get_constraints(obj)
-    forces_data = _get_forces(obj)
+
+def _read_truss_model(filename):
+    nodes_data,elements_data,constraints_data,forces_data = _get_data_from_json(filename)
 
     nc = nodes_data
     ec = elements_data
@@ -42,8 +43,10 @@ def read_truss_model(filename):
         elements.append(ce)
         
     model = TrussModel("Truss Model")
-    for n in nodes: model.add_node(n)
-    for e in elements: model.add_element(e)
+    for n in nodes: 
+        model.add_node(n)
+    for e in elements: 
+        model.add_element(e)
     
     for c in constraints_data:
         k,ux,uy = int(c[0]),c[1],c[2]
@@ -62,16 +65,8 @@ def read_truss_model(filename):
 
 
 
-def read_spring_model(filename):
-    json_file = filename
-    with open(json_file, 'r') as myfile:
-        data=myfile.read()
-    obj = json.loads(data)
-    
-    nodes_data = _get_nodes(obj)
-    elements_data = _get_elements_spring(obj)
-    constraints_data = _get_constraints(obj)
-    forces_data = _get_forces(obj)
+def _read_spring_model(filename):
+    nodes_data,elements_data,constraints_data,forces_data = _get_data_from_json(filename)
 
     nc = nodes_data
     ec = elements_data
@@ -91,8 +86,11 @@ def read_spring_model(filename):
         elements.append(ce)
         
     model = SpringModel("Truss Model")
-    for n in nodes: model.add_node(n)
-    for e in elements: model.add_element(e)
+
+    for n in nodes: 
+        model.add_node(n)
+    for e in elements: 
+        model.add_element(e)
     
     for c in constraints_data:
         k,ux,uy = int(c[0]),c[1],c[2]
@@ -111,55 +109,37 @@ def read_spring_model(filename):
 
 
 
-def _get_nodes(obj):
-    nn = len(obj["nodes"])
-    nodes = np.zeros((nn,2))
-    for i,m in enumerate(obj["nodes"]):
-        nodes[i,0] = m["x"]
-        nodes[i,1] = m["y"]
-    return nodes
-
-def _get_elements(obj):
-    nn = len(obj["elements"])
-    elements = np.zeros((nn,4))
-    for i,m in enumerate(obj["elements"]):
-        elements[i,0] = m["ni"]
-        elements[i,1] = m["nj"]
-        elements[i,2] = m["E"]
-        elements[i,3] = m["A"]
-    return elements
-
-def _get_elements_spring(obj):
-    nn = len(obj["elements"])
-    elements = np.zeros((nn,3))
-    for i,m in enumerate(obj["elements"]):
-        elements[i,0] = m["ni"]
-        elements[i,1] = m["nj"]
-        elements[i,2] = m["ke"]
-    return elements
+def _dicts2array(listofdicts):
+    """
+    Convierte una lista de diccionarios a un array
+    """
+    nel = len(listofdicts) 
+    nch = len(listofdicts[0])
+    keys = listofdicts[0].keys()
+    array = np.zeros((nel,nch))
+    for i,dc in enumerate(listofdicts):
+        for j,key in enumerate(keys):
+            value = dc[key]
+            if value == "free": # in case of "free" constraints
+                value = np.nan
+            array[i,j] = value
+    return array
 
 
-def _get_constraints(obj):
-    nn = len(obj["constraints"])    
-    const = np.zeros((nn,3))
-    for i,m in enumerate(obj["constraints"]):
-        const[i,1] = np.nan if m["ux"] == "free" else m["ux"]
-        const[i,2] = np.nan if m["uy"] == "free" else m["uy"]
-        const[i,0] = m["node"]
-    return const
+def _get_data_from_json(filename):
+    with open(filename, 'r') as nusafile:
+        data = nusafile.read()
+    obj = json.loads(data)
+    nodes_data = _dicts2array(obj["nodes"])
+    elements_data = _dicts2array(obj["elements"])
+    constraints_data = _dicts2array(obj["constraints"])
+    forces_data = _dicts2array(obj["forces"])
+    return nodes_data,elements_data,constraints_data,forces_data
 
-def _get_forces(obj):
-    nn = len(obj["forces"])
-    forces = np.zeros((nn,3))
-    for i,m in enumerate(obj["forces"]):
-        forces[i,1] = m["fx"]
-        forces[i,2] = m["fy"]
-        forces[i,0] = m["node"]
-    return forces
 
 
 if __name__=='__main__':
-    fname = "data/spring_model.nusa"
-    m1 = read_spring_model(fname)
+    fname = "data/truss_model.nusa"
+    m1 = read_model(fname, "lineartriangle")
     m1.solve()
     m1.simple_report()
