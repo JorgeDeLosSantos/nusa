@@ -1119,7 +1119,7 @@ class LinearTriangleModel(Model):
         fsol = np.array(list(solutions.get(var.lower())))
         pc.set_array(fsol)
         ax.add_collection(pc)
-        plt.colorbar(pc)
+        fig.colorbar(pc)
         x0,x1,y0,y1 = self.rect_region()
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
