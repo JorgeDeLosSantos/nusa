@@ -15,6 +15,10 @@ with open(os.path.join(dir_setup, 'nusa', 'version.py')) as f:
     # Defines __version__
     exec(f.read())
 
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 # Current status: pre-alpha
 setup(name='nusa',
       version=__version__,
@@ -25,6 +29,8 @@ setup(name='nusa',
       keywords=["Structural Analysis","Finite Element Analysis","Mechanical Engineering"],
       install_requires=["matplotlib","numpy","tabulate","meshio"],
       url='https://github.com/JorgeDeLosSantos/nusa',
+      long_description=long_description,
+      long_description_content_type="text/markdown",
       packages=['nusa'],
       classifiers=[
       "Development Status :: 2 - Pre-Alpha",
