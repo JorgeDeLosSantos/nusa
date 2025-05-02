@@ -990,7 +990,7 @@ class LinearTriangleModel(Model):
                 if nd.ux == 0 and nd.uy == 0: self._draw_xyconstraint(ax,nd.x,nd.y)
                 _x.append(nd.x)
                 _y.append(nd.y)
-            polygon = Polygon(list(zip(_x,_y)), True)
+            polygon = Polygon(list(zip(_x,_y)))
             patches.append(polygon)
 
         pc = PatchCollection(patches, color="#7CE7FF", edgecolor="k", alpha=0.4)
@@ -1104,7 +1104,7 @@ class LinearTriangleModel(Model):
             for nd in elm.nodes:
                 _x.append(nd.x)
                 _y.append(nd.y)
-            polygon = Polygon(list(zip(_x,_y)), True)
+            polygon = Polygon(list(zip(_x,_y)))
             patches.append(polygon)
             
         pc = PatchCollection(patches, cmap="jet", alpha=1)
