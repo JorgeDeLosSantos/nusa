@@ -1,0 +1,743 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nusa.core &mdash; nusa 0.3.0.dev0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=6fc6f92e"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            nusa
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../core.html">The <code class="code docutils literal notranslate"><span class="pre">core</span></code> module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">nusa</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">nusa.core</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for nusa.core</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ***********************************</span>
+<span class="c1">#  Author: Pedro Jorge De Los Santos    </span>
+<span class="c1">#  E-mail: delossantosmfq@gmail.com </span>
+<span class="c1">#  Blog: numython.github.io</span>
+<span class="c1">#  License: MIT License</span>
+<span class="c1"># ***********************************</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1">#~ ===========================  MODEL  ===========================</span>
+<div class="viewcode-block" id="Model">
+<a class="viewcode-back" href="../../core.html#nusa.core.Model">[docs]</a>
+<span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Superclass for all Finite Element Analysis (FEA) models.</span>
+
+<span class="sd">    This class serves as a base container to manage nodes and elements,</span>
+<span class="sd">    allowing derived models to build and manipulate FEA structures.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">mtype</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a new FEA model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Name of the model.</span>
+<span class="sd">        mtype : str</span>
+<span class="sd">            Type of model (e.g., &#39;bar&#39;, &#39;truss&#39;, &#39;beam&#39;).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mtype</span> <span class="o">=</span> <span class="n">mtype</span> <span class="c1"># Model type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="c1"># Name </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># Dictionary for nodes {number: NodeObject}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># Dictionary for elements {number: ElementObject}</span>
+        
+<div class="viewcode-block" id="Model.add_node">
+<a class="viewcode-back" href="../../core.html#nusa.core.Model.add_node">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">node</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a node to the model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node : :class:`~nusa.core.Node`</span>
+<span class="sd">            Instance of a Node to be added.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">current_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_number_of_nodes</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">label</span> <span class="ow">is</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="n">current_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span></div>
+
+        
+<div class="viewcode-block" id="Model.add_element">
+<a class="viewcode-back" href="../../core.html#nusa.core.Model.add_element">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">element</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an element to the model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        element : :class:`~nusa.core.Element`</span>
+<span class="sd">            Instance of an Element to be added.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the element type does not match the model type.</span>
+
+<span class="sd">        Example</span>
+<span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; m1 = BarModel()</span>
+<span class="sd">        &gt;&gt;&gt; E, A = 200e9, 0.001</span>
+<span class="sd">        &gt;&gt;&gt; n1 = Node((0,0))</span>
+<span class="sd">        &gt;&gt;&gt; n2 = Node((1,0))</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Bar((n1,n2), E, A)</span>
+<span class="sd">        &gt;&gt;&gt; m1.add_element(e1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtype</span> <span class="o">!=</span> <span class="n">element</span><span class="o">.</span><span class="n">etype</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Element type must be &quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">mtype</span><span class="p">)</span>
+        <span class="n">current_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_number_of_elements</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">element</span><span class="o">.</span><span class="n">label</span> <span class="ow">is</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">element</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="n">current_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="n">element</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">element</span>
+        <span class="c1"># Assign this element to &quot;xxxx&quot; </span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">element</span><span class="o">.</span><span class="n">get_nodes</span><span class="p">():</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">_elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Model.get_number_of_nodes">
+<a class="viewcode-back" href="../../core.html#nusa.core.Model.get_number_of_nodes">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_number_of_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of nodes in the model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Total number of nodes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span></div>
+
+        
+<div class="viewcode-block" id="Model.get_number_of_elements">
+<a class="viewcode-back" href="../../core.html#nusa.core.Model.get_number_of_elements">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_number_of_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of elements in the model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Total number of elements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span></div>
+
+        
+<div class="viewcode-block" id="Model.get_nodes">
+<a class="viewcode-back" href="../../core.html#nusa.core.Model.get_nodes">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of node objects.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of Node instances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">values</span><span class="p">()</span></div>
+
+        
+<div class="viewcode-block" id="Model.get_elements">
+<a class="viewcode-back" href="../../core.html#nusa.core.Model.get_elements">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of element objects.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of Element instances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="o">.</span><span class="n">values</span><span class="p">()</span></div>
+
+    
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a string representation of the model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Model name and number of nodes/elements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Model: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Nodes: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_number_of_nodes</span><span class="p">()</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Elements: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_number_of_elements</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a string representation of the model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Model name and number of nodes/elements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Model: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Nodes: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_number_of_nodes</span><span class="p">()</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Elements: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_number_of_elements</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Model.simple_report">
+<a class="viewcode-back" href="../../core.html#nusa.core.Model.simple_report">[docs]</a>
+    <span class="k">def</span> <span class="nf">simple_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">report_type</span><span class="o">=</span><span class="s2">&quot;print&quot;</span><span class="p">,</span><span class="n">fname</span><span class="o">=</span><span class="s2">&quot;nusa_rpt.txt&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Placeholder for a future implementation of a simple report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        report_type : str, optional</span>
+<span class="sd">            Type of report to generate (&#39;print&#39;, &#39;file&#39;, etc.).</span>
+<span class="sd">        fname : str, optional</span>
+<span class="sd">            Output filename for file-based reports.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+        
+    <span class="k">def</span> <span class="nf">_get_ndisplacements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a table of node displacements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        options : dict</span>
+<span class="sd">            Tabulate formatting options.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Tabulated string of displacements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;Node&quot;</span><span class="p">,</span><span class="s2">&quot;UX&quot;</span><span class="p">,</span><span class="s2">&quot;UY&quot;</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nodes</span><span class="p">():</span>
+            <span class="n">D</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">n</span><span class="o">.</span><span class="n">label</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">.</span><span class="n">ux</span><span class="p">,</span><span class="n">n</span><span class="o">.</span><span class="n">uy</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_get_nforces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a table of nodal forces.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        options : dict</span>
+<span class="sd">            Tabulate formatting options.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Tabulated string of nodal forces.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;Node&quot;</span><span class="p">,</span><span class="s2">&quot;FX&quot;</span><span class="p">,</span><span class="s2">&quot;FY&quot;</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nodes</span><span class="p">():</span>
+            <span class="n">F</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">n</span><span class="o">.</span><span class="n">label</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">.</span><span class="n">fx</span><span class="p">,</span><span class="n">n</span><span class="o">.</span><span class="n">fy</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_get_eforces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a table of element internal forces.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        options : dict</span>
+<span class="sd">            Tabulate formatting options.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Tabulated string of element forces.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;Element&quot;</span><span class="p">,</span><span class="s2">&quot;F&quot;</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">elm</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_elements</span><span class="p">():</span>
+            <span class="n">F</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">elm</span><span class="o">.</span><span class="n">label</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">elm</span><span class="o">.</span><span class="n">f</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_get_estresses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a table of element stresses.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        options : dict</span>
+<span class="sd">            Tabulate formatting options.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Tabulated string of element stresses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;Element&quot;</span><span class="p">,</span><span class="s2">&quot;S&quot;</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">elm</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_elements</span><span class="p">():</span>
+            <span class="n">S</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">elm</span><span class="o">.</span><span class="n">label</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">elm</span><span class="o">.</span><span class="n">s</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_get_nodes_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a table of node coordinates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        options : dict</span>
+<span class="sd">            Tabulate formatting options.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Tabulated string of node positions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;Node&quot;</span><span class="p">,</span><span class="s2">&quot;X&quot;</span><span class="p">,</span><span class="s2">&quot;Y&quot;</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nodes</span><span class="p">():</span>
+            <span class="n">F</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">n</span><span class="o">.</span><span class="n">label</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_get_elements_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a table of element connectivity.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        options : dict</span>
+<span class="sd">            Tabulate formatting options.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Tabulated string of element-node relationships.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;Element&quot;</span><span class="p">,</span><span class="s2">&quot;NI&quot;</span><span class="p">,</span><span class="s2">&quot;NJ&quot;</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">elm</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_elements</span><span class="p">():</span>
+            <span class="n">ni</span><span class="p">,</span> <span class="n">nj</span> <span class="o">=</span> <span class="n">elm</span><span class="o">.</span><span class="n">get_nodes</span><span class="p">()</span>
+            <span class="n">S</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">elm</span><span class="o">.</span><span class="n">label</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">ni</span><span class="o">.</span><span class="n">label</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">nj</span><span class="o">.</span><span class="n">label</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span></div>
+
+            
+
+<span class="c1">#~ =========================== ELEMENT ===========================</span>
+
+<div class="viewcode-block" id="Element">
+<a class="viewcode-back" href="../../core.html#nusa.core.Element">[docs]</a>
+<span class="k">class</span> <span class="nc">Element</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Superclass for all Elements</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">etype</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">etype</span> <span class="o">=</span> <span class="n">etype</span> <span class="c1"># element type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="c1"># label (reassignment -&gt; Model.addElement)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fx</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fy</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sx</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sy</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sxy</span> <span class="o">=</span> <span class="mf">0.0</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fx</span>
+        
+    <span class="nd">@fx</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">fx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fx</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fy</span>
+        
+    <span class="nd">@fy</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">fy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fy</span> <span class="o">=</span> <span class="n">val</span>
+        
+<div class="viewcode-block" id="Element.set_label">
+<a class="viewcode-back" href="../../core.html#nusa.core.Element.set_label">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">label</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the label property</span>
+<span class="sd">        </span>
+<span class="sd">        *label* : int</span>
+<span class="sd">            Label, must be an integer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span></div>
+
+        
+<div class="viewcode-block" id="Element.set_element_forces">
+<a class="viewcode-back" href="../../core.html#nusa.core.Element.set_element_forces">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_element_forces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fx</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">fy</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set element forces</span>
+<span class="sd">        </span>
+<span class="sd">        *fx* : float</span>
+<span class="sd">            Force in x-dir</span>
+<span class="sd">        *fy* : float</span>
+<span class="sd">            Force in y-dir</span>
+<span class="sd">        </span>
+<span class="sd">        Normally this method is used by the `solve` method to </span>
+<span class="sd">        update computed element-forces.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fx</span> <span class="o">=</span> <span class="n">fx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fy</span> <span class="o">=</span> <span class="n">fy</span></div>
+
+        
+<div class="viewcode-block" id="Element.get_element_forces">
+<a class="viewcode-back" href="../../core.html#nusa.core.Element.get_element_forces">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_element_forces</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a tuple with element forces:  (fx, fy)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fy</span></div>
+
+        
+<div class="viewcode-block" id="Element.get_nodes">
+<a class="viewcode-back" href="../../core.html#nusa.core.Element.get_nodes">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span></div>
+
+        
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_str</span></div>
+
+
+
+<span class="c1">#~ =========================== NODE ===========================</span>
+
+<div class="viewcode-block" id="Node">
+<a class="viewcode-back" href="../../core.html#nusa.core.Node">[docs]</a>
+<span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for node object.</span>
+<span class="sd">    </span>
+<span class="sd">    *coordinates* : `tuple`, `list`</span>
+<span class="sd">        Coordinates of node</span>
+<span class="sd">    </span>
+<span class="sd">    *label* : int</span>
+<span class="sd">        Label of node</span>
+<span class="sd">        </span>
+<span class="sd">    ::</span>
+<span class="sd">    </span>
+<span class="sd">        n1 = Node((0,0))</span>
+<span class="sd">        n2 = Node((0,0))</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">coordinates</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">coordinates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># usable prop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># usable prop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_label</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_uy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ur</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fx</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fy</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_m</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="c1"># Nodal stresses</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sx</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sy</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sxy</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_seqv</span> <span class="o">=</span> <span class="mf">0.0</span> 
+        <span class="c1"># Elements ¿what?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_elements</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label</span>
+        
+    <span class="nd">@label</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Experimental setter for adjust range of labels: TO DO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_label</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ux</span>
+    
+    <span class="nd">@ux</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">ux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="k">if</span> <span class="kc">True</span><span class="p">:</span><span class="c1">#type(val) in [int,float]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ux</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Value must be float or int&quot;</span><span class="p">)</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">uy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uy</span>
+    
+    <span class="nd">@uy</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">uy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="k">if</span> <span class="kc">True</span><span class="p">:</span><span class="c1">#type(val) in [int,float]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_uy</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Value must be float or int&quot;</span><span class="p">)</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ur</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ur</span>
+    
+    <span class="nd">@ur</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">ur</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="k">if</span> <span class="kc">True</span><span class="p">:</span><span class="c1">#type(val) in [int,float]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ur</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Value must be float or int&quot;</span><span class="p">)</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fx</span>
+    
+    <span class="nd">@fx</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">fx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fx</span> <span class="o">=</span> <span class="n">val</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fy</span>
+    
+    <span class="nd">@fy</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">fy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fy</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">m</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m</span>
+    
+    <span class="nd">@m</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">m</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_m</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_elements</span>
+        <span class="k">if</span> <span class="n">elements</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sx</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sx</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">el</span><span class="o">.</span><span class="n">sx</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">])</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sx</span>
+    
+    <span class="nd">@sx</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">sx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sx</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_elements</span>
+        <span class="k">if</span> <span class="n">elements</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sy</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sy</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">el</span><span class="o">.</span><span class="n">sy</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">])</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sy</span>
+    
+    <span class="nd">@sy</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">sy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sy</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sxy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_elements</span>
+        <span class="k">if</span> <span class="n">elements</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sxy</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sxy</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">el</span><span class="o">.</span><span class="n">sxy</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">])</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sxy</span>
+    
+    <span class="nd">@sxy</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">sxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sxy</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">seqv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sxx</span><span class="p">,</span> <span class="n">syy</span><span class="p">,</span> <span class="n">sxy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sxy</span>
+        <span class="n">seqv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sxx</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">sxx</span><span class="o">*</span><span class="n">syy</span> <span class="o">+</span> <span class="n">syy</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">sxy</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">seqv</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ex</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_elements</span>
+        <span class="k">if</span> <span class="n">elements</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ex</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ex</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">el</span><span class="o">.</span><span class="n">ex</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">])</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ex</span>
+    
+    <span class="nd">@ex</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">ex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ex</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ey</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_elements</span>
+        <span class="k">if</span> <span class="n">elements</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ey</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ey</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">el</span><span class="o">.</span><span class="n">ey</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">])</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ey</span>
+    
+    <span class="nd">@ey</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">ey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ey</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_elements</span>
+        <span class="k">if</span> <span class="n">elements</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_exy</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_exy</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">el</span><span class="o">.</span><span class="n">exy</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">])</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exy</span>
+    
+    <span class="nd">@exy</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">exy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exy</span> <span class="o">=</span> <span class="n">val</span>
+
+<div class="viewcode-block" id="Node.get_label">
+<a class="viewcode-back" href="../../core.html#nusa.core.Node.get_label">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label</span></div>
+
+    
+<div class="viewcode-block" id="Node.set_label">
+<a class="viewcode-back" href="../../core.html#nusa.core.Node.set_label">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">label</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_label</span> <span class="o">=</span> <span class="n">label</span></div>
+
+    
+<div class="viewcode-block" id="Node.get_displacements">
+<a class="viewcode-back" href="../../core.html#nusa.core.Node.get_displacements">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_displacements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ux</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_uy</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_ur</span></div>
+
+        
+<div class="viewcode-block" id="Node.set_displacements">
+<a class="viewcode-back" href="../../core.html#nusa.core.Node.set_displacements">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_displacements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ux</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">uy</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">ur</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ux</span> <span class="o">=</span> <span class="n">ux</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_uy</span> <span class="o">=</span> <span class="n">uy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ur</span> <span class="o">=</span> <span class="n">ur</span></div>
+
+    
+<div class="viewcode-block" id="Node.get_forces">
+<a class="viewcode-back" href="../../core.html#nusa.core.Node.get_forces">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_forces</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fx</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_fy</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="Node.set_forces">
+<a class="viewcode-back" href="../../core.html#nusa.core.Node.set_forces">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_forces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fx</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span><span class="n">fy</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fx</span> <span class="o">=</span> <span class="n">fx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fy</span> <span class="o">=</span> <span class="n">fy</span></div>
+
+        
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+        <span class="n">_str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">U:(</span><span class="si">%g</span><span class="s2">,</span><span class="si">%g</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">_str</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uy</span><span class="p">)</span>
+        <span class="n">_str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">F:(</span><span class="si">%g</span><span class="s2">,</span><span class="si">%g</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">_str</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fx</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fy</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_str</span></div>
+
+        
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Pedro Jorge De Los Santos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

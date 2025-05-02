@@ -1,0 +1,539 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The core module &mdash; nusa 0.3.0.dev0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6fc6f92e"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            nusa
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The <code class="code docutils literal notranslate"><span class="pre">core</span></code> module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#nusa.core.Element"><code class="docutils literal notranslate"><span class="pre">Element</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Element.fx"><code class="docutils literal notranslate"><span class="pre">Element.fx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Element.fy"><code class="docutils literal notranslate"><span class="pre">Element.fy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Element.get_element_forces"><code class="docutils literal notranslate"><span class="pre">Element.get_element_forces()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Element.get_nodes"><code class="docutils literal notranslate"><span class="pre">Element.get_nodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Element.set_element_forces"><code class="docutils literal notranslate"><span class="pre">Element.set_element_forces()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Element.set_label"><code class="docutils literal notranslate"><span class="pre">Element.set_label()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#nusa.core.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Model.add_element"><code class="docutils literal notranslate"><span class="pre">Model.add_element()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Model.add_node"><code class="docutils literal notranslate"><span class="pre">Model.add_node()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Model.get_elements"><code class="docutils literal notranslate"><span class="pre">Model.get_elements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Model.get_nodes"><code class="docutils literal notranslate"><span class="pre">Model.get_nodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Model.get_number_of_elements"><code class="docutils literal notranslate"><span class="pre">Model.get_number_of_elements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Model.get_number_of_nodes"><code class="docutils literal notranslate"><span class="pre">Model.get_number_of_nodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Model.simple_report"><code class="docutils literal notranslate"><span class="pre">Model.simple_report()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#nusa.core.Node"><code class="docutils literal notranslate"><span class="pre">Node</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.ex"><code class="docutils literal notranslate"><span class="pre">Node.ex</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.exy"><code class="docutils literal notranslate"><span class="pre">Node.exy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.ey"><code class="docutils literal notranslate"><span class="pre">Node.ey</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.fx"><code class="docutils literal notranslate"><span class="pre">Node.fx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.fy"><code class="docutils literal notranslate"><span class="pre">Node.fy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.get_displacements"><code class="docutils literal notranslate"><span class="pre">Node.get_displacements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.get_forces"><code class="docutils literal notranslate"><span class="pre">Node.get_forces()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.get_label"><code class="docutils literal notranslate"><span class="pre">Node.get_label()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.label"><code class="docutils literal notranslate"><span class="pre">Node.label</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.m"><code class="docutils literal notranslate"><span class="pre">Node.m</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.seqv"><code class="docutils literal notranslate"><span class="pre">Node.seqv</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.set_displacements"><code class="docutils literal notranslate"><span class="pre">Node.set_displacements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.set_forces"><code class="docutils literal notranslate"><span class="pre">Node.set_forces()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.set_label"><code class="docutils literal notranslate"><span class="pre">Node.set_label()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.sx"><code class="docutils literal notranslate"><span class="pre">Node.sx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.sxy"><code class="docutils literal notranslate"><span class="pre">Node.sxy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.sy"><code class="docutils literal notranslate"><span class="pre">Node.sy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.ur"><code class="docutils literal notranslate"><span class="pre">Node.ur</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.ux"><code class="docutils literal notranslate"><span class="pre">Node.ux</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nusa.core.Node.uy"><code class="docutils literal notranslate"><span class="pre">Node.uy</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">nusa</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">The <code class="code docutils literal notranslate"><span class="pre">core</span></code> module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/core.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-nusa.core">
+<span id="the-core-module"></span><h1>The <code class="code docutils literal notranslate"><span class="pre">core</span></code> module<a class="headerlink" href="#module-nusa.core" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="nusa.core.Element">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nusa.core.</span></span><span class="sig-name descname"><span class="pre">Element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">etype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Element" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Superclass for all Elements</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fx</strong></dt><dd></dd>
+<dt><strong>fy</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#nusa.core.Element.get_element_forces" title="nusa.core.Element.get_element_forces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_element_forces</span></code></a>()</p></td>
+<td><p>Returns a tuple with element forces:  (fx, fy)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#nusa.core.Element.set_element_forces" title="nusa.core.Element.set_element_forces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_element_forces</span></code></a>([fx, fy])</p></td>
+<td><p>Set element forces</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#nusa.core.Element.set_label" title="nusa.core.Element.set_label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_label</span></code></a>(label)</p></td>
+<td><p>Set the label property</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>get_nodes</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Element.fx">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fx</span></span><a class="headerlink" href="#nusa.core.Element.fx" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Element.fy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fy</span></span><a class="headerlink" href="#nusa.core.Element.fy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Element.get_element_forces">
+<span class="sig-name descname"><span class="pre">get_element_forces</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Element.get_element_forces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Element.get_element_forces" title="Link to this definition"></a></dt>
+<dd><p>Returns a tuple with element forces:  (fx, fy)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Element.get_nodes">
+<span class="sig-name descname"><span class="pre">get_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Element.get_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Element.get_nodes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Element.set_element_forces">
+<span class="sig-name descname"><span class="pre">set_element_forces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Element.set_element_forces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Element.set_element_forces" title="Link to this definition"></a></dt>
+<dd><p>Set element forces</p>
+<dl class="simple">
+<dt><em>fx</em><span class="classifier">float</span></dt><dd><p>Force in x-dir</p>
+</dd>
+<dt><em>fy</em><span class="classifier">float</span></dt><dd><p>Force in y-dir</p>
+</dd>
+</dl>
+<p>Normally this method is used by the <cite>solve</cite> method to 
+update computed element-forces.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Element.set_label">
+<span class="sig-name descname"><span class="pre">set_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Element.set_label"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Element.set_label" title="Link to this definition"></a></dt>
+<dd><p>Set the label property</p>
+<dl class="simple">
+<dt><em>label</em><span class="classifier">int</span></dt><dd><p>Label, must be an integer</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="nusa.core.Model">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nusa.core.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Model" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Superclass for all Finite Element Analysis (FEA) models.</p>
+<p>This class serves as a base container to manage nodes and elements,
+allowing derived models to build and manipulate FEA structures.</p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#nusa.core.Model.add_element" title="nusa.core.Model.add_element"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_element</span></code></a>(element)</p></td>
+<td><p>Add an element to the model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#nusa.core.Model.add_node" title="nusa.core.Model.add_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_node</span></code></a>(node)</p></td>
+<td><p>Add a node to the model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#nusa.core.Model.get_elements" title="nusa.core.Model.get_elements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_elements</span></code></a>()</p></td>
+<td><p>Return a list of element objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#nusa.core.Model.get_nodes" title="nusa.core.Model.get_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_nodes</span></code></a>()</p></td>
+<td><p>Return a list of node objects.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#nusa.core.Model.get_number_of_elements" title="nusa.core.Model.get_number_of_elements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_number_of_elements</span></code></a>()</p></td>
+<td><p>Return the number of elements in the model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#nusa.core.Model.get_number_of_nodes" title="nusa.core.Model.get_number_of_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_number_of_nodes</span></code></a>()</p></td>
+<td><p>Return the number of nodes in the model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#nusa.core.Model.simple_report" title="nusa.core.Model.simple_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">simple_report</span></code></a>([report_type, fname])</p></td>
+<td><p>Placeholder for a future implementation of a simple report.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Model.add_element">
+<span class="sig-name descname"><span class="pre">add_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Model.add_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Model.add_element" title="Link to this definition"></a></dt>
+<dd><p>Add an element to the model.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>element</strong><span class="classifier"><a class="reference internal" href="#nusa.core.Element" title="nusa.core.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a></span></dt><dd><p>Instance of an Element to be added.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the element type does not match the model type.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Model.add_node">
+<span class="sig-name descname"><span class="pre">add_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Model.add_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Model.add_node" title="Link to this definition"></a></dt>
+<dd><p>Add a node to the model.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>node</strong><span class="classifier"><a class="reference internal" href="#nusa.core.Node" title="nusa.core.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a></span></dt><dd><p>Instance of a Node to be added.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Model.get_elements">
+<span class="sig-name descname"><span class="pre">get_elements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Model.get_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Model.get_elements" title="Link to this definition"></a></dt>
+<dd><p>Return a list of element objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list</dt><dd><p>List of Element instances.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Model.get_nodes">
+<span class="sig-name descname"><span class="pre">get_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Model.get_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Model.get_nodes" title="Link to this definition"></a></dt>
+<dd><p>Return a list of node objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list</dt><dd><p>List of Node instances.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Model.get_number_of_elements">
+<span class="sig-name descname"><span class="pre">get_number_of_elements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Model.get_number_of_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Model.get_number_of_elements" title="Link to this definition"></a></dt>
+<dd><p>Return the number of elements in the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>Total number of elements.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Model.get_number_of_nodes">
+<span class="sig-name descname"><span class="pre">get_number_of_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Model.get_number_of_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Model.get_number_of_nodes" title="Link to this definition"></a></dt>
+<dd><p>Return the number of nodes in the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>Total number of nodes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Model.simple_report">
+<span class="sig-name descname"><span class="pre">simple_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'print'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nusa_rpt.txt'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Model.simple_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Model.simple_report" title="Link to this definition"></a></dt>
+<dd><p>Placeholder for a future implementation of a simple report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>report_type</strong><span class="classifier">str, optional</span></dt><dd><p>Type of report to generate (‘print’, ‘file’, etc.).</p>
+</dd>
+<dt><strong>fname</strong><span class="classifier">str, optional</span></dt><dd><p>Output filename for file-based reports.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="nusa.core.Node">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nusa.core.</span></span><span class="sig-name descname"><span class="pre">Node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Node" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for node object.</p>
+<dl>
+<dt><em>coordinates</em><span class="classifier"><cite>tuple</cite>, <cite>list</cite></span></dt><dd><p>Coordinates of node</p>
+</dd>
+<dt><em>label</em><span class="classifier">int</span></dt><dd><p>Label of node</p>
+</dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">n1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">n2</span> <span class="o">=</span> <span class="n">Node</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ex</strong></dt><dd></dd>
+<dt><strong>exy</strong></dt><dd></dd>
+<dt><strong>ey</strong></dt><dd></dd>
+<dt><strong>fx</strong></dt><dd></dd>
+<dt><strong>fy</strong></dt><dd></dd>
+<dt><strong>label</strong></dt><dd></dd>
+<dt><strong>m</strong></dt><dd></dd>
+<dt><strong>seqv</strong></dt><dd></dd>
+<dt><strong>sx</strong></dt><dd></dd>
+<dt><strong>sxy</strong></dt><dd></dd>
+<dt><strong>sy</strong></dt><dd></dd>
+<dt><strong>ur</strong></dt><dd></dd>
+<dt><strong>ux</strong></dt><dd></dd>
+<dt><strong>uy</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>get_displacements</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_forces</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_label</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>set_displacements</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_forces</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>set_label</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.ex">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ex</span></span><a class="headerlink" href="#nusa.core.Node.ex" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.exy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exy</span></span><a class="headerlink" href="#nusa.core.Node.exy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.ey">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ey</span></span><a class="headerlink" href="#nusa.core.Node.ey" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.fx">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fx</span></span><a class="headerlink" href="#nusa.core.Node.fx" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.fy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fy</span></span><a class="headerlink" href="#nusa.core.Node.fy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Node.get_displacements">
+<span class="sig-name descname"><span class="pre">get_displacements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Node.get_displacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Node.get_displacements" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Node.get_forces">
+<span class="sig-name descname"><span class="pre">get_forces</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Node.get_forces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Node.get_forces" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Node.get_label">
+<span class="sig-name descname"><span class="pre">get_label</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Node.get_label"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Node.get_label" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.label">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">label</span></span><a class="headerlink" href="#nusa.core.Node.label" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.m">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">m</span></span><a class="headerlink" href="#nusa.core.Node.m" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.seqv">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">seqv</span></span><a class="headerlink" href="#nusa.core.Node.seqv" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Node.set_displacements">
+<span class="sig-name descname"><span class="pre">set_displacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">nan</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">nan</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ur</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">nan</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Node.set_displacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Node.set_displacements" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Node.set_forces">
+<span class="sig-name descname"><span class="pre">set_forces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">nan</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">nan</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Node.set_forces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Node.set_forces" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nusa.core.Node.set_label">
+<span class="sig-name descname"><span class="pre">set_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nusa/core.html#Node.set_label"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nusa.core.Node.set_label" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.sx">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sx</span></span><a class="headerlink" href="#nusa.core.Node.sx" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.sxy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sxy</span></span><a class="headerlink" href="#nusa.core.Node.sxy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.sy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sy</span></span><a class="headerlink" href="#nusa.core.Node.sy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.ur">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ur</span></span><a class="headerlink" href="#nusa.core.Node.ur" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.ux">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ux</span></span><a class="headerlink" href="#nusa.core.Node.ux" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="nusa.core.Node.uy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uy</span></span><a class="headerlink" href="#nusa.core.Node.uy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Pedro Jorge De Los Santos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

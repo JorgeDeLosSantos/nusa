@@ -5,4 +5,4 @@ E-mail: delossantosmfq@gmail.com
 License: MIT License
 """
 
-__version__ = "0.3.dev0"
+__version__ = "0.3.0.dev0"

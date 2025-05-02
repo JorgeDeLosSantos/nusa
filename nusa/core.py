@@ -9,16 +9,21 @@ import numpy as np
 #~ ===========================  MODEL  ===========================
 class Model(object):
     """
-    Superclass for all FEA models
+    Superclass for all Finite Element Analysis (FEA) models.
+
+    This class serves as a base container to manage nodes and elements,
+    allowing derived models to build and manipulate FEA structures.
     """
     def __init__(self,name,mtype):
         """
+        Initialize a new FEA model.
+
         Parameters
         ----------
         name : str
-            Name of model
+            Name of the model.
         mtype : str
-            Type of model 
+            Type of model (e.g., 'bar', 'truss', 'beam').
         """
         self.mtype = mtype # Model type
         self.name = name # Name 
@@ -27,13 +32,13 @@ class Model(object):
         
     def add_node(self,node):
         """
-        Add node to current model
-        
+        Add a node to the model.
+
         Parameters
         ----------
         node : :class:`~nusa.core.Node`
-            Node instance
-        
+            Instance of a Node to be added.
+
         Returns
         -------
         None
@@ -45,20 +50,26 @@ class Model(object):
         
     def add_element(self,element):
         """
-        Add element to current model
-        
-        *element* :  :class:`~nusa.core.Element`
-            Element instance 
-        
-        ::
-        
-            m1 = BarModel()
-            E, A = 200e9, 0.001
-            n1 = Node((0,0))
-            n2 = Node((1,0))
-            e1 = Bar((n1,n2), E, A)
-            m1.add_element(e1)
-        
+        Add an element to the model.
+
+        Parameters
+        ----------
+        element : :class:`~nusa.core.Element`
+            Instance of an Element to be added.
+
+        Raises
+        ------
+        ValueError
+            If the element type does not match the model type.
+
+        Example
+        -------
+        >>> m1 = BarModel()
+        >>> E, A = 200e9, 0.001
+        >>> n1 = Node((0,0))
+        >>> n2 = Node((1,0))
+        >>> e1 = Bar((n1,n2), E, A)
+        >>> m1.add_element(e1)
         """
         if self.mtype != element.etype:
             raise ValueError("Element type must be "+self.mtype)
@@ -72,42 +83,105 @@ class Model(object):
 
     def get_number_of_nodes(self):
         """
-        Returns the number of nodes
+        Return the number of nodes in the model.
+
+        Returns
+        -------
+        int
+            Total number of nodes.
         """
         return len(self.nodes)
         
     def get_number_of_elements(self):
         """
-        Returns the number of elements
+        Return the number of elements in the model.
+
+        Returns
+        -------
+        int
+            Total number of elements.
         """
         return len(self.elements)
         
     def get_nodes(self):
         """
-        Returns a list of Node objects
+        Return a list of node objects.
+
+        Returns
+        -------
+        list
+            List of Node instances.
         """
         return self.nodes.values()
         
     def get_elements(self):
         """
-        Returns a list of Element objects
+        Return a list of element objects.
+
+        Returns
+        -------
+        list
+            List of Element instances.
         """
         return self.elements.values()
     
     def __str__(self):
-        custom_str = ("Model: "+self.name+"\nNodes: "+str(self.get_number_of_nodes())+
-        "\nElements: "+str(self.get_number_of_elements()))
-        return custom_str
+        """
+        Return a string representation of the model.
+
+        Returns
+        -------
+        str
+            Model name and number of nodes/elements.
+        """
+        return (
+            f"Model: {self.name}\n"
+            f"Nodes: {self.get_number_of_nodes()}\n"
+            f"Elements: {self.get_number_of_elements()}"
+        )
+    
+    def __repr__(self):
+        """
+        Return a string representation of the model.
+
+        Returns
+        -------
+        str
+            Model name and number of nodes/elements.
+        """
+        return (
+            f"Model: {self.name}\n"
+            f"Nodes: {self.get_number_of_nodes()}\n"
+            f"Elements: {self.get_number_of_elements()}"
+        )
 
     def simple_report(self,report_type="print",fname="nusa_rpt.txt"):
+        """
+        Placeholder for a future implementation of a simple report.
+
+        Parameters
+        ----------
+        report_type : str, optional
+            Type of report to generate ('print', 'file', etc.).
+        fname : str, optional
+            Output filename for file-based reports.
+        """
         pass
         
-    def _write_report(self,txt,fname):
-        fobj = open(fname,"w")
-        fobj.write(txt)
-        fobj.close()
-        
     def _get_ndisplacements(self,options):
+        """
+        Generate a table of node displacements.
+
+        Parameters
+        ----------
+        options : dict
+            Tabulate formatting options.
+
+        Returns
+        -------
+        str
+            Tabulated string of displacements.
+        """
         from tabulate import tabulate
         D = [["Node","UX","UY"]]
         for n in self.get_nodes():
@@ -115,6 +189,19 @@ class Model(object):
         return tabulate(D, **options)
         
     def _get_nforces(self,options):
+        """
+        Generate a table of nodal forces.
+
+        Parameters
+        ----------
+        options : dict
+            Tabulate formatting options.
+
+        Returns
+        -------
+        str
+            Tabulated string of nodal forces.
+        """
         from tabulate import tabulate
         F = [["Node","FX","FY"]]
         for n in self.get_nodes():
@@ -122,6 +209,19 @@ class Model(object):
         return tabulate(F, **options)
         
     def _get_eforces(self,options):
+        """
+        Generate a table of element internal forces.
+
+        Parameters
+        ----------
+        options : dict
+            Tabulate formatting options.
+
+        Returns
+        -------
+        str
+            Tabulated string of element forces.
+        """
         from tabulate import tabulate
         F = [["Element","F"]]
         for elm in self.get_elements():
@@ -129,6 +229,19 @@ class Model(object):
         return tabulate(F, **options)
         
     def _get_estresses(self,options):
+        """
+        Generate a table of element stresses.
+
+        Parameters
+        ----------
+        options : dict
+            Tabulate formatting options.
+
+        Returns
+        -------
+        str
+            Tabulated string of element stresses.
+        """
         from tabulate import tabulate
         S = [["Element","S"]]
         for elm in self.get_elements():
@@ -136,6 +249,19 @@ class Model(object):
         return tabulate(S, **options)
     
     def _get_nodes_info(self,options):
+        """
+        Generate a table of node coordinates.
+
+        Parameters
+        ----------
+        options : dict
+            Tabulate formatting options.
+
+        Returns
+        -------
+        str
+            Tabulated string of node positions.
+        """
         from tabulate import tabulate
         F = [["Node","X","Y"]]
         for n in self.get_nodes():
@@ -143,6 +269,19 @@ class Model(object):
         return tabulate(F, **options)
     
     def _get_elements_info(self,options):
+        """
+        Generate a table of element connectivity.
+
+        Parameters
+        ----------
+        options : dict
+            Tabulate formatting options.
+
+        Returns
+        -------
+        str
+            Tabulated string of element-node relationships.
+        """
         from tabulate import tabulate
         S = [["Element","NI","NJ"]]
         for elm in self.get_elements():
