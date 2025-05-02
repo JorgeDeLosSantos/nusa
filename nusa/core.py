@@ -12,7 +12,7 @@ class Model(object):
     Superclass for all Finite Element Analysis (FEA) models.
 
     This class serves as a base container to manage nodes and elements,
-    allowing derived models to build and manipulate FEA structures.
+    allowing derived models to build and manipulate FEA structures. 
     """
     def __init__(self,name,mtype):
         """
