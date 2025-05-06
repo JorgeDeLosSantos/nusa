@@ -99,7 +99,7 @@ class Modeler(object):
             for nd in elm:
                 _x.append(self.nc[nd,0])
                 _y.append(self.nc[nd,1])
-            polygon = Polygon(list(zip(_x,_y)), True)
+            polygon = Polygon(list(zip(_x,_y)))
             patches.append(polygon)
             
         pc = PatchCollection(patches, color="#25CDCD", edgecolor="#435959", alpha=0.8, lw=0.5)
@@ -129,12 +129,8 @@ class Modeler(object):
         mesh = meshio.read(filename)
         self.nc = mesh.points
         self.x, self.y = self.nc[:,0], self.nc[:,1]
-        self.ec = mesh.cells["triangle"]
-        return mesh.points, mesh.cells["triangle"]
-    
-    
-
-
+        self.ec = mesh.cells_dict["triangle"]
+        return mesh.points, mesh.cells_dict["triangle"]
 
     
 if __name__=='__main__':

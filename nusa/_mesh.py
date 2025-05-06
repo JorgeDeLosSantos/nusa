@@ -75,11 +75,8 @@ class SimpleGMSH(object):
             out = os.system(" ".join(cmd))
         if verbose:
             print(out.decode())
-        #points,cells = meshio.read(outname)
         mesh = meshio.read(outname)
-        # ~ print(dir(mesh))
-        #return points, cells
-        return mesh.points, mesh.cells["triangle"]
+        return mesh.points, mesh.cells_dict["triangle"]
 
 
 if __name__=='__main__':
