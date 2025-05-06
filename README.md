@@ -103,7 +103,6 @@ Nodes 1 and 2 are fixed.
 ![](docs/nusa-info/es/src/spring-element/example_01.PNG)
 
 ```python
-# -*- coding: utf-8 -*-
 # NuSA Demo
 from nusa import *
     
@@ -192,22 +191,11 @@ print(n2.uy)
 * [wxTruss](https://github.com/JorgeDeLosSantos/wxtruss)
 
 
-## Documentation
+## Documentation and Examples
 
-To build documentation based on docstrings execute the `docs/toHTML.py` script. (Sphinx required)
+You can view the online documentation at the following link: [https://jorgedelossantos.github.io/nusa/](https://jorgedelossantos.github.io/nusa/).
 
-Tutorials (Jupyter notebooks):
-
-Spanish version (in progress):
-
-* [Introducción a NuSA](docs/nusa-info/es/intro-nusa.ipynb)
-* [Elemento Spring](docs/nusa-info/es/spring-element.ipynb)
-* [Elemento Bar](docs/nusa-info/es/bar-element.ipynb)
-* [Elemento Beam](docs/nusa-info/es/beam-element.ipynb)
-* [Elemento Truss](docs/nusa-info/es/truss-element.ipynb)
-* [Elemento LinearTriangle](docs/nusa-info/es/linear-triangle-element.ipynb)
-
-English version (TODO): 
+You can also explore more examples in the following Jupyter Notebooks:
 
 * [Introduction to NuSA](docs/nusa-info/en/intro-nusa.ipynb)
 * [Spring element](docs/nusa-info/en/spring-element.ipynb)
@@ -215,6 +203,15 @@ English version (TODO):
 * [Beam element](docs/nusa-info/en/beam-element.ipynb)
 * [Truss element](docs/nusa-info/en/truss-element.ipynb)
 * [LinearTriangle element](docs/nusa-info/en/linear-triangle-element.ipynb)
+
+Spanish versions available:
+
+* [Introducción a NuSA](docs/nusa-info/es/intro-nusa.ipynb)
+* [Elemento Spring](docs/nusa-info/es/spring-element.ipynb)
+* [Elemento Bar](docs/nusa-info/es/bar-element.ipynb)
+* [Elemento Beam](docs/nusa-info/es/beam-element.ipynb)
+* [Elemento Truss](docs/nusa-info/es/truss-element.ipynb)
+* [Elemento LinearTriangle](docs/nusa-info/es/linear-triangle-element.ipynb)
 
 
 ## About...
