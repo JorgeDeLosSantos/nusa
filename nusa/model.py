@@ -29,7 +29,7 @@ class SpringModel(Model):
     def build_global_matrix(self):
         msz = (self.dof)*self.n_nodes # Matrix size
         self.KG = np.zeros((msz,msz))
-        for element in self.elements.values():
+        for element in self.elements:
             ku = element.get_element_stiffness()
             n1,n2 = element.get_nodes()
             self.KG[n1.label, n1.label] += ku[0,0]
@@ -44,7 +44,7 @@ class SpringModel(Model):
     def _build_global_matrix(self):
         msz = (self.dof)*self.n_nodes # Matrix size
         self.KG = np.zeros((msz,msz))
-        for element in self.elements.values():
+        for element in self.elements:
             ku = element.get_element_stiffness()
             n1,n2 = element.get_nodes()
             for ii,jj in self._nodal_index(n1.label,n2.label):
@@ -164,7 +164,7 @@ class BarModel(Model):
     def build_global_matrix(self):
         msz = (self.dof)*self.n_nodes
         self.KG = np.zeros((msz,msz))
-        for element in self.elements.values():
+        for element in self.elements:
             ku = element.get_element_stiffness()
             n1,n2 = element.get_nodes()
             self.KG[n1.label, n1.label] += ku[0,0]
@@ -249,7 +249,7 @@ class TrussModel(Model):
     def build_global_matrix(self):
         msz = (self.dof)*self.n_nodes
         self.KG = np.zeros((msz,msz))
-        for element in self.elements.values():
+        for element in self.elements:
             ku = element.get_element_stiffness()
             n1,n2 = element.get_nodes()
             self.KG[2*n1.label, 2*n1.label] += ku[0,0]
@@ -548,7 +548,7 @@ class BeamModel(Model):
     def build_global_matrix(self):
         msz = (self.dof)*self.n_nodes
         self.KG = np.zeros((msz,msz))
-        for element in self.elements.values():
+        for element in self.elements:
             ku = element.get_element_stiffness()
             n1,n2 = element.get_nodes()
             self.KG[2*n1.label, 2*n1.label] += ku[0,0]
@@ -578,7 +578,7 @@ class BeamModel(Model):
     def _build_global_matrix(self):
         msz = (self.dof)*self.n_nodes
         self.KG = np.zeros((msz,msz))
-        for element in self.elements.values():
+        for element in self.elements:
             ku = element.get_element_stiffness()
             n1,n2 = element.get_nodes()
             self.KG[2*n1.label, 2*n1.label] += ku[0,0]
@@ -842,7 +842,7 @@ class LinearTriangleModel(Model):
         """
         msz = (self.dof)*self.n_nodes
         self.KG = np.zeros((msz,msz))
-        for element in self.elements.values():
+        for element in self.elements:
             ku = element.get_element_stiffness()
             n1,n2,n3 = element.get_nodes()
             i, j, m = n1.label, n2.label, n3.label
