@@ -27,7 +27,7 @@ class SpringModel(Model):
         self.IS_KG_BUILDED = False
 
     def build_global_matrix(self):
-        msz = (self.dof)*self.get_number_of_nodes() # Matrix size
+        msz = (self.dof)*self.n_nodes # Matrix size
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
             ku = element.get_element_stiffness()
@@ -42,7 +42,7 @@ class SpringModel(Model):
         self.IS_KG_BUILDED = True
         
     def _build_global_matrix(self):
-        msz = (self.dof)*self.get_number_of_nodes() # Matrix size
+        msz = (self.dof)*self.n_nodes # Matrix size
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
             ku = element.get_element_stiffness()
@@ -102,7 +102,7 @@ class SpringModel(Model):
         self.NF = self.F.copy()
         self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
         nf_calc = np.dot(self.KG, self.VU)
-        for k,ic in enumerate(range(self.get_number_of_nodes())):
+        for k,ic in enumerate(range(self.n_nodes)):
             nd, var = self.index2key(ic, ("fx",))
             self.NF[nd][var] = nf_calc[k]
             self.nodes[ic].fx = nf_calc[k]
@@ -119,7 +119,7 @@ class SpringModel(Model):
                    "numalign":"right"}
         _str = SPRING_SIMPLE_REPORT.format(
                 model_name=self.name,
-                nodes=self.get_number_of_nodes(),
+                nodes=self.n_nodes,
                 elements=self.get_number_of_elements(),
                 nodal_displacements=self._get_ndisplacements(options),
                 nodal_forces=self._get_nforces(options),
@@ -155,11 +155,14 @@ class BarModel(Model):
         self.IS_KG_BUILDED = False
         
     def build_forces_vector(self):
-        for node in self.nodes.values():
+        """
+        Build forces vector, where each node has a dict with "fx" and "fy" keys, but only "fx" is used for bar model
+        """
+        for node in self.nodes:
             self.F[node.label] = {"fx":0, "fy":0}
         
     def build_global_matrix(self):
-        msz = (self.dof)*self.get_number_of_nodes()
+        msz = (self.dof)*self.n_nodes
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
             ku = element.get_element_stiffness()
@@ -173,7 +176,7 @@ class BarModel(Model):
         self.IS_KG_BUILDED = True
         
     def build_displacements_vector(self):
-        for node in self.nodes.values():
+        for node in self.nodes:
             self.U[node.label] = {"ux":np.nan, "uy":np.nan}
         
     def add_force(self,node,force):
@@ -217,7 +220,7 @@ class BarModel(Model):
         self.NF = self.F.copy()
         self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
         nf_calc = np.dot(self.KG, self.VU)
-        for k,ic in enumerate(range(self.get_number_of_nodes())):
+        for k,ic in enumerate(range(self.n_nodes)):
             nd, var = self.index2key(ic, ("fx",))
             self.NF[nd][var] = nf_calc[k]
             self.nodes[ic].fx = nf_calc[k]
@@ -244,7 +247,7 @@ class TrussModel(Model):
         self.IS_KG_BUILDED = False
         
     def build_global_matrix(self):
-        msz = (self.dof)*self.get_number_of_nodes()
+        msz = (self.dof)*self.n_nodes
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
             ku = element.get_element_stiffness()
@@ -333,7 +336,7 @@ class TrussModel(Model):
         self.NF = self.F.copy()
         self.VU = [node[key] for node in self.U.values() for key in ("ux","uy")]
         nf_calc = np.dot(self.KG, self.VU)
-        for k in range(2*self.get_number_of_nodes()):
+        for k in range(2*self.n_nodes):
             nd, var = self.index2key(k, ("fx","fy"))
             self.NF[nd][var] = nf_calc[k]
             cnlab = np.floor(k/float(self.dof))
@@ -465,7 +468,7 @@ class TrussModel(Model):
                    "numalign":"right"}
         _str = TRUSS_SIMPLE_REPORT.format(
                 model_name=self.name,
-                nodes=self.get_number_of_nodes(),
+                nodes=self.n_nodes,
                 elements=self.get_number_of_elements(),
                 nodal_displacements=self._get_ndisplacements(options),
                 nodal_forces=self._get_nforces(options),
@@ -543,7 +546,7 @@ class BeamModel(Model):
         self.IS_KG_BUILDED = False
         
     def build_global_matrix(self):
-        msz = (self.dof)*self.get_number_of_nodes()
+        msz = (self.dof)*self.n_nodes
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
             ku = element.get_element_stiffness()
@@ -573,7 +576,7 @@ class BeamModel(Model):
         self.IS_KG_BUILDED = True
     
     def _build_global_matrix(self):
-        msz = (self.dof)*self.get_number_of_nodes()
+        msz = (self.dof)*self.n_nodes
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
             ku = element.get_element_stiffness()
@@ -669,7 +672,7 @@ class BeamModel(Model):
         self.NF = self.F.copy()
         self.VU = [node[key] for node in self.U.values() for key in ("uy","ur")]
         nf_calc = np.dot(self.KG, self.VU)
-        for k in range(2*self.get_number_of_nodes()):
+        for k in range(2*self.n_nodes):
             nd, var = self.index2key(k, ("fy","m"))
             self.NF[nd][var] = nf_calc[k]
             cnlab = np.floor(k/float(self.dof))
@@ -837,7 +840,7 @@ class LinearTriangleModel(Model):
         """
         Build global matrix -> KG
         """
-        msz = (self.dof)*self.get_number_of_nodes()
+        msz = (self.dof)*self.n_nodes
         self.KG = np.zeros((msz,msz))
         for element in self.elements.values():
             ku = element.get_element_stiffness()
@@ -952,7 +955,7 @@ class LinearTriangleModel(Model):
         self.NF = self.F.copy()
         self.VU = [node[key] for node in self.U.values() for key in ("ux","uy")]
         nf_calc = np.dot(self.KG, self.VU)
-        for k in range(2*self.get_number_of_nodes()):
+        for k in range(2*self.n_nodes):
             nd, var = self.index2key(k, ("fx","fy"))
             self.NF[nd][var] = nf_calc[k]
             cnlab = np.floor(k/float(self.dof))

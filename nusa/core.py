@@ -1,18 +1,15 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos    
 #  E-mail: delossantosmfq@gmail.com 
-#  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
 import numpy as np
 
 #~ ===========================  MODEL  ===========================
-class Model(object):
+class Model:
     """
-    Superclass for all Finite Element Analysis (FEA) models.
-
-    This class serves as a base container to manage nodes and elements,
-    allowing derived models to build and manipulate FEA structures. 
+    Base class for all Finite Element Analysis (FEA) models.
+    This class provides a base container for nodes and elements, enabling derived models to construct and manipulate FEA structures.
     """
     def __init__(self,name,mtype):
         """
@@ -27,7 +24,7 @@ class Model(object):
         """
         self.mtype = mtype # Model type
         self.name = name # Name 
-        self.nodes = {} # Dictionary for nodes {number: NodeObject}
+        self._nodes = {} # Dictionary for nodes {number: NodeObject}
         self.elements = {} # Dictionary for elements {number: ElementObject}
         
     def add_node(self,node):
@@ -43,10 +40,10 @@ class Model(object):
         -------
         None
         """
-        current_label = self.get_number_of_nodes()
         if node.label is None:
-            node.set_label(current_label)
-        self.nodes[node.label] = node
+            node.label = self.n_nodes
+
+        self._nodes[node.label] = node
         
     def add_element(self,element):
         """
@@ -81,16 +78,16 @@ class Model(object):
         for node in element.get_nodes():
             node._elements.append(element)
 
-    def get_number_of_nodes(self):
-        """
-        Return the number of nodes in the model.
+    # def get_number_of_nodes(self):
+    #     """
+    #     Return the number of nodes in the model.
 
-        Returns
-        -------
-        int
-            Total number of nodes.
-        """
-        return len(self.nodes)
+    #     Returns
+    #     -------
+    #     int
+    #         Total number of nodes.
+    #     """
+    #     return len(self.nodes)
         
     def get_number_of_elements(self):
         """
@@ -103,7 +100,19 @@ class Model(object):
         """
         return len(self.elements)
         
-    def get_nodes(self):
+    # def get_nodes(self):
+    #     """
+    #     Return a list of node objects.
+
+    #     Returns
+    #     -------
+    #     list
+    #         List of Node instances.
+    #     """
+    #     return self.nodes.values()
+    
+    @property
+    def nodes(self):
         """
         Return a list of node objects.
 
@@ -112,7 +121,20 @@ class Model(object):
         list
             List of Node instances.
         """
-        return self.nodes.values()
+        return list(self._nodes.values())
+
+    @property
+    def n_nodes(self):
+        """
+        Return the number of nodes in the model.
+
+        Returns
+        -------
+        int
+            Total number of nodes.
+        """
+        return len(self._nodes)
+
         
     def get_elements(self):
         """
