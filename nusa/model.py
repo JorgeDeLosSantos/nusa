@@ -61,11 +61,11 @@ class SpringModel(Model):
         return izip(iter1,iter2)
         
     def build_forces_vector(self):
-        for node in self.nodes.values():
+        for node in self.nodes:
             self.F[node.label] = {"fx":0, "fy":0}
         
     def build_displacements_vector(self):
-        for node in self.nodes.values():
+        for node in self.nodes:
             self.U[node.label] = {"ux":np.nan, "uy":np.nan}
         
     def add_force(self,node,force):
@@ -120,7 +120,7 @@ class SpringModel(Model):
         _str = SPRING_SIMPLE_REPORT.format(
                 model_name=self.name,
                 nodes=self.n_nodes,
-                elements=self.get_number_of_elements(),
+                elements=self.self.n_elements,
                 nodal_displacements=self._get_ndisplacements(options),
                 nodal_forces=self._get_nforces(options),
                 element_forces=self._get_eforces(options),
@@ -134,7 +134,7 @@ class SpringModel(Model):
     def _get_eforces(self,options):
         from tabulate import tabulate
         F = [["Element","F"]]
-        for elm in self.get_elements():
+        for elm in self.elements:
             F.append([elm.label+1, elm.fx])
         return tabulate(F, **options)
         
@@ -277,11 +277,11 @@ class TrussModel(Model):
         self.IS_KG_BUILDED = True
         
     def build_forces_vector(self):
-        for node in self.nodes.values():
+        for node in self.nodes:
             self.F[node.label] = {"fx":0, "fy":0}
         
     def build_displacements_vector(self):
-        for node in self.nodes.values():
+        for node in self.nodes:
             self.U[node.label] = {"ux":np.nan, "uy":np.nan}
     
     def add_force(self,node,force):
@@ -326,7 +326,7 @@ class TrussModel(Model):
             self.U[nd][var] = self.solved_u[k]
             
         # Updating nodes displacements
-        for nd in self.nodes.values():
+        for nd in self.nodes:
             if np.isnan(nd.ux):
                 nd.ux = self.U[nd.label]["ux"]
             if np.isnan(nd.uy):
@@ -339,7 +339,8 @@ class TrussModel(Model):
         for k in range(2*self.n_nodes):
             nd, var = self.index2key(k, ("fx","fy"))
             self.NF[nd][var] = nf_calc[k]
-            cnlab = np.floor(k/float(self.dof))
+            cnlab = int( np.floor(k/float(self.dof)) )
+            # print(f"cnlab = {cnlab}")
             if var=="fx": 
                 self.nodes[cnlab].fx = nf_calc[k]
             elif var=="fy":
@@ -362,7 +363,7 @@ class TrussModel(Model):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         
-        for elm in self.get_elements():
+        for elm in self.elements:
             ni, nj = elm.get_nodes()
             ax.plot([ni.x,nj.x],[ni.y,nj.y],"b-")
             for nd in (ni,nj):
@@ -418,7 +419,7 @@ class TrussModel(Model):
         
         df = dfactor*self._calculate_deformed_factor()
         
-        for elm in self.get_elements():
+        for elm in self.elements:
             ni,nj = elm.get_nodes()
             x, y = [ni.x,nj.x], [ni.y,nj.y]
             xx = [ni.x+ni.ux*df, nj.x+nj.ux*df]
@@ -433,8 +434,8 @@ class TrussModel(Model):
         
     def _calculate_deformed_factor(self):
         x0,x1,y0,y1 = self.rect_region()
-        ux = np.abs(np.array([n.ux for n in self.get_nodes()]))
-        uy = np.abs(np.array([n.uy for n in self.get_nodes()]))
+        ux = np.abs(np.array([n.ux for n in self.nodes]))
+        uy = np.abs(np.array([n.uy for n in self.nodes]))
         sf = 1.5e-2
         if ux.max()==0 and uy.max()!=0:
             kfx = sf*(y1-y0)/uy.max()
@@ -453,7 +454,7 @@ class TrussModel(Model):
         
     def rect_region(self,factor=7.0):
         nx,ny = [],[]
-        for n in self.get_nodes():
+        for n in self.nodes:
             nx.append(n.x)
             ny.append(n.y)
         xmn,xmx,ymn,ymx = min(nx),max(nx),min(ny),max(ny)
@@ -469,7 +470,7 @@ class TrussModel(Model):
         _str = TRUSS_SIMPLE_REPORT.format(
                 model_name=self.name,
                 nodes=self.n_nodes,
-                elements=self.get_number_of_elements(),
+                elements=self.self.n_elements,
                 nodal_displacements=self._get_ndisplacements(options),
                 nodal_forces=self._get_nforces(options),
                 element_forces=self._get_eforces(options),
@@ -489,42 +490,42 @@ class TrussModel(Model):
     def _get_ndisplacements(self,options):
         from tabulate import tabulate
         D = [["Node","UX","UY"]]
-        for n in self.get_nodes():
+        for n in self.nodes:
             D.append([n.label+1,n.ux,n.uy])
         return tabulate(D, **options)
         
     def _get_nforces(self,options):
         from tabulate import tabulate
         F = [["Node","FX","FY"]]
-        for n in self.get_nodes():
+        for n in self.nodes:
             F.append([n.label+1,n.fx,n.fy])
         return tabulate(F, **options)
         
     def _get_eforces(self,options):
         from tabulate import tabulate
         F = [["Element","F"]]
-        for elm in self.get_elements():
+        for elm in self.elements:
             F.append([elm.label+1, elm.f])
         return tabulate(F, **options)
         
     def _get_estresses(self,options):
         from tabulate import tabulate
         S = [["Element","S"]]
-        for elm in self.get_elements():
+        for elm in self.elements:
             S.append([elm.label+1, elm.s])
         return tabulate(S, **options)
     
     def _get_nodes_info(self,options):
         from tabulate import tabulate
         F = [["Node","X","Y"]]
-        for n in self.get_nodes():
+        for n in self.nodes:
             F.append([n.label+1, n.x, n.y])
         return tabulate(F, **options)
     
     def _get_elements_info(self,options):
         from tabulate import tabulate
         S = [["Element","NI","NJ"]]
-        for elm in self.get_elements():
+        for elm in self.elements:
             ni, nj = elm.get_nodes()
             S.append([elm.label+1, ni.label+1, nj.label+1])
         return tabulate(S, **options)
@@ -606,11 +607,11 @@ class BeamModel(Model):
         self.IS_KG_BUILDED = True
     
     def build_forces_vector(self):
-        for node in self.nodes.values():
+        for node in self.nodes:
             self.F[node.label] = {"fy":0.0, "m":0.0} # (fy, m)
             
     def build_displacements_vector(self):
-        for node in self.nodes.values():
+        for node in self.nodes:
             self.U[node.label] = {"uy":np.nan, "ur":np.nan} # (uy, r)
     
     def add_force(self,node,force):
@@ -662,7 +663,7 @@ class BeamModel(Model):
             self.U[nd][var] = self.solved_u[k]
             
         # Updating nodes displacements
-        for nd in self.nodes.values():
+        for nd in self.nodes:
             if np.isnan(nd.uy):
                 nd.uy = self.U[nd.label]["uy"]
             if np.isnan(nd.ur):
@@ -692,7 +693,7 @@ class BeamModel(Model):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         
-        for elm in self.get_elements():
+        for elm in self.elements:
             ni,nj = elm.get_nodes()
             xx = [ni.x, nj.x]
             yy = [ni.y, nj.y]
@@ -745,7 +746,7 @@ class BeamModel(Model):
 
     def rect_region(self,factor=7.0):
         nx,ny = [],[]
-        for n in self.get_nodes():
+        for n in self.nodes:
             nx.append(n.x)
             ny.append(n.y)
         xmn,xmx,ymn,ymx = min(nx),max(nx),min(ny),max(ny)
@@ -762,7 +763,7 @@ class BeamModel(Model):
         
         xx = []
         yy = []
-        for elm in self.get_elements():
+        for elm in self.elements:
             ni,nj = elm.get_nodes()
             xx.append( ni.x )
             xx.append( nj.x )
@@ -796,7 +797,7 @@ class BeamModel(Model):
     def _get_data_for_moment_diagram(self):
         cx = 0
         X, M = [], []
-        for el in self.get_elements():
+        for el in self.elements:
             L = el.L
             X = np.concatenate((X, np.array([cx, cx+L])))
             mel = el.m.squeeze()
@@ -808,7 +809,7 @@ class BeamModel(Model):
     def _get_data_for_shear_diagram(self):
         cx = 0
         X, S = [], []
-        for el in self.get_elements():
+        for el in self.elements:
             L = el.L # element length
             X = np.concatenate((X, np.array([cx, cx+L])))
             fel = el.fy.squeeze()
@@ -888,11 +889,11 @@ class LinearTriangleModel(Model):
         self.IS_KG_BUILDED = True
     
     def build_forces_vector(self):
-        for node in self.nodes.values():
+        for node in self.nodes:
             self.F[node.label] = {"fx":0.0, "fy":0.0} # (fy, m)
             
     def build_displacements_vector(self):
-        for node in self.nodes.values():
+        for node in self.nodes:
             self.U[node.label] = {"ux":np.nan, "uy":np.nan} # (uy, r)
     
     def add_force(self,node,force):
@@ -920,7 +921,7 @@ class LinearTriangleModel(Model):
             self.U[node.label]["uy"] = uy
         
     def _check_nodes(self):
-        for node in self.get_nodes():
+        for node in self.nodes:
             if node._elements == []: self.add_constraint(node, ux=0, uy=0)
         
     def solve(self):
@@ -945,7 +946,7 @@ class LinearTriangleModel(Model):
             self.U[nd][var] = self.solved_u[k]
             
         # Updating nodes displacements
-        for nd in self.nodes.values():
+        for nd in self.nodes:
             if np.isnan(nd.ux):
                 nd.ux = self.U[nd.label]["ux"]
             if np.isnan(nd.uy):
@@ -958,7 +959,7 @@ class LinearTriangleModel(Model):
         for k in range(2*self.n_nodes):
             nd, var = self.index2key(k, ("fx","fy"))
             self.NF[nd][var] = nf_calc[k]
-            cnlab = np.floor(k/float(self.dof))
+            cnlab = int( np.floor(k/float(self.dof)) )
             if var=="fx": 
                 self.nodes[cnlab].fx = nf_calc[k]
             elif var=="fy": 
@@ -985,7 +986,7 @@ class LinearTriangleModel(Model):
 
         _x,_y = [],[]
         patches = []
-        for k,elm in enumerate(self.get_elements()):
+        for k,elm in enumerate(self.elements):
             _x,_y,_ux,_uy = [],[],[],[]
             for nd in elm.nodes:
                 if nd.fx != 0: self._draw_xforce(ax,nd.x,nd.y)
@@ -1040,14 +1041,14 @@ class LinearTriangleModel(Model):
         
         _x,_y = [],[]
         # ~ df = 1
-        for n in self.get_nodes():
+        for n in self.nodes:
             _x.append(n.x)
             # ~ _x.append(n.x + n.ux*df)
             _y.append(n.y)
             # ~ _y.append(n.y + n.uy*df)
             
         tg = []
-        for e in self.get_elements():
+        for e in self.elements:
             ni,nj,nm = e.get_nodes()
             tg.append([ni.label, nj.label, nm.label])
             
@@ -1063,16 +1064,16 @@ class LinearTriangleModel(Model):
         ax = fig.add_subplot(111)
         
         solutions = {
-             "ux": (n.ux for n in self.get_nodes()),
-             "uy": (n.uy for n in self.get_nodes()),
-             "usum": (np.sqrt(n.ux**2 + n.uy**2) for n in self.get_nodes()),
-             "sxx": (n.sx for n in self.get_nodes()),
-             "syy": (n.sy for n in self.get_nodes()),
-             "sxy": (n.sxy for n in self.get_nodes()),
-             "seqv": (n.seqv for n in self.get_nodes()),
-             "exx": (n.ex for n in self.get_nodes()),
-             "eyy": (n.ey for n in self.get_nodes()),
-             "exy": (n.exy for n in self.get_nodes())
+             "ux": (n.ux for n in self.nodes),
+             "uy": (n.uy for n in self.nodes),
+             "usum": (np.sqrt(n.ux**2 + n.uy**2) for n in self.nodes),
+             "sxx": (n.sx for n in self.nodes),
+             "syy": (n.sy for n in self.nodes),
+             "sxy": (n.sxy for n in self.nodes),
+             "seqv": (n.seqv for n in self.nodes),
+             "exx": (n.ex for n in self.nodes),
+             "eyy": (n.ey for n in self.nodes),
+             "exy": (n.exy for n in self.nodes)
              }
         
         tr = self._get_tri()
@@ -1102,7 +1103,7 @@ class LinearTriangleModel(Model):
 
         _x,_y = [],[]
         patches = []
-        for k,elm in enumerate(self.get_elements()):
+        for k,elm in enumerate(self.elements):
             _x,_y,_ux,_uy = [],[],[],[]
             for nd in elm.nodes:
                 _x.append(nd.x)
@@ -1112,12 +1113,12 @@ class LinearTriangleModel(Model):
             
         pc = PatchCollection(patches, cmap="jet", alpha=1)
         solutions = {
-             "sxx": (e.sx for e in self.get_elements()),
-             "syy": (e.sy for e in self.get_elements()),
-             "sxy": (e.sxy for e in self.get_elements()),
-             "exx": (e.ex for e in self.get_elements()),
-             "eyy": (e.ey for e in self.get_elements()),
-             "exy": (e.exy for e in self.get_elements())
+             "sxx": (e.sx for e in self.elements),
+             "syy": (e.sy for e in self.elements),
+             "sxy": (e.sxy for e in self.elements),
+             "exx": (e.ex for e in self.elements),
+             "eyy": (e.ey for e in self.elements),
+             "exy": (e.exy for e in self.elements)
              }
         fsol = np.array(list(solutions.get(var.lower())))
         pc.set_array(fsol)
@@ -1139,8 +1140,8 @@ class LinearTriangleModel(Model):
     
     def calculate_deformed_factor(self):
         x0,x1,y0,y1 = self.rect_region()
-        ux = np.array([n.ux for n in self.get_nodes()])
-        uy = np.array([n.uy for n in self.get_nodes()])
+        ux = np.array([n.ux for n in self.nodes])
+        uy = np.array([n.uy for n in self.nodes])
         sf = 1.5e-2
         kfx = sf*(x1-x0)/ux.max()
         kfy = sf*(y1-y0)/uy.max()
@@ -1148,7 +1149,7 @@ class LinearTriangleModel(Model):
                 
     def rect_region(self,factor=7.0):
         nx,ny = [],[]
-        for n in self.get_nodes():
+        for n in self.nodes:
             nx.append(n.x)
             ny.append(n.y)
         xmn,xmx,ymn,ymx = min(nx),max(nx),min(ny),max(ny)
