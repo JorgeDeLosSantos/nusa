@@ -1,8 +1,14 @@
+# NuSA
+
 ![](nusa/img/nusa-logo.png)
 
 A Python library for structural analysis using the finite element method, designed for academic purposes.
 
-## Versions
+![PyPI](https://img.shields.io/pypi/v/nusa)
+![Python](https://img.shields.io/pypi/pyversions/nusa)
+![License](https://img.shields.io/github/license/JorgeDeLosSantos/nusa)
+
+## Releases
 
 * **0.1.0** (16/11/2016)
 * **0.2.0** (14/07/2019)
@@ -10,11 +16,16 @@ A Python library for structural analysis using the finite element method, design
 
 ## Requirements
 
-* NumPy
-* Matplotlib
-* Tabulate
-* [GMSH](http://gmsh.info/)
-* meshio
+NuSA depends on the following Python packages:
+
+- numpy
+- matplotlib
+- tabulate
+- meshio
+
+For mesh generation, **Gmsh** is required:
+
+https://gmsh.info/
 
 
 ## Installation
@@ -22,24 +33,23 @@ A Python library for structural analysis using the finite element method, design
 From PyPI (0.2.0 version):
 
 ```
-$ pip install nusa
+pip install nusa
 ```
 
-or from this repo (development version):
+Or install the latest development version directly from GitHub:
 
 ```
-$ pip install git+https://github.com/JorgeDeLosSantos/nusa.git
+pip install git+https://github.com/JorgeDeLosSantos/nusa.git
 ```
 
 
-## Elements type supported
+## Supported element types
 
 * Spring
 * Bar
 * Truss
 * Beam
-* Linear triangle (currently, only plane stress)
-
+* Linear triangle (plane stress formulation)
 
 ## Mini-Demos
 
@@ -204,19 +214,8 @@ You can also explore more examples in the following Jupyter Notebooks:
 * [Truss element](docs/nusa-info/en/truss-element.ipynb)
 * [LinearTriangle element](docs/nusa-info/en/linear-triangle-element.ipynb)
 
-Spanish versions available:
-
-* [Introducción a NuSA](docs/nusa-info/es/intro-nusa.ipynb)
-* [Elemento Spring](docs/nusa-info/es/spring-element.ipynb)
-* [Elemento Bar](docs/nusa-info/es/bar-element.ipynb)
-* [Elemento Beam](docs/nusa-info/es/beam-element.ipynb)
-* [Elemento Truss](docs/nusa-info/es/truss-element.ipynb)
-* [Elemento LinearTriangle](docs/nusa-info/es/linear-triangle-element.ipynb)
-
-
 ## About...
 
-```
-Developer: Pedro Jorge De Los Santos
-E-mail: delossantosmfq@gmail.com
+**Developer:** Pedro Jorge De Los Santos
+**E-mail:** delossantosmfq@gmail.com
 ```
