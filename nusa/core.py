@@ -325,7 +325,7 @@ class Model:
 
 #~ =========================== ELEMENT ===========================
 
-class Element(object):
+class Element:
     """
     Superclass for all Elements
     """
@@ -394,7 +394,7 @@ class Element(object):
 
 #~ =========================== NODE ===========================
 
-class Node(object):
+class Node:
     """
     Class for node object.
     """
