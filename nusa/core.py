@@ -451,6 +451,9 @@ class Node:
         
     @property
     def ux(self):
+        """
+        Return the x-displacement of the node.
+        """
         return self._ux
     
     @ux.setter
@@ -459,6 +462,9 @@ class Node:
     
     @property
     def uy(self):
+        """
+        Return the y-displacement of the node.
+        """
         return self._uy
     
     @uy.setter
@@ -467,14 +473,14 @@ class Node:
     
     @property
     def ur(self):
+        """
+        Return the rotational displacement of the node.
+        """
         return self._ur
     
     @ur.setter
     def ur(self,val):
-        if True:#type(val) in [int,float]:
-            self._ur = val
-        else:
-            raise ValueError("Value must be float or int")
+        self._ur = val
         
     @property
     def fx(self):

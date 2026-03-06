@@ -66,28 +66,28 @@ md.substract_surfaces(a,b)
 nc, ec = md.generate_mesh()
 x,y = nc[:,0], nc[:,1]
 
-nodos = []
-elementos = []
+nodes = []
+elements = []
 
 for k,nd in enumerate(nc):
     cn = Node((x[k],y[k]))
-    nodos.append(cn)
+    nodes.append(cn)
     
 for k,elm in enumerate(ec):
     i,j,m = int(elm[0]),int(elm[1]),int(elm[2])
-    ni,nj,nm = nodos[i],nodos[j],nodos[m]
+    ni,nj,nm = nodes[i],nodes[j],nodes[m]
     ce = LinearTriangle((ni,nj,nm),200e9,0.3,0.1)
-    elementos.append(ce)
+    elements.append(ce)
 
 m = LinearTriangleModel()
-for node in nodos: m.add_node(node)
-for elm in elementos: m.add_element(elm)
+for node in nodes: m.add_node(node)
+for elm in elements: m.add_element(elm)
     
 # Boundary conditions and loads
 minx, maxx = min(x), max(x)
 miny, maxy = min(y), max(y)
 
-for node in nodos:
+for node in nodes:
     if node.x == minx:
         m.add_constraint(node, ux=0, uy=0)
     if node.x == maxx:
@@ -183,13 +183,13 @@ n3 = Node((L1+L2,0))
 e1 = Beam((n1,n2),E,I)
 e2 = Beam((n2,n3),E,I)
 
-# Add elements 
+# Add elements and nodes
 for nd in (n1,n2,n3): m1.add_node(nd)
 for el in (e1,e2): m1.add_element(el)
     
 m1.add_force(n2, (-P,))
-m1.add_constraint(n1, ux=0, uy=0) # fixed 
-m1.add_constraint(n3, uy=0) # fixed
+m1.add_constraint(n1, ux=0, uy=0) # pin
+m1.add_constraint(n3, uy=0) # roller
 m1.solve() # Solve model
 
 # Displacement at C point
