@@ -120,7 +120,7 @@ class SpringModel(Model):
         _str = SPRING_SIMPLE_REPORT.format(
                 model_name=self.name,
                 nodes=self.n_nodes,
-                elements=self.self.n_elements,
+                elements=self.n_elements,
                 nodal_displacements=self._get_ndisplacements(options),
                 nodal_forces=self._get_nforces(options),
                 element_forces=self._get_eforces(options),
@@ -470,7 +470,7 @@ class TrussModel(Model):
         _str = TRUSS_SIMPLE_REPORT.format(
                 model_name=self.name,
                 nodes=self.n_nodes,
-                elements=self.self.n_elements,
+                elements=self.n_elements,
                 nodal_displacements=self._get_ndisplacements(options),
                 nodal_forces=self._get_nforces(options),
                 element_forces=self._get_eforces(options),

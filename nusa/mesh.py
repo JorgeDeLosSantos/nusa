@@ -12,6 +12,19 @@ class Modeler(object):
         self.geom = msh.SimpleGMSH()
         
     def add_rectangle(self,p0,p1,esize=0.1):
+        """
+        Add a rectangle to the model.
+
+        Parameters
+        ----------
+
+        p0 : tuple
+            The coordinates of the first corner of the rectangle (x0, y0).
+        p1 : tuple
+            The coordinates of the opposite corner of the rectangle (x1, y1).
+        esize : float, optional
+            The characteristic length for meshing the rectangle. Default is 0.1.
+        """
         n = esize
         x0,y0 = p0[:2]
         x1,y1 = p1[:2]
@@ -30,6 +43,18 @@ class Modeler(object):
         return loop,surf
         
     def add_poly(self,*points,**kw):
+        """
+        Add a polygon to the model.
+
+        Parameters
+        ----------
+        *points : tuple
+            A variable number of tuples, each containing the coordinates of a vertex of the polygon (x, y).
+        **kw : dict
+            Additional keyword arguments. Currently supports:
+            - esize: float, optional
+                The characteristic length for meshing the polygon. Default is 0.1.    
+        """
         if "esize" in kw:
             n = kw["esize"]
         else:
