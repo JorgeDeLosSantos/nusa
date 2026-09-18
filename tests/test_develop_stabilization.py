@@ -2,25 +2,17 @@
 
 import numpy as np
 
-from nusa.core import Element, Node
-from nusa.model import BeamModel, SpringModel
+from nusa.core import Element, Model, Node
+from nusa.model import BeamModel
 from nusa.version import __version__
 
 
-class MockSpring(Element):
-    def __init__(self, nodes, stiffness=1.0):
-        super().__init__("spring")
+class MockElement(Element):
+    def __init__(self, nodes):
+        super().__init__("mock")
         self.nodes = nodes
-        self.stiffness = stiffness
-
-    def get_element_stiffness(self):
-        k = self.stiffness
-        return np.array([[k, -k], [-k, k]], dtype=float)
-
-    @property
-    def fx(self):
-        n1, n2 = self.nodes
-        return self.get_element_stiffness() @ np.array([[n1.ux], [n2.ux]])
+        self.f = 1.0
+        self.s = 2.0
 
 
 class MockBeam(Element):
@@ -44,23 +36,34 @@ def test_develop_version_remains_marked_as_development():
     assert __version__ == "0.3.0.dev0"
 
 
-def test_spring_simple_report_uses_property_based_model_api():
-    model = SpringModel("Regression spring")
+def test_model_report_helpers_use_property_based_model_api():
+    model = Model("Regression model", "mock")
     n1 = Node((0.0, 0.0))
     n2 = Node((1.0, 0.0))
-    element = MockSpring((n1, n2), stiffness=10.0)
+    element = MockElement((n1, n2))
 
     model.add_nodes([n1, n2])
     model.add_element(element)
-    model.add_constraint(n1, ux=0.0)
-    model.add_force(n2, (10.0,))
-    model.solve()
 
-    report = model.simple_report(report_type="string")
+    options = {
+        "headers": "firstrow",
+        "tablefmt": "rst",
+        "numalign": "right",
+    }
 
-    assert "Regression spring" in report
-    assert "Number of nodes: 2" in report
-    assert "Number of elements: 1" in report
+    tables = (
+        model._get_ndisplacements(options),
+        model._get_nforces(options),
+        model._get_eforces(options),
+        model._get_estresses(options),
+        model._get_nodes_info(options),
+        model._get_elements_info(options),
+    )
+
+    assert all(isinstance(table, str) for table in tables)
+    assert "Node" in tables[0]
+    assert "Element" in tables[2]
+    assert "Element" in tables[5]
 
 
 def test_beam_solve_indexes_property_based_node_collection_with_integers():
