@@ -1,8 +1,6 @@
 """Numerical regression tests for spring and bar finite elements."""
 
 import numpy as np
-import pytest
-
 from nusa.core import Node
 from nusa.element import Bar, Spring
 from nusa.model import BarModel, SpringModel
@@ -86,13 +84,6 @@ class TestSpringModel:
             [45000.0 / 11.0, -45000.0 / 11.0],
         )
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "SpringModel.solve() omits the K_uk @ u_k term when more than one "
-            "unknown displacement is present."
-        ),
-    )
     def test_nonzero_prescribed_displacement(self):
         """Regression target from examples/spring/spring_02.py (Logan, Example 2.2)."""
         model = SpringModel("Logan 2.2")
@@ -224,3 +215,21 @@ class TestBarModel:
             [n1.fx, n2.fx, n3.fx],
             expected_nodal_forces,
         )
+
+
+def test_bar_nonzero_prescribed_displacement_with_multiple_unknowns():
+    model = BarModel("Prescribed bar chain")
+    nodes = [Node((float(i), 0.0)) for i in range(4)]
+    elements = [Bar((nodes[i], nodes[i + 1]), E=100.0, A=1.0) for i in range(3)]
+
+    model.add_nodes(nodes)
+    model.add_elements(elements)
+    model.add_constraint(nodes[0], ux=0.0)
+    model.add_constraint(nodes[3], ux=0.03)
+    model.solve()
+
+    np.testing.assert_allclose(
+        [node.ux for node in nodes],
+        [0.0, 0.01, 0.02, 0.03],
+        atol=1e-12,
+    )

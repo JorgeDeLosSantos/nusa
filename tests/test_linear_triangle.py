@@ -214,3 +214,19 @@ class TestLinearTriangleModel:
             ]
         )
         np.testing.assert_allclose(total_nodal_force, [0.0, 0.0], atol=1e-7)
+
+
+def test_linear_triangle_nonzero_prescribed_displacement():
+    model = LinearTriangleModel("Prescribed CST")
+    n1 = Node((0.0, 0.0))
+    n2 = Node((1.0, 0.0))
+    n3 = Node((0.0, 1.0))
+    element = LinearTriangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5)
+
+    model.add_nodes([n1, n2, n3])
+    model.add_element(element)
+    model.add_constraint(n1, ux=0.0, uy=0.0)
+    model.add_constraint(n2, ux=0.01, uy=0.0)
+    model.solve()
+
+    np.testing.assert_allclose([n3.ux, n3.uy], [0.0, -0.0025], atol=1e-12)
