@@ -1,8 +1,6 @@
 """Numerical regression tests for the constant-strain linear triangle element."""
 
 import numpy as np
-import pytest
-
 from nusa.core import Node
 from nusa.element import LinearTriangle
 from nusa.model import LinearTriangleModel
@@ -83,23 +81,45 @@ class TestLinearTriangleElement:
         np.testing.assert_allclose(element.get_element_strains(), 0.0, atol=1e-14)
         np.testing.assert_allclose(element.get_element_stresses(), 0.0, atol=1e-3)
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "Clockwise node ordering gives a negative signed area and therefore "
-            "a negative-semidefinite stiffness matrix."
-        ),
-    )
     def test_clockwise_connectivity_does_not_produce_negative_stiffness(self):
         n1 = Node((0.0, 0.0))
         n2 = Node((0.0, 1.0))
         n3 = Node((1.0, 0.0))
         element = LinearTriangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5)
 
+        assert np.isclose(element.A, 0.5)
         stiffness = element.get_element_stiffness()
         eigenvalues = np.linalg.eigvalsh(stiffness)
 
         assert eigenvalues.min() >= -1e-10
+
+    def test_clockwise_and_counterclockwise_connectivity_are_equivalent(self):
+        a = Node((0.0, 0.0))
+        b = Node((1.0, 0.0))
+        c = Node((0.0, 1.0))
+
+        ccw = LinearTriangle((a, b, c), E=1000.0, nu=0.25, t=0.5)
+        cw = LinearTriangle((a, c, b), E=1000.0, nu=0.25, t=0.5)
+
+        # CW order (a,c,b) -> CCW order (a,b,c).
+        dof_permutation = [0, 1, 4, 5, 2, 3]
+        cw_reordered = cw.get_element_stiffness()[np.ix_(dof_permutation, dof_permutation)]
+
+        np.testing.assert_allclose(
+            cw_reordered,
+            ccw.get_element_stiffness(),
+            atol=1e-12,
+        )
+
+    def test_degenerate_triangle_raises_clear_error(self):
+        n1 = Node((0.0, 0.0))
+        n2 = Node((1.0, 0.0))
+        n3 = Node((2.0, 0.0))
+        element = LinearTriangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5)
+
+        assert np.isclose(element.A, 0.0)
+        with np.testing.assert_raises_regex(ValueError, "Degenerate triangle"):
+            element.get_element_stiffness()
 
 
 class TestLinearTriangleModel:
