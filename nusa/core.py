@@ -215,7 +215,7 @@ class Model:
         """
         from tabulate import tabulate
         D = [["Node","UX","UY"]]
-        for n in self.get_nodes():
+        for n in self.nodes:
             D.append([n.label+1,n.ux,n.uy])
         return tabulate(D, **options)
         
@@ -235,7 +235,7 @@ class Model:
         """
         from tabulate import tabulate
         F = [["Node","FX","FY"]]
-        for n in self.get_nodes():
+        for n in self.nodes:
             F.append([n.label+1,n.fx,n.fy])
         return tabulate(F, **options)
         
@@ -255,7 +255,7 @@ class Model:
         """
         from tabulate import tabulate
         F = [["Element","F"]]
-        for elm in self.get_elements():
+        for elm in self.elements:
             F.append([elm.label+1, elm.f])
         return tabulate(F, **options)
         
@@ -275,7 +275,7 @@ class Model:
         """
         from tabulate import tabulate
         S = [["Element","S"]]
-        for elm in self.get_elements():
+        for elm in self.elements:
             S.append([elm.label+1, elm.s])
         return tabulate(S, **options)
     
@@ -295,7 +295,7 @@ class Model:
         """
         from tabulate import tabulate
         F = [["Node","X","Y"]]
-        for n in self.get_nodes():
+        for n in self.nodes:
             F.append([n.label+1, n.x, n.y])
         return tabulate(F, **options)
     
@@ -315,7 +315,7 @@ class Model:
         """
         from tabulate import tabulate
         S = [["Element","NI","NJ"]]
-        for elm in self.get_elements():
+        for elm in self.elements:
             ni, nj = elm.get_nodes()
             S.append([elm.label+1, ni.label+1, nj.label+1])
         return tabulate(S, **options)
