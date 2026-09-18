@@ -1,8 +1,6 @@
 """Numerical regression tests for Euler-Bernoulli beam elements and models."""
 
 import numpy as np
-import pytest
-
 from nusa.core import Node
 from nusa.element import Beam
 from nusa.model import BeamModel
@@ -149,13 +147,6 @@ class TestBeamModel:
 
         assert np.isclose(n1.fy + n3.fy, P)
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "BeamModel.solve() omits the K_uk @ u_k contribution for nonzero "
-            "prescribed displacements."
-        ),
-    )
     def test_nonzero_support_settlement(self):
         """Known solver limitation: support settlements are not assembled correctly."""
         E = 1.0
