@@ -55,19 +55,16 @@ def _solve_model_system(
     if allow_lstsq:
         try:
             model.solved_u = la.solve(model.K2S, model.F2S)
-        except np.linalg.LinAlgError:
+        except:
             print("Solved using LSTSQ")
-            model.solved_u = la.lstsq(model.K2S, model.F2S, rcond=None)[0]
+            model.solved_u = la.lstsq(model.K2S, model.F2S)[0]
     else:
         model.solved_u = la.solve(model.K2S, model.F2S)
 
     for value, dof_index in zip(model.solved_u, unknown):
         node_label, variable = model.index2key(dof_index, displacement_keys)
         model.U[node_label][variable] = value
-
-    for node in model.nodes:
-        for variable in displacement_keys:
-            setattr(node, variable, model.U[node.label][variable])
+        setattr(model.nodes[node_label], variable, value)
 
     model.NF = model.F.copy()
     model.VU = [
