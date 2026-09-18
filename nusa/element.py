@@ -476,30 +476,34 @@ class LinearTriangle(Element):
                             ])
         return D
     
+    def _signed_area(self):
+        n1, n2, n3 = self.nodes
+        xi, yi = n1.x, n1.y
+        xj, yj = n2.x, n2.y
+        xm, ym = n3.x, n3.y
+        return (xi*(yj-ym) + xj*(ym-yi) + xm*(yi-yj))/2
+
     @property
     def B(self):
         ni, nj, nm = self.nodes
-        A = self.A
+        signed_area = self._signed_area()
+        if signed_area == 0.0:
+            raise ValueError("Degenerate triangle: area must be nonzero")
         betai = nj.y - nm.y
         betaj = nm.y - ni.y
         betam = ni.y - nj.y
         gammai = nm.x - nj.x
         gammaj = ni.x - nm.x
         gammam = nj.x - ni.x
-        B = (1/(2*A))*np.array([[betai, 0, betaj, 0, betam, 0],
-                                 [0, gammai, 0, gammaj, 0, gammam],
-                                 [gammai, betai, gammaj, betaj, gammam, betam]
-                                 ])
+        B = (1/(2*signed_area))*np.array([[betai, 0, betaj, 0, betam, 0],
+                                           [0, gammai, 0, gammaj, 0, gammam],
+                                           [gammai, betai, gammaj, betaj, gammam, betam]
+                                           ])
         return B
     
     @property
     def A(self):
-        n1, n2, n3 = self.nodes
-        xi, yi = n1.x, n1.y
-        xj, yj = n2.x, n2.y
-        xm, ym = n3.x, n3.y
-        A = (xi*(yj-ym) + xj*(ym-yi) + xm*(yi-yj))/2
-        return A
+        return abs(self._signed_area())
     
     def get_element_stiffness(self):
         """
