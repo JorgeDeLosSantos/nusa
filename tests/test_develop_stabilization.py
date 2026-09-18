@@ -3,7 +3,8 @@
 import numpy as np
 
 from nusa.core import Element, Model, Node
-from nusa.model import BeamModel
+from nusa.element import Spring
+from nusa.model import BeamModel, SpringModel
 from nusa.version import __version__
 
 
@@ -83,3 +84,25 @@ def test_beam_solve_indexes_property_based_node_collection_with_integers():
     assert np.isclose(n2.ur, -0.5)
     assert np.isclose(n1.fy, 1.0)
     assert np.isclose(n1.m, 1.0)
+
+
+
+def test_shared_solver_preserves_observable_solver_state():
+    model = SpringModel("Solver state")
+    n1 = Node((0.0, 0.0))
+    n2 = Node((0.0, 0.0))
+    element = Spring((n1, n2), 300.0)
+
+    model.add_nodes([n1, n2])
+    model.add_element(element)
+    model.add_constraint(n1, ux=0.0)
+    model.add_force(n2, (750.0,))
+    model.solve()
+
+    np.testing.assert_allclose(model.VU, [0.0, 2.5])
+    np.testing.assert_allclose(model.VF, [0.0, 750.0])
+    np.testing.assert_allclose(model.K2S, [[300.0]])
+    np.testing.assert_allclose(model.F2S, [750.0])
+    np.testing.assert_allclose(model.solved_u, [2.5])
+    assert np.isclose(model.NF[0]["fx"], -750.0)
+    assert np.isclose(model.NF[1]["fx"], 750.0)

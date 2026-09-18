@@ -28,6 +28,57 @@ def _partition_system(K, F, U):
 
     return known.tolist(), unknown.tolist(), Kuu, Fu
 
+
+def _solve_model_system(
+    model,
+    displacement_keys,
+    force_keys,
+    *,
+    allow_lstsq=False,
+):
+    """Solve a model using its assembled stiffness matrix and DOF dictionaries."""
+    model.VU = [
+        node[key]
+        for node in model.U.values()
+        for key in displacement_keys
+    ]
+    model.VF = [
+        node[key]
+        for node in model.F.values()
+        for key in force_keys
+    ]
+
+    _, unknown, model.K2S, model.F2S = _partition_system(
+        model.KG, model.VF, model.VU
+    )
+
+    if allow_lstsq:
+        try:
+            model.solved_u = la.solve(model.K2S, model.F2S)
+        except:
+            print("Solved using LSTSQ")
+            model.solved_u = la.lstsq(model.K2S, model.F2S)[0]
+    else:
+        model.solved_u = la.solve(model.K2S, model.F2S)
+
+    for value, dof_index in zip(model.solved_u, unknown):
+        node_label, variable = model.index2key(dof_index, displacement_keys)
+        model.U[node_label][variable] = value
+        setattr(model.nodes[node_label], variable, value)
+
+    model.NF = model.F.copy()
+    model.VU = [
+        node[key]
+        for node in model.U.values()
+        for key in displacement_keys
+    ]
+    nodal_forces = np.dot(model.KG, model.VU)
+
+    for dof_index, value in enumerate(nodal_forces):
+        node_label, variable = model.index2key(dof_index, force_keys)
+        model.NF[node_label][variable] = value
+        setattr(model.nodes[node_label], variable, value)
+
 #~ *********************************************************************
 #~ ****************************  SpringModel ***************************
 #~ *********************************************************************
@@ -100,27 +151,7 @@ class SpringModel(Model):
             self.U[node.label]["ux"] = ux
         
     def solve(self):
-        # known and unknown values
-        self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
-        self.VF = [node[key] for node in self.F.values() for key in ("fx",)]
-        knw, unknw, self.K2S, self.F2S = _partition_system(
-            self.KG, self.VF, self.VU
-        )
-        # For displacements
-        self.solved_u = la.solve(self.K2S,self.F2S)
-        # Updating U (displacements vector)
-        for k,ic in enumerate(unknw):
-            nd, var = self.index2key(ic)
-            self.U[nd][var] = self.solved_u[k]
-            self.nodes[ic].ux = self.solved_u[k]
-        # For nodal forces/reactions
-        self.NF = self.F.copy()
-        self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
-        nf_calc = np.dot(self.KG, self.VU)
-        for k,ic in enumerate(range(self.n_nodes)):
-            nd, var = self.index2key(ic, ("fx",))
-            self.NF[nd][var] = nf_calc[k]
-            self.nodes[ic].fx = nf_calc[k]
+        _solve_model_system(self, ("ux",), ("fx",))
             
     def index2key(self,idx,opts=("ux",)):
         node = idx
@@ -206,28 +237,7 @@ class BarModel(Model):
             self.U[node.label]["ux"] = ux
         
     def solve(self):
-        # known and unknown values
-        self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
-        self.VF = [node[key] for node in self.F.values() for key in ("fx",)]
-        knw, unknw, self.K2S, self.F2S = _partition_system(
-            self.KG, self.VF, self.VU
-        )
-        self.solved_u = la.solve(self.K2S,self.F2S)
-            
-        # For displacements
-        # Updating U (displacements vector)
-        for k,ic in enumerate(unknw):
-            nd, var = self.index2key(ic)
-            self.U[nd][var] = self.solved_u[k]
-            self.nodes[ic].ux = self.solved_u[k]
-        # For nodal forces/reactions
-        self.NF = self.F.copy()
-        self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
-        nf_calc = np.dot(self.KG, self.VU)
-        for k,ic in enumerate(range(self.n_nodes)):
-            nd, var = self.index2key(ic, ("fx",))
-            self.NF[nd][var] = nf_calc[k]
-            self.nodes[ic].fx = nf_calc[k]
+        _solve_model_system(self, ("ux",), ("fx",))
 
     def index2key(self,idx,opts=("ux",)):
         node = idx
@@ -315,39 +325,7 @@ class TrussModel(Model):
         else: pass # todo
         
     def solve(self):
-        # Solve LS
-        self.VU = [node[key] for node in self.U.values() for key in ("ux","uy")]
-        self.VF = [node[key] for node in self.F.values() for key in ("fx","fy")]
-        knw, unknw, self.K2S, self.F2S = _partition_system(
-            self.KG, self.VF, self.VU
-        )
-        
-        # For displacements
-        self.solved_u = la.solve(self.K2S,self.F2S)
-        for k,ic in enumerate(unknw):
-            nd, var = self.index2key(ic)
-            self.U[nd][var] = self.solved_u[k]
-            
-        # Updating nodes displacements
-        for nd in self.nodes:
-            if np.isnan(nd.ux):
-                nd.ux = self.U[nd.label]["ux"]
-            if np.isnan(nd.uy):
-                nd.uy = self.U[nd.label]["uy"]
-                    
-        # For nodal forces/reactions
-        self.NF = self.F.copy()
-        self.VU = [node[key] for node in self.U.values() for key in ("ux","uy")]
-        nf_calc = np.dot(self.KG, self.VU)
-        for k in range(2*self.n_nodes):
-            nd, var = self.index2key(k, ("fx","fy"))
-            self.NF[nd][var] = nf_calc[k]
-            cnlab = int( np.floor(k/float(self.dof)) )
-            # print(f"cnlab = {cnlab}")
-            if var=="fx": 
-                self.nodes[cnlab].fx = nf_calc[k]
-            elif var=="fy":
-                self.nodes[cnlab].fy = nf_calc[k]
+        _solve_model_system(self, ("ux", "uy"), ("fx", "fy"))
                 
     def index2key(self,idx,opts=("ux","uy")):
         """
@@ -651,38 +629,7 @@ class BeamModel(Model):
             self.U[node.label]["uy"] = uy
         
     def solve(self):
-        # Solve LS
-        self.VU = [node[key] for node in self.U.values() for key in ("uy","ur")]
-        self.VF = [node[key] for node in self.F.values() for key in ("fy","m")]
-        knw, unknw, self.K2S, self.F2S = _partition_system(
-            self.KG, self.VF, self.VU
-        )
-        
-        # For displacements
-        self.solved_u = la.solve(self.K2S,self.F2S)
-        for k,ic in enumerate(unknw):
-            nd, var = self.index2key(ic)
-            self.U[nd][var] = self.solved_u[k]
-            
-        # Updating nodes displacements
-        for nd in self.nodes:
-            if np.isnan(nd.uy):
-                nd.uy = self.U[nd.label]["uy"]
-            if np.isnan(nd.ur):
-                nd.ur = self.U[nd.label]["ur"]
-                    
-        # For nodal forces/reactions
-        self.NF = self.F.copy()
-        self.VU = [node[key] for node in self.U.values() for key in ("uy","ur")]
-        nf_calc = np.dot(self.KG, self.VU)
-        for k in range(2*self.n_nodes):
-            nd, var = self.index2key(k, ("fy","m"))
-            self.NF[nd][var] = nf_calc[k]
-            cnlab = int(np.floor(k/float(self.dof)))
-            if var=="fy": 
-                self.nodes[cnlab].fy = nf_calc[k]
-            elif var=="m": 
-                self.nodes[cnlab].m = nf_calc[k]
+        _solve_model_system(self, ("uy", "ur"), ("fy", "m"))
             
     def index2key(self,idx,opts=("uy","ur")):
         node = idx//2
@@ -928,43 +875,12 @@ class LinearTriangleModel(Model):
         
     def solve(self):
         self._check_nodes()
-        # Solve LS
-        self.VU = [node[key] for node in self.U.values() for key in ("ux","uy")]
-        self.VF = [node[key] for node in self.F.values() for key in ("fx","fy")]
-        knw, unknw, self.K2S, self.F2S = _partition_system(
-            self.KG, self.VF, self.VU
+        _solve_model_system(
+            self,
+            ("ux", "uy"),
+            ("fx", "fy"),
+            allow_lstsq=True,
         )
-        
-        # For displacements
-        try:
-            self.solved_u = la.solve(self.K2S,self.F2S)
-        except:
-            print("Solved using LSTSQ")
-            self.solved_u = la.lstsq(self.K2S, self.F2S)[0]
-            
-        for k,ic in enumerate(unknw):
-            nd, var = self.index2key(ic)
-            self.U[nd][var] = self.solved_u[k]
-            
-        # Updating nodes displacements
-        for nd in self.nodes:
-            if np.isnan(nd.ux):
-                nd.ux = self.U[nd.label]["ux"]
-            if np.isnan(nd.uy):
-                nd.uy = self.U[nd.label]["uy"]
-                    
-        # For nodal forces/reactions
-        self.NF = self.F.copy()
-        self.VU = [node[key] for node in self.U.values() for key in ("ux","uy")]
-        nf_calc = np.dot(self.KG, self.VU)
-        for k in range(2*self.n_nodes):
-            nd, var = self.index2key(k, ("fx","fy"))
-            self.NF[nd][var] = nf_calc[k]
-            cnlab = int( np.floor(k/float(self.dof)) )
-            if var=="fx": 
-                self.nodes[cnlab].fx = nf_calc[k]
-            elif var=="fy": 
-                self.nodes[cnlab].fy = nf_calc[k]
                 
     def index2key(self,idx,opts=("ux","uy")):
         """
