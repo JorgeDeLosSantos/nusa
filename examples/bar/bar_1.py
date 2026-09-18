@@ -44,7 +44,7 @@ def test1():
     m1.solve() # Solve model
     
     print("Node | Displacements | Forces")
-    for node in m1.get_nodes():
+    for node in m1.nodes:
         print("{0}\t{1:0.6f}\t{2}".format(node.label, node.ux, node.fx)) 
     
     
