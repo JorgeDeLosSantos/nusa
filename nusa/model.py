@@ -676,7 +676,7 @@ class BeamModel(Model):
         for k in range(2*self.n_nodes):
             nd, var = self.index2key(k, ("fy","m"))
             self.NF[nd][var] = nf_calc[k]
-            cnlab = np.floor(k/float(self.dof))
+            cnlab = int(np.floor(k/float(self.dof)))
             if var=="fy": 
                 self.nodes[cnlab].fy = nf_calc[k]
             elif var=="m": 
