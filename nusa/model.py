@@ -11,6 +11,23 @@ import nusa.templates as tmp
 import matplotlib.pyplot as plt
 from .core import Model
 
+
+def _partition_system(K, F, U):
+    """Build the reduced linear system for prescribed displacements."""
+    U = np.asarray(U, dtype=float)
+    F = np.asarray(F, dtype=float)
+
+    known = np.flatnonzero(~np.isnan(U))
+    unknown = np.flatnonzero(np.isnan(U))
+
+    Kuu = K[np.ix_(unknown, unknown)]
+    Fu = F[unknown].copy()
+    if known.size:
+        Kuk = K[np.ix_(unknown, known)]
+        Fu -= np.dot(Kuk, U[known])
+
+    return known.tolist(), unknown.tolist(), Kuu, Fu
+
 #~ *********************************************************************
 #~ ****************************  SpringModel ***************************
 #~ *********************************************************************
@@ -86,11 +103,9 @@ class SpringModel(Model):
         # known and unknown values
         self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
         self.VF = [node[key] for node in self.F.values() for key in ("fx",)]
-        knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]
-        unknw = [pos for pos,value in enumerate(self.VU) if value is np.nan]
-        # Matrices to solve
-        self.K2S = np.delete(np.delete(self.KG,knw,0),knw,1)
-        self.F2S = np.delete(self.VF,knw,0)
+        knw, unknw, self.K2S, self.F2S = _partition_system(
+            self.KG, self.VF, self.VU
+        )
         # For displacements
         self.solved_u = la.solve(self.K2S,self.F2S)
         # Updating U (displacements vector)
@@ -194,21 +209,10 @@ class BarModel(Model):
         # known and unknown values
         self.VU = [node[key] for node in self.U.values() for key in ("ux",)]
         self.VF = [node[key] for node in self.F.values() for key in ("fx",)]
-        knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]
-        unknw = [pos for pos,value in enumerate(self.VU) if value is np.nan]
-        
-        if len(unknw)==1:
-            _k = unknw[0]
-            _rowtmp = self.KG[_k,:]
-            _ftmp = self.VF[_k]
-            _fk = _ftmp - np.dot(np.delete(_rowtmp,_k), np.delete(self.VU,_k))
-            _uk = _fk / self.KG[_k, _k]
-            # Then 
-            self.solved_u = np.array([_uk])
-        else: # "Normal" case
-            self.K2S = np.delete(np.delete(self.KG,knw,0),knw,1)
-            self.F2S = np.delete(self.VF,knw,0)
-            self.solved_u = la.solve(self.K2S,self.F2S)
+        knw, unknw, self.K2S, self.F2S = _partition_system(
+            self.KG, self.VF, self.VU
+        )
+        self.solved_u = la.solve(self.K2S,self.F2S)
             
         # For displacements
         # Updating U (displacements vector)
@@ -314,10 +318,9 @@ class TrussModel(Model):
         # Solve LS
         self.VU = [node[key] for node in self.U.values() for key in ("ux","uy")]
         self.VF = [node[key] for node in self.F.values() for key in ("fx","fy")]
-        knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]
-        unknw = [pos for pos,value in enumerate(self.VU) if value is np.nan]
-        self.K2S = np.delete(np.delete(self.KG,knw,0),knw,1)
-        self.F2S = np.delete(self.VF,knw,0)
+        knw, unknw, self.K2S, self.F2S = _partition_system(
+            self.KG, self.VF, self.VU
+        )
         
         # For displacements
         self.solved_u = la.solve(self.K2S,self.F2S)
@@ -651,10 +654,9 @@ class BeamModel(Model):
         # Solve LS
         self.VU = [node[key] for node in self.U.values() for key in ("uy","ur")]
         self.VF = [node[key] for node in self.F.values() for key in ("fy","m")]
-        knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]
-        unknw = [pos for pos,value in enumerate(self.VU) if value is np.nan]
-        self.K2S = np.delete(np.delete(self.KG,knw,0),knw,1)
-        self.F2S = np.delete(self.VF,knw,0)
+        knw, unknw, self.K2S, self.F2S = _partition_system(
+            self.KG, self.VF, self.VU
+        )
         
         # For displacements
         self.solved_u = la.solve(self.K2S,self.F2S)
@@ -929,10 +931,9 @@ class LinearTriangleModel(Model):
         # Solve LS
         self.VU = [node[key] for node in self.U.values() for key in ("ux","uy")]
         self.VF = [node[key] for node in self.F.values() for key in ("fx","fy")]
-        knw = [pos for pos,value in enumerate(self.VU) if not value is np.nan]
-        unknw = [pos for pos,value in enumerate(self.VU) if value is np.nan]
-        self.K2S = np.delete(np.delete(self.KG,knw,0),knw,1)
-        self.F2S = np.delete(self.VF,knw,0)
+        knw, unknw, self.K2S, self.F2S = _partition_system(
+            self.KG, self.VF, self.VU
+        )
         
         # For displacements
         try:
