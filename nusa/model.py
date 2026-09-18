@@ -29,6 +29,30 @@ def _partition_system(K, F, U):
     return known.tolist(), unknown.tolist(), Kuu, Fu
 
 
+def _element_dof_indices(element, dof_per_node):
+    """Return global DOF indices for an element using the model's label convention."""
+    indices = []
+    for node in element.get_nodes():
+        base = dof_per_node * node.label
+        indices.extend(base + component for component in range(dof_per_node))
+    return indices
+
+
+def _assemble_global_stiffness(model):
+    """Assemble the dense global stiffness matrix from element matrices."""
+    matrix_size = model.dof * model.n_nodes
+    model.KG = np.zeros((matrix_size, matrix_size))
+
+    for element in model.elements:
+        element_stiffness = element.get_element_stiffness()
+        global_dofs = _element_dof_indices(element, model.dof)
+        model.KG[np.ix_(global_dofs, global_dofs)] += element_stiffness
+
+    model.build_forces_vector()
+    model.build_displacements_vector()
+    model.IS_KG_BUILDED = True
+
+
 def _solve_model_system(
     model,
     displacement_keys,
@@ -95,38 +119,7 @@ class SpringModel(Model):
         self.IS_KG_BUILDED = False
 
     def build_global_matrix(self):
-        msz = (self.dof)*self.n_nodes # Matrix size
-        self.KG = np.zeros((msz,msz))
-        for element in self.elements:
-            ku = element.get_element_stiffness()
-            n1,n2 = element.get_nodes()
-            self.KG[n1.label, n1.label] += ku[0,0]
-            self.KG[n1.label, n2.label] += ku[0,1]
-            self.KG[n2.label, n1.label] += ku[1,0]
-            self.KG[n2.label, n2.label] += ku[1,1]
-        
-        self.build_forces_vector()
-        self.build_displacements_vector()
-        self.IS_KG_BUILDED = True
-        
-    def _build_global_matrix(self):
-        msz = (self.dof)*self.n_nodes # Matrix size
-        self.KG = np.zeros((msz,msz))
-        for element in self.elements:
-            ku = element.get_element_stiffness()
-            n1,n2 = element.get_nodes()
-            for ii,jj in self._nodal_index(n1.label,n2.label):
-                self.KG[ii[0],ii[1]] += ku[jj[0],jj[1]]
-        
-        self.build_forces_vector()
-        self.build_displacements_vector()
-        self.IS_KG_BUILDED = True
-        
-    def _nodal_index(self,ii,jj):
-        from itertools import product,izip
-        iter1 = product((ii,jj),repeat=2)
-        iter2 = product((0,1),repeat=2)
-        return izip(iter1,iter2)
+        _assemble_global_stiffness(self)
         
     def build_forces_vector(self):
         for node in self.nodes:
@@ -208,18 +201,7 @@ class BarModel(Model):
             self.F[node.label] = {"fx":0, "fy":0}
         
     def build_global_matrix(self):
-        msz = (self.dof)*self.n_nodes
-        self.KG = np.zeros((msz,msz))
-        for element in self.elements:
-            ku = element.get_element_stiffness()
-            n1,n2 = element.get_nodes()
-            self.KG[n1.label, n1.label] += ku[0,0]
-            self.KG[n1.label, n2.label] += ku[0,1]
-            self.KG[n2.label, n1.label] += ku[1,0]
-            self.KG[n2.label, n2.label] += ku[1,1]
-        self.build_forces_vector()
-        self.build_displacements_vector()
-        self.IS_KG_BUILDED = True
+        _assemble_global_stiffness(self)
         
     def build_displacements_vector(self):
         for node in self.nodes:
@@ -261,34 +243,7 @@ class TrussModel(Model):
         self.IS_KG_BUILDED = False
         
     def build_global_matrix(self):
-        msz = (self.dof)*self.n_nodes
-        self.KG = np.zeros((msz,msz))
-        for element in self.elements:
-            ku = element.get_element_stiffness()
-            n1,n2 = element.get_nodes()
-            self.KG[2*n1.label, 2*n1.label] += ku[0,0]
-            self.KG[2*n1.label, 2*n1.label+1] += ku[0,1]
-            self.KG[2*n1.label, 2*n2.label] += ku[0,2]
-            self.KG[2*n1.label, 2*n2.label+1] += ku[0,3]
-            
-            self.KG[2*n1.label+1, 2*n1.label] += ku[1,0]
-            self.KG[2*n1.label+1, 2*n1.label+1] += ku[1,1]
-            self.KG[2*n1.label+1, 2*n2.label] += ku[1,2]
-            self.KG[2*n1.label+1, 2*n2.label+1] += ku[1,3]
-            
-            self.KG[2*n2.label, 2*n1.label] += ku[2,0]
-            self.KG[2*n2.label, 2*n1.label+1] += ku[2,1]
-            self.KG[2*n2.label, 2*n2.label] += ku[2,2]
-            self.KG[2*n2.label, 2*n2.label+1] += ku[2,3]
-            
-            self.KG[2*n2.label+1, 2*n1.label] += ku[3,0]
-            self.KG[2*n2.label+1, 2*n1.label+1] += ku[3,1]
-            self.KG[2*n2.label+1, 2*n2.label] += ku[3,2]
-            self.KG[2*n2.label+1, 2*n2.label+1] += ku[3,3]
-            
-        self.build_forces_vector()
-        self.build_displacements_vector()
-        self.IS_KG_BUILDED = True
+        _assemble_global_stiffness(self)
         
     def build_forces_vector(self):
         for node in self.nodes:
@@ -528,64 +483,7 @@ class BeamModel(Model):
         self.IS_KG_BUILDED = False
         
     def build_global_matrix(self):
-        msz = (self.dof)*self.n_nodes
-        self.KG = np.zeros((msz,msz))
-        for element in self.elements:
-            ku = element.get_element_stiffness()
-            n1,n2 = element.get_nodes()
-            self.KG[2*n1.label, 2*n1.label] += ku[0,0]
-            self.KG[2*n1.label, 2*n1.label+1] += ku[0,1]
-            self.KG[2*n1.label, 2*n2.label] += ku[0,2]
-            self.KG[2*n1.label, 2*n2.label+1] += ku[0,3]
-            
-            self.KG[2*n1.label+1, 2*n1.label] += ku[1,0]
-            self.KG[2*n1.label+1, 2*n1.label+1] += ku[1,1]
-            self.KG[2*n1.label+1, 2*n2.label] += ku[1,2]
-            self.KG[2*n1.label+1, 2*n2.label+1] += ku[1,3]
-            
-            self.KG[2*n2.label, 2*n1.label] += ku[2,0]
-            self.KG[2*n2.label, 2*n1.label+1] += ku[2,1]
-            self.KG[2*n2.label, 2*n2.label] += ku[2,2]
-            self.KG[2*n2.label, 2*n2.label+1] += ku[2,3]
-            
-            self.KG[2*n2.label+1, 2*n1.label] += ku[3,0]
-            self.KG[2*n2.label+1, 2*n1.label+1] += ku[3,1]
-            self.KG[2*n2.label+1, 2*n2.label] += ku[3,2]
-            self.KG[2*n2.label+1, 2*n2.label+1] += ku[3,3]
-            
-        self.build_forces_vector()
-        self.build_displacements_vector()
-        self.IS_KG_BUILDED = True
-    
-    def _build_global_matrix(self):
-        msz = (self.dof)*self.n_nodes
-        self.KG = np.zeros((msz,msz))
-        for element in self.elements:
-            ku = element.get_element_stiffness()
-            n1,n2 = element.get_nodes()
-            self.KG[2*n1.label, 2*n1.label] += ku[0,0]
-            self.KG[2*n1.label, 2*n1.label+1] += ku[0,1]
-            self.KG[2*n1.label, 2*n2.label] += ku[0,2]
-            self.KG[2*n1.label, 2*n2.label+1] += ku[0,3]
-            
-            self.KG[2*n1.label+1, 2*n1.label] += ku[1,0]
-            self.KG[2*n1.label+1, 2*n1.label+1] += ku[1,1]
-            self.KG[2*n1.label+1, 2*n2.label] += ku[1,2]
-            self.KG[2*n1.label+1, 2*n2.label+1] += ku[1,3]
-            
-            self.KG[2*n2.label, 2*n1.label] += ku[2,0]
-            self.KG[2*n2.label, 2*n1.label+1] += ku[2,1]
-            self.KG[2*n2.label, 2*n2.label] += ku[2,2]
-            self.KG[2*n2.label, 2*n2.label+1] += ku[2,3]
-            
-            self.KG[2*n2.label+1, 2*n1.label] += ku[3,0]
-            self.KG[2*n2.label+1, 2*n1.label+1] += ku[3,1]
-            self.KG[2*n2.label+1, 2*n2.label] += ku[3,2]
-            self.KG[2*n2.label+1, 2*n2.label+1] += ku[3,3]
-            
-        self.build_forces_vector()
-        self.build_displacements_vector()
-        self.IS_KG_BUILDED = True
+        _assemble_global_stiffness(self)
     
     def build_forces_vector(self):
         for node in self.nodes:
@@ -787,56 +685,9 @@ class LinearTriangleModel(Model):
         self.IS_KG_BUILDED = False
         
     def build_global_matrix(self):
-        """
-        Build global matrix -> KG
-        """
-        msz = (self.dof)*self.n_nodes
-        self.KG = np.zeros((msz,msz))
-        for element in self.elements:
-            ku = element.get_element_stiffness()
-            n1,n2,n3 = element.get_nodes()
-            i, j, m = n1.label, n2.label, n3.label
-            self.KG[2*i,2*i] += ku[0,0]
-            self.KG[2*i,2*i+1] += ku[0,1]
-            self.KG[2*i,2*j] += ku[0,2]
-            self.KG[2*i,2*j+1] += ku[0,3]
-            self.KG[2*i,2*m] += ku[0,4]
-            self.KG[2*i,2*m+1] += ku[0,5]
-            self.KG[2*i+1,2*i] += ku[1,0]
-            self.KG[2*i+1,2*i+1] += ku[1,1]
-            self.KG[2*i+1,2*j] += ku[1,2]
-            self.KG[2*i+1,2*j+1] += ku[1,3]
-            self.KG[2*i+1,2*m] += ku[1,4]
-            self.KG[2*i+1,2*m+1] += ku[1,5]
-            self.KG[2*j,2*i] += ku[2,0]
-            self.KG[2*j,2*i+1] += ku[2,1]
-            self.KG[2*j,2*j] += ku[2,2]
-            self.KG[2*j,2*j+1] += ku[2,3]
-            self.KG[2*j,2*m] += ku[2,4]
-            self.KG[2*j,2*m+1] += ku[2,5]
-            self.KG[2*j+1,2*i] += ku[3,0]
-            self.KG[2*j+1,2*i+1] += ku[3,1]
-            self.KG[2*j+1,2*j] += ku[3,2]
-            self.KG[2*j+1,2*j+1] += ku[3,3]
-            self.KG[2*j+1,2*m] += ku[3,4]
-            self.KG[2*j+1,2*m+1] += ku[3,5]
-            self.KG[2*m,2*i] += ku[4,0]
-            self.KG[2*m,2*i+1] += ku[4,1]
-            self.KG[2*m,2*j] += ku[4,2]
-            self.KG[2*m,2*j+1] += ku[4,3]
-            self.KG[2*m,2*m] += ku[4,4]
-            self.KG[2*m,2*m+1] += ku[4,5]
-            self.KG[2*m+1,2*i] += ku[5,0]
-            self.KG[2*m+1,2*i+1] += ku[5,1]
-            self.KG[2*m+1,2*j] += ku[5,2]
-            self.KG[2*m+1,2*j+1] += ku[5,3]
-            self.KG[2*m+1,2*m] += ku[5,4]
-            self.KG[2*m+1,2*m+1] += ku[5,5]
-            
-        self.build_forces_vector()
-        self.build_displacements_vector()
-        self.IS_KG_BUILDED = True
-    
+        """Build global stiffness matrix."""
+        _assemble_global_stiffness(self)
+
     def build_forces_vector(self):
         for node in self.nodes:
             self.F[node.label] = {"fx":0.0, "fy":0.0} # (fy, m)

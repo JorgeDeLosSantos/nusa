@@ -3,7 +3,7 @@
 import numpy as np
 
 from nusa.core import Element, Model, Node
-from nusa.element import Spring
+from nusa.element import Beam, Spring
 from nusa.model import BeamModel, SpringModel
 from nusa.version import __version__
 
@@ -106,3 +106,31 @@ def test_shared_solver_preserves_observable_solver_state():
     np.testing.assert_allclose(model.solved_u, [2.5])
     assert np.isclose(model.NF[0]["fx"], -750.0)
     assert np.isclose(model.NF[1]["fx"], 750.0)
+
+
+
+def test_shared_assembly_accumulates_overlapping_beam_dofs():
+    model = BeamModel("Assembly regression")
+    n1 = Node((0.0, 0.0))
+    n2 = Node((1.0, 0.0))
+    n3 = Node((2.0, 0.0))
+    e1 = Beam((n1, n2), E=1.0, I=1.0)
+    e2 = Beam((n2, n3), E=1.0, I=1.0)
+
+    model.add_nodes([n1, n2, n3])
+    model.add_elements([e1, e2])
+    model.build_global_matrix()
+
+    expected = np.array(
+        [
+            [12.0, 6.0, -12.0, 6.0, 0.0, 0.0],
+            [6.0, 4.0, -6.0, 2.0, 0.0, 0.0],
+            [-12.0, -6.0, 24.0, 0.0, -12.0, 6.0],
+            [6.0, 2.0, 0.0, 8.0, -6.0, 2.0],
+            [0.0, 0.0, -12.0, -6.0, 12.0, -6.0],
+            [0.0, 0.0, 6.0, 2.0, -6.0, 4.0],
+        ]
+    )
+
+    np.testing.assert_allclose(model.KG, expected)
+    assert model.IS_KG_BUILDED is True
