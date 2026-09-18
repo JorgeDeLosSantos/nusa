@@ -111,6 +111,29 @@ class TestLinearTriangleElement:
             atol=1e-12,
         )
 
+    def test_clockwise_and_counterclockwise_strain_stress_are_equivalent(self):
+        a = Node((0.0, 0.0))
+        b = Node((1.0, 0.0))
+        c = Node((0.0, 1.0))
+
+        for node in (a, b, c):
+            node.ux = 1.0e-3 * node.x + 2.0e-3 * node.y
+            node.uy = -0.5e-3 * node.x + 3.0e-3 * node.y
+
+        ccw = LinearTriangle((a, b, c), E=200e9, nu=0.3, t=0.1)
+        cw = LinearTriangle((a, c, b), E=200e9, nu=0.3, t=0.1)
+
+        np.testing.assert_allclose(
+            cw.get_element_strains(),
+            ccw.get_element_strains(),
+            atol=1e-14,
+        )
+        np.testing.assert_allclose(
+            cw.get_element_stresses(),
+            ccw.get_element_stresses(),
+            atol=1e-3,
+        )
+
     def test_degenerate_triangle_raises_clear_error(self):
         n1 = Node((0.0, 0.0))
         n2 = Node((1.0, 0.0))
