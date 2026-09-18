@@ -205,10 +205,12 @@ class TestLinearTriangleModel:
             atol=1e-6,
         )
 
-        total_force = np.array(
+        # After solve(), nodal forces contain K @ u. Applied nodal loads and
+        # support reactions therefore balance over the complete model.
+        total_nodal_force = np.array(
             [
                 sum(node.fx for node in nodes),
                 sum(node.fy for node in nodes),
             ]
         )
-        np.testing.assert_allclose(total_force, [18750.0, 0.0], atol=1e-7)
+        np.testing.assert_allclose(total_nodal_force, [0.0, 0.0], atol=1e-7)
