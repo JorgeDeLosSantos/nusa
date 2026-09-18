@@ -35,7 +35,7 @@ def test3():
     m3.add_constraint(n1,ux=0)
     m3.solve()
     
-    for n in m3.get_nodes():
+    for n in m3.nodes:
         print(n.ux, n.uy)
         
 
