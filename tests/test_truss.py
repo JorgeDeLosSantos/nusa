@@ -218,3 +218,22 @@ class TestTrussModel:
             [-20e3, 0.0],
             atol=1e-7,
         )
+
+
+def test_truss_nonzero_prescribed_displacement():
+    model = TrussModel("Prescribed truss chain")
+    n1 = Node((0.0, 0.0))
+    n2 = Node((1.0, 0.0))
+    n3 = Node((2.0, 0.0))
+    e1 = Truss((n1, n2), E=100.0, A=1.0)
+    e2 = Truss((n2, n3), E=100.0, A=1.0)
+
+    model.add_nodes([n1, n2, n3])
+    model.add_elements([e1, e2])
+    model.add_constraint(n1, ux=0.0, uy=0.0)
+    model.add_constraint(n2, uy=0.0)
+    model.add_constraint(n3, ux=0.03, uy=0.0)
+    model.solve()
+
+    np.testing.assert_allclose([n1.ux, n2.ux, n3.ux], [0.0, 0.015, 0.03])
+    np.testing.assert_allclose([e1.f, e2.f], [1.5, 1.5])
