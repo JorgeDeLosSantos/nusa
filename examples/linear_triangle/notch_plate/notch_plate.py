@@ -6,8 +6,8 @@
 #  License: MIT License
 # ***********************************
 import numpy as np
-from nusa import *
-from nusa.mesh import *
+from nusa import LinearTriangle, LinearTriangleModel, Node
+from nusa.mesh import Modeler
 
 m = Modeler()
 a = m.add_poly((0,0),(1,0),(1,1),(0.6,1),(0.5,0.9),(0.4,1),(0,1), esize=0.08)
