@@ -53,6 +53,11 @@ jobs:
           python -m build
           python -m twine check dist/*
 
+      - name: Smoke-test built wheel
+        run: |
+          python -m pip install --force-reinstall dist/*.whl
+          python -c "import nusa; print(nusa.__version__)"
+
   docs:
     name: Build documentation
     runs-on: ubuntu-latest
