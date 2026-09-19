@@ -41,7 +41,7 @@ def test1():
     m1.solve()
     
     # a) Global matrix
-    print("a) Global matrix:\n {0}".format(m1.KG))
+    print("a) Global matrix:\n {0}".format(m1.stiffness_matrix))
     # b) Nodal displacement -> 3 and 4
     print("\nb) Nodal displacement (3 and 4)")
     print("UX3: {0}".format(n3.ux))
