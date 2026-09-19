@@ -46,8 +46,8 @@ for node in nodos:
 m.plot_model()
 m.solve()
 # Plotting
-m.plot_nsol("seqv") # von Mises Stress
-#~ m.plot_nsol("exx")
+m.plot_nodal_result("seqv") # von Mises Stress
+#~ m.plot_nodal_result("exx")
 m.show()
 
 
