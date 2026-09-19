@@ -73,6 +73,22 @@ def test_load_change_invalidates_solution_but_preserves_assembly():
     assert np.isclose(n2.ux, 0.8)
 
 
+def test_constraint_change_invalidates_solution_but_preserves_assembly():
+    model, n1, n2 = _spring_model()
+    model.solve()
+
+    assembled_matrix = model._K
+    model.add_constraint(n2, ux=0.1)
+
+    assert model._is_assembled is True
+    assert model._K is assembled_matrix
+    assert not hasattr(model, "_nodal_forces")
+    assert not hasattr(model, "_reactions")
+    np.testing.assert_allclose(model._u, [0.0, 0.1])
+    assert np.isclose(n1.ux, 0.0)
+    assert np.isclose(n2.ux, 0.1)
+
+
 def test_topology_change_invalidates_assembly_and_legacy_names_are_absent():
     model, _, _ = _spring_model()
     model.assemble()
