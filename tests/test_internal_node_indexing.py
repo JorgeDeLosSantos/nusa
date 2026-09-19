@@ -51,7 +51,7 @@ def test_bar_solver_accepts_sparse_integer_labels():
 
     np.testing.assert_allclose([n1.ux, n2.ux, n3.ux], [0.0, 1.0, 2.0])
     np.testing.assert_allclose([n1.fx, n2.fx, n3.fx], [-1.0, 0.0, 1.0])
-    assert model.KG.shape == (3, 3)
+    assert model.stiffness_matrix.shape == (3, 3)
 
 
 def test_truss_solver_accepts_string_labels():
