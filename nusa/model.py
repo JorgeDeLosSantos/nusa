@@ -275,18 +275,18 @@ class TrussModel(Model):
             uy = cs.get('uy')
             node.set_displacements(ux=ux, uy=uy) # eqv to node.ux = ux, node.uy = uy
             self.U[self._get_node_index(node)]["ux"] = ux
-            self._record_prescribed_displacements(node, ux=ux)
             self.U[self._get_node_index(node)]["uy"] = uy
-            self._record_prescribed_displacements(node, uy=uy)
             self._record_prescribed_displacements(node, ux=ux, uy=uy)
         elif "ux" in cs:
             ux = cs.get('ux')
             node.set_displacements(ux=ux)
             self.U[self._get_node_index(node)]["ux"] = ux
+            self._record_prescribed_displacements(node, ux=ux)
         elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
             self.U[self._get_node_index(node)]["uy"] = uy
+            self._record_prescribed_displacements(node, uy=uy)
         else: pass # todo
         
     def solve(self):
@@ -525,8 +525,6 @@ class BeamModel(Model):
             node.set_displacements(ux=ux, uy=uy, ur=ur)
             #~ print("Encastre")
             self.U[self._get_node_index(node)]["uy"] = uy
-            self._record_prescribed_displacements(node, uy=uy)
-            self._record_prescribed_displacements(node, uy=uy)
             self.U[self._get_node_index(node)]["ur"] = ur
             self._record_prescribed_displacements(node, uy=uy, ur=ur)
         elif "ux" in cs and "uy" in cs: # 
@@ -535,11 +533,13 @@ class BeamModel(Model):
             node.set_displacements(ux=ux, uy=uy)
             #~ print("Fixed")
             self.U[self._get_node_index(node)]["uy"] = uy
+            self._record_prescribed_displacements(node, uy=uy)
         elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
             #~ print("Simple support")
             self.U[self._get_node_index(node)]["uy"] = uy
+            self._record_prescribed_displacements(node, uy=uy)
         
     def solve(self):
         _solve_model_system(self, ("uy", "ur"), ("fy", "m"))
@@ -731,12 +731,12 @@ class LinearTriangleModel(Model):
             node.set_displacements(ux=ux, uy=uy)
             self.U[self._get_node_index(node)]["ux"] = ux
             self.U[self._get_node_index(node)]["uy"] = uy
-            self._record_prescribed_displacements(node, uy=uy)
             self._record_prescribed_displacements(node, ux=ux, uy=uy)
         elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
             self.U[self._get_node_index(node)]["uy"] = uy
+            self._record_prescribed_displacements(node, uy=uy)
         
     def _check_nodes(self):
         for node in self.nodes:
