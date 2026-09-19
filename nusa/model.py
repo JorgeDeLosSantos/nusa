@@ -7,7 +7,6 @@
 import re
 import numpy as np
 import numpy.linalg as la
-import nusa.templates as tmp
 import matplotlib.pyplot as plt
 from .core import Model
 
@@ -129,35 +128,15 @@ class SpringModel(Model):
     def solve(self):
         _solve_model_system(self)
             
-    def simple_report(self,report_type="print",fname="nusa_rpt.txt"):
-        from .templates import SPRING_SIMPLE_REPORT
-        options = {"headers":"firstrow",
-                   "tablefmt":"rst",
-                   "numalign":"right"}
-        _str = SPRING_SIMPLE_REPORT.format(
-                model_name=self.name,
-                nodes=self.n_nodes,
-                elements=self.n_elements,
-                nodal_displacements=self._get_ndisplacements(options),
-                applied_loads=self._get_applied_loads(options),
-                nodal_forces=self._get_nforces(options),
-                reactions=self._get_reactions(options),
-                element_forces=self._get_eforces(options),
-                nodes_info=self._get_nodes_info(options),
-                elements_info=self._get_elements_info(options))
-        if report_type=="print": print(_str)
-        elif report_type=="write": self._write_report(_str, fname)
-        elif report_type=="string": return _str
-        else: return _str
-
-    def _get_eforces(self,options):
+    def _get_element_results(self, options):
         from tabulate import tabulate
-        F = [["Element","Fi","Fj"]]
-        for elm in self.elements:
-            values = np.asarray(elm.fx, dtype=float).reshape(-1)
-            F.append([elm.label+1, values[0], values[-1]])
-        return tabulate(F, **options)
-        
+
+        rows = [["Element", "Fi", "Fj"]]
+        for element in self.elements:
+            values = np.asarray(element.fx, dtype=float).reshape(-1)
+            rows.append([element.label, values[0], values[-1]])
+        return tabulate(rows, **options)
+
 
 
 #~ *********************************************************************
@@ -189,6 +168,22 @@ class BarModel(Model):
         
     def solve(self):
         _solve_model_system(self)
+
+    def _get_element_results(self, options):
+        from tabulate import tabulate
+
+        rows = [["Element", "Fi", "Fj", "Si", "Sj"]]
+        for element in self.elements:
+            forces = np.asarray(element.fx, dtype=float).reshape(-1)
+            stresses = np.asarray(element.sx, dtype=float).reshape(-1)
+            rows.append([
+                element.label,
+                forces[0],
+                forces[-1],
+                stresses[0],
+                stresses[-1],
+            ])
+        return tabulate(rows, **options)
 
 #~ *********************************************************************
 #~ ****************************  TrussModel ****************************
@@ -346,68 +341,13 @@ class TrussModel(Model):
             ky = 1.0/factor
         return xmn-kx, xmx+kx, ymn-ky, ymx+ky
         
-    def simple_report(self,report_type="print",fname="nusa_rpt.txt"):
-        from .templates import TRUSS_SIMPLE_REPORT
-        options = {"headers":"firstrow",
-                   "tablefmt":"rst",
-                   "numalign":"right"}
-        _str = TRUSS_SIMPLE_REPORT.format(
-                model_name=self.name,
-                nodes=self.n_nodes,
-                elements=self.n_elements,
-                nodal_displacements=self._get_ndisplacements(options),
-                applied_loads=self._get_applied_loads(options),
-                nodal_forces=self._get_nforces(options),
-                reactions=self._get_reactions(options),
-                element_forces=self._get_eforces(options),
-                element_stresses=self._get_estresses(options),
-                nodes_info=self._get_nodes_info(options),
-                elements_info=self._get_elements_info(options))
-        if report_type=="print": print(_str)
-        elif report_type=="write": self._write_report(_str, fname)
-        elif report_type=="string": return _str
-        else: return _str
-        
-    def _write_report(self,txt,fname):
-        fobj = open(fname,"w")
-        fobj.write(txt)
-        fobj.close()
-        
-    def _get_ndisplacements(self,options):
+    def _get_element_results(self, options):
         from tabulate import tabulate
-        D = [["Node","UX","UY"]]
-        for n in self.nodes:
-            D.append([n.label,n.ux,n.uy])
-        return tabulate(D, **options)
-        
-    def _get_eforces(self,options):
-        from tabulate import tabulate
-        F = [["Element","F"]]
-        for elm in self.elements:
-            F.append([elm.label+1, elm.f])
-        return tabulate(F, **options)
-        
-    def _get_estresses(self,options):
-        from tabulate import tabulate
-        S = [["Element","S"]]
-        for elm in self.elements:
-            S.append([elm.label+1, elm.s])
-        return tabulate(S, **options)
-    
-    def _get_nodes_info(self,options):
-        from tabulate import tabulate
-        F = [["Node","X","Y"]]
-        for n in self.nodes:
-            F.append([n.label, n.x, n.y])
-        return tabulate(F, **options)
-    
-    def _get_elements_info(self,options):
-        from tabulate import tabulate
-        S = [["Element","NI","NJ"]]
-        for elm in self.elements:
-            ni, nj = elm.nodes
-            S.append([elm.label+1, ni.label, nj.label])
-        return tabulate(S, **options)
+
+        rows = [["Element", "F", "S"]]
+        for element in self.elements:
+            rows.append([element.label, element.f, element.s])
+        return tabulate(rows, **options)
 
 
 
@@ -447,6 +387,22 @@ class BeamModel(Model):
         
     def solve(self):
         _solve_model_system(self)
+
+    def _get_element_results(self, options):
+        from tabulate import tabulate
+
+        rows = [["Element", "Vi", "Vj", "Mi", "Mj"]]
+        for element in self.elements:
+            shear = np.asarray(element.fy, dtype=float).reshape(-1)
+            moment = np.asarray(element.m, dtype=float).reshape(-1)
+            rows.append([
+                element.label,
+                shear[0],
+                shear[-1],
+                moment[0],
+                moment[-1],
+            ])
+        return tabulate(rows, **options)
             
     def plot_model(self, show_reactions=False):
         """Plot beam geometry, applied transverse loads, and optional reactions."""
@@ -631,6 +587,24 @@ class LinearTriangleModel(Model):
     def solve(self):
         self._check_nodes()
         _solve_model_system(self)
+
+    def _get_element_results(self, options):
+        from tabulate import tabulate
+
+        rows = [["Element", "SXX", "SYY", "SXY", "EXX", "EYY", "EXY"]]
+        for element in self.elements:
+            stress = np.asarray(element.get_element_stresses(), dtype=float).reshape(-1)
+            strain = np.asarray(element.get_element_strains(), dtype=float).reshape(-1)
+            rows.append([
+                element.label,
+                stress[0],
+                stress[1],
+                stress[2],
+                strain[0],
+                strain[1],
+                strain[2],
+            ])
+        return tabulate(rows, **options)
                 
     def plot_model(self, show_reactions=False):
         """
