@@ -95,7 +95,7 @@ for node in nodes:
 
 m.plot_model()
 m.solve()
-m.plot_nsol("seqv")
+m.plot_nodal_result("seqv")
 ```
 
 ![](docs/nusa-info/es/src/linear-triangle-element/model_plot.png)
