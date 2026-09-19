@@ -143,7 +143,9 @@ class SpringModel(Model):
                 nodes=self.n_nodes,
                 elements=self.n_elements,
                 nodal_displacements=self._get_ndisplacements(options),
+                applied_loads=self._get_applied_loads(options),
                 nodal_forces=self._get_nforces(options),
+                reactions=self._get_reactions(options),
                 element_forces=self._get_eforces(options),
                 nodes_info=self._get_nodes_info(options),
                 elements_info=self._get_elements_info(options))
@@ -352,7 +354,9 @@ class TrussModel(Model):
                 nodes=self.n_nodes,
                 elements=self.n_elements,
                 nodal_displacements=self._get_ndisplacements(options),
+                applied_loads=self._get_applied_loads(options),
                 nodal_forces=self._get_nforces(options),
+                reactions=self._get_reactions(options),
                 element_forces=self._get_eforces(options),
                 element_stresses=self._get_estresses(options),
                 nodes_info=self._get_nodes_info(options),
@@ -373,13 +377,6 @@ class TrussModel(Model):
         for n in self.nodes:
             D.append([n.label,n.ux,n.uy])
         return tabulate(D, **options)
-        
-    def _get_nforces(self,options):
-        from tabulate import tabulate
-        F = [["Node","FX","FY"]]
-        for n in self.nodes:
-            F.append([n.label,n.fx,n.fy])
-        return tabulate(F, **options)
         
     def _get_eforces(self,options):
         from tabulate import tabulate
