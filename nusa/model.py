@@ -63,6 +63,9 @@ def _solve_model_system(
     allow_lstsq=False,
 ):
     """Solve a model using its assembled stiffness matrix and DOF dictionaries."""
+    if not model.IS_KG_BUILDED:
+        model.build_global_matrix()
+
     model.VU = [
         node[key]
         for node in model.U.values()
