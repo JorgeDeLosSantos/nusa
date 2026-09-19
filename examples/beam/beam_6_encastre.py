@@ -45,7 +45,7 @@ m.add_constraint(nodos[0], ux=0, uy=0, ur=0)
 m.add_force(nodos[-1], (-P,))
 m.solve()
 
-m.plot_disp(1, label="Approx.")
+m.plot_deformed_shape(1, label="Approx.")
 
 xx = np.linspace(0,L)
 d = ((-P*xx**2.0)/(6.0*E*I))*(3*L - xx)
