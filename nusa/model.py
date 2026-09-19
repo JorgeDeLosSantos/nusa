@@ -29,12 +29,13 @@ def _partition_system(K, F, U):
     return known.tolist(), unknown.tolist(), Kuu, Fu
 
 
-def _element_dof_indices(element, dof_per_node):
-    """Return global DOF indices for an element using the model's label convention."""
+def _element_dof_indices(model, element):
+    """Return global DOF indices using model-owned contiguous node indices."""
     indices = []
     for node in element.get_nodes():
-        base = dof_per_node * node.label
-        indices.extend(base + component for component in range(dof_per_node))
+        node_index = model._get_node_index(node)
+        base = model.dof * node_index
+        indices.extend(base + component for component in range(model.dof))
     return indices
 
 
@@ -45,7 +46,7 @@ def _assemble_global_stiffness(model):
 
     for element in model.elements:
         element_stiffness = element.get_element_stiffness()
-        global_dofs = _element_dof_indices(element, model.dof)
+        global_dofs = _element_dof_indices(model, element)
         model.KG[np.ix_(global_dofs, global_dofs)] += element_stiffness
 
     model.build_forces_vector()
@@ -86,9 +87,9 @@ def _solve_model_system(
         model.solved_u = la.solve(model.K2S, model.F2S)
 
     for value, dof_index in zip(model.solved_u, unknown):
-        node_label, variable = model.index2key(dof_index, displacement_keys)
-        model.U[node_label][variable] = value
-        setattr(model.nodes[node_label], variable, value)
+        node_index, variable = model.index2key(dof_index, displacement_keys)
+        model.U[node_index][variable] = value
+        setattr(model.nodes[node_index], variable, value)
 
     model.NF = model.F.copy()
     model.VU = [
@@ -99,9 +100,9 @@ def _solve_model_system(
     nodal_forces = np.dot(model.KG, model.VU)
 
     for dof_index, value in enumerate(nodal_forces):
-        node_label, variable = model.index2key(dof_index, force_keys)
-        model.NF[node_label][variable] = value
-        setattr(model.nodes[node_label], variable, value)
+        node_index, variable = model.index2key(dof_index, force_keys)
+        model.NF[node_index][variable] = value
+        setattr(model.nodes[node_index], variable, value)
 
 #~ *********************************************************************
 #~ ****************************  SpringModel ***************************
@@ -123,15 +124,15 @@ class SpringModel(Model):
         
     def build_forces_vector(self):
         for node in self.nodes:
-            self.F[node.label] = {"fx":0, "fy":0}
+            self.F[self._get_node_index(node)] = {"fx":0, "fy":0}
         
     def build_displacements_vector(self):
         for node in self.nodes:
-            self.U[node.label] = {"ux":np.nan, "uy":np.nan}
+            self.U[self._get_node_index(node)] = {"ux":np.nan, "uy":np.nan}
         
     def add_force(self,node,force):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        self.F[node.label]["fx"] = force[0]
+        self.F[self._get_node_index(node)]["fx"] = force[0]
         
     def add_constraint(self,node,**constraint):
         """
@@ -141,7 +142,7 @@ class SpringModel(Model):
         if "ux" in constraint:
             ux = constraint.get("ux")
             node.set_displacements(ux=ux)
-            self.U[node.label]["ux"] = ux
+            self.U[self._get_node_index(node)]["ux"] = ux
         
     def solve(self):
         _solve_model_system(self, ("ux",), ("fx",))
@@ -198,25 +199,25 @@ class BarModel(Model):
         Build forces vector, where each node has a dict with "fx" and "fy" keys, but only "fx" is used for bar model
         """
         for node in self.nodes:
-            self.F[node.label] = {"fx":0, "fy":0}
+            self.F[self._get_node_index(node)] = {"fx":0, "fy":0}
         
     def build_global_matrix(self):
         _assemble_global_stiffness(self)
         
     def build_displacements_vector(self):
         for node in self.nodes:
-            self.U[node.label] = {"ux":np.nan, "uy":np.nan}
+            self.U[self._get_node_index(node)] = {"ux":np.nan, "uy":np.nan}
         
     def add_force(self,node,force):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        self.F[node.label]["fx"] = force[0]
+        self.F[self._get_node_index(node)]["fx"] = force[0]
         
     def add_constraint(self,node,**constraint):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
         if "ux" in constraint:
             ux = constraint.get('ux')
             node.set_displacements(ux=ux)
-            self.U[node.label]["ux"] = ux
+            self.U[self._get_node_index(node)]["ux"] = ux
         
     def solve(self):
         _solve_model_system(self, ("ux",), ("fx",))
@@ -247,16 +248,16 @@ class TrussModel(Model):
         
     def build_forces_vector(self):
         for node in self.nodes:
-            self.F[node.label] = {"fx":0, "fy":0}
+            self.F[self._get_node_index(node)] = {"fx":0, "fy":0}
         
     def build_displacements_vector(self):
         for node in self.nodes:
-            self.U[node.label] = {"ux":np.nan, "uy":np.nan}
+            self.U[self._get_node_index(node)] = {"ux":np.nan, "uy":np.nan}
     
     def add_force(self,node,force):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        self.F[node.label]["fx"] = force[0]
-        self.F[node.label]["fy"] = force[1]
+        self.F[self._get_node_index(node)]["fx"] = force[0]
+        self.F[self._get_node_index(node)]["fy"] = force[1]
         node.fx = force[0]
         node.fy = force[1]
         
@@ -267,16 +268,16 @@ class TrussModel(Model):
             ux = cs.get('ux')
             uy = cs.get('uy')
             node.set_displacements(ux=ux, uy=uy) # eqv to node.ux = ux, node.uy = uy
-            self.U[node.label]["ux"] = ux
-            self.U[node.label]["uy"] = uy
+            self.U[self._get_node_index(node)]["ux"] = ux
+            self.U[self._get_node_index(node)]["uy"] = uy
         elif "ux" in cs:
             ux = cs.get('ux')
             node.set_displacements(ux=ux)
-            self.U[node.label]["ux"] = ux
+            self.U[self._get_node_index(node)]["ux"] = ux
         elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
-            self.U[node.label]["uy"] = uy
+            self.U[self._get_node_index(node)]["uy"] = uy
         else: pass # todo
         
     def solve(self):
@@ -427,14 +428,14 @@ class TrussModel(Model):
         from tabulate import tabulate
         D = [["Node","UX","UY"]]
         for n in self.nodes:
-            D.append([n.label+1,n.ux,n.uy])
+            D.append([n.label,n.ux,n.uy])
         return tabulate(D, **options)
         
     def _get_nforces(self,options):
         from tabulate import tabulate
         F = [["Node","FX","FY"]]
         for n in self.nodes:
-            F.append([n.label+1,n.fx,n.fy])
+            F.append([n.label,n.fx,n.fy])
         return tabulate(F, **options)
         
     def _get_eforces(self,options):
@@ -455,7 +456,7 @@ class TrussModel(Model):
         from tabulate import tabulate
         F = [["Node","X","Y"]]
         for n in self.nodes:
-            F.append([n.label+1, n.x, n.y])
+            F.append([n.label, n.x, n.y])
         return tabulate(F, **options)
     
     def _get_elements_info(self,options):
@@ -463,7 +464,7 @@ class TrussModel(Model):
         S = [["Element","NI","NJ"]]
         for elm in self.elements:
             ni, nj = elm.get_nodes()
-            S.append([elm.label+1, ni.label+1, nj.label+1])
+            S.append([elm.label+1, ni.label, nj.label])
         return tabulate(S, **options)
 
 
@@ -487,20 +488,20 @@ class BeamModel(Model):
     
     def build_forces_vector(self):
         for node in self.nodes:
-            self.F[node.label] = {"fy":0.0, "m":0.0} # (fy, m)
+            self.F[self._get_node_index(node)] = {"fy":0.0, "m":0.0} # (fy, m)
             
     def build_displacements_vector(self):
         for node in self.nodes:
-            self.U[node.label] = {"uy":np.nan, "ur":np.nan} # (uy, r)
+            self.U[self._get_node_index(node)] = {"uy":np.nan, "ur":np.nan} # (uy, r)
     
     def add_force(self,node,force):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        self.F[node.label]["fy"] = force[0]
+        self.F[self._get_node_index(node)]["fy"] = force[0]
         node.fy = force[0]
         
     def add_moment(self,node,moment):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        self.F[node.label]["m"] = moment[0]
+        self.F[self._get_node_index(node)]["m"] = moment[0]
         node.m = moment[0]
         
     def add_constraint(self,node,**constraint):
@@ -512,19 +513,19 @@ class BeamModel(Model):
             ur = cs.get('ur')
             node.set_displacements(ux=ux, uy=uy, ur=ur)
             #~ print("Encastre")
-            self.U[node.label]["uy"] = uy
-            self.U[node.label]["ur"] = ur
+            self.U[self._get_node_index(node)]["uy"] = uy
+            self.U[self._get_node_index(node)]["ur"] = ur
         elif "ux" in cs and "uy" in cs: # 
             ux = cs.get('ux')
             uy = cs.get('uy')
             node.set_displacements(ux=ux, uy=uy)
             #~ print("Fixed")
-            self.U[node.label]["uy"] = uy
+            self.U[self._get_node_index(node)]["uy"] = uy
         elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
             #~ print("Simple support")
-            self.U[node.label]["uy"] = uy
+            self.U[self._get_node_index(node)]["uy"] = uy
         
     def solve(self):
         _solve_model_system(self, ("uy", "ur"), ("fy", "m"))
@@ -690,16 +691,16 @@ class LinearTriangleModel(Model):
 
     def build_forces_vector(self):
         for node in self.nodes:
-            self.F[node.label] = {"fx":0.0, "fy":0.0} # (fy, m)
+            self.F[self._get_node_index(node)] = {"fx":0.0, "fy":0.0} # (fy, m)
             
     def build_displacements_vector(self):
         for node in self.nodes:
-            self.U[node.label] = {"ux":np.nan, "uy":np.nan} # (uy, r)
+            self.U[self._get_node_index(node)] = {"ux":np.nan, "uy":np.nan} # (uy, r)
     
     def add_force(self,node,force):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        self.F[node.label]["fx"] = force[0]
-        self.F[node.label]["fy"] = force[1]
+        self.F[self._get_node_index(node)]["fx"] = force[0]
+        self.F[self._get_node_index(node)]["fy"] = force[1]
         node.fx = force[0]
         node.fy = force[1]
         
@@ -713,12 +714,12 @@ class LinearTriangleModel(Model):
             ux = cs.get('ux')
             uy = cs.get('uy')
             node.set_displacements(ux=ux, uy=uy)
-            self.U[node.label]["ux"] = ux
-            self.U[node.label]["uy"] = uy
+            self.U[self._get_node_index(node)]["ux"] = ux
+            self.U[self._get_node_index(node)]["uy"] = uy
         elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
-            self.U[node.label]["uy"] = uy
+            self.U[self._get_node_index(node)]["uy"] = uy
         
     def _check_nodes(self):
         for node in self.nodes:
@@ -818,7 +819,11 @@ class LinearTriangleModel(Model):
         tg = []
         for e in self.elements:
             ni,nj,nm = e.get_nodes()
-            tg.append([ni.label, nj.label, nm.label])
+            tg.append([
+                self._get_node_index(ni),
+                self._get_node_index(nj),
+                self._get_node_index(nm),
+            ])
             
         tr = tri.Triangulation(_x,_y, triangles=tg)
         return tr
