@@ -4,9 +4,7 @@
 #  E-mail: delossantosmfq@gmail.com 
 #  License: MIT License
 # ***********************************
-from nusa.core import *
-from nusa.model import *
-from nusa.element import *
+from nusa import Node, Spring, SpringModel
 
 def simple_case():
     P = 750
@@ -31,7 +29,8 @@ def simple_case():
     # for n in ms.nodes:
     #     print(n.ux, n.uy)
 
-    print(ms.simple_report())
+    ms.simple_report()
+    return ms
 
 if __name__ == '__main__':
     simple_case()
