@@ -37,7 +37,7 @@ def _partition_system(K, F, U):
 def _element_dof_indices(model, element):
     """Return global DOF indices using model-owned contiguous node indices."""
     indices = []
-    for node in element.get_nodes():
+    for node in element.nodes:
         node_index = model._get_node_index(node)
         base = model.dof * node_index
         indices.extend(base + component for component in range(model.dof))
@@ -236,7 +236,7 @@ class TrussModel(Model):
         ax = fig.add_subplot(111)
         
         for elm in self.elements:
-            ni, nj = elm.get_nodes()
+            ni, nj = elm.nodes
             ax.plot([ni.x,nj.x],[ni.y,nj.y],"b-")
 
         for nd in self.nodes:
@@ -304,7 +304,7 @@ class TrussModel(Model):
         df = dfactor*self._calculate_deformed_factor()
         
         for elm in self.elements:
-            ni,nj = elm.get_nodes()
+            ni,nj = elm.nodes
             x, y = [ni.x,nj.x], [ni.y,nj.y]
             xx = [ni.x+ni.ux*df, nj.x+nj.ux*df]
             yy = [ni.y+ni.uy*df, nj.y+nj.uy*df]
@@ -407,7 +407,7 @@ class TrussModel(Model):
         from tabulate import tabulate
         S = [["Element","NI","NJ"]]
         for elm in self.elements:
-            ni, nj = elm.get_nodes()
+            ni, nj = elm.nodes
             S.append([elm.label+1, ni.label, nj.label])
         return tabulate(S, **options)
 
@@ -458,7 +458,7 @@ class BeamModel(Model):
         ax = fig.add_subplot(111)
         
         for elm in self.elements:
-            ni,nj = elm.get_nodes()
+            ni,nj = elm.nodes
             xx = [ni.x, nj.x]
             yy = [ni.y, nj.y]
             ax.plot(xx, yy, "r.-")
@@ -536,7 +536,7 @@ class BeamModel(Model):
         xx = []
         yy = []
         for elm in self.elements:
-            ni,nj = elm.get_nodes()
+            ni,nj = elm.nodes
             xx.append( ni.x )
             xx.append( nj.x )
             yy.append( ni.y+ni.uy*df )
@@ -726,7 +726,7 @@ class LinearTriangleModel(Model):
             
         tg = []
         for e in self.elements:
-            ni,nj,nm = e.get_nodes()
+            ni,nj,nm = e.nodes
             tg.append([
                 self._get_node_index(ni),
                 self._get_node_index(nj),
