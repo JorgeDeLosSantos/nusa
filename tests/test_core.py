@@ -160,6 +160,44 @@ class TestModel:
         assert node in model.nodes
         assert node.label == 0  # Should be auto-assigned
     
+    def test_node_labels_must_be_unique_within_model(self):
+        model = Model("test", "bar")
+        n1 = Node((0, 0))
+        n2 = Node((1, 0))
+        n1.label = "A"
+        n2.label = "A"
+
+        model.add_node(n1)
+
+        with pytest.raises(ValueError, match="already exists"):
+            model.add_node(n2)
+
+    def test_auto_label_uses_next_available_integer(self):
+        model = Model("test", "bar")
+        n1 = Node((0, 0))
+        n2 = Node((1, 0))
+        n3 = Node((2, 0))
+        n1.label = 0
+        n2.label = 2
+
+        model.add_nodes([n1, n2, n3])
+
+        assert [node.label for node in model.nodes] == [0, 2, 1]
+        assert [model._get_node_index(node) for node in model.nodes] == [0, 1, 2]
+
+    def test_internal_index_is_independent_of_label_mutation(self):
+        model = Model("test", "bar")
+        node = Node((0, 0))
+        node.label = "support"
+        model.add_node(node)
+
+        assert model._get_node_index(node) == 0
+
+        node.label = "renamed-support"
+
+        assert model._get_node_index(node) == 0
+        assert model.nodes[0] is node
+
     def test_add_nodes(self):
         """Test adding multiple nodes to model"""
         model = Model("test", "bar")

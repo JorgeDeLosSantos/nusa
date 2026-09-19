@@ -24,7 +24,8 @@ class Model:
         """
         self.mtype = mtype # Model type
         self.name = name # Name 
-        self._nodes = {} # Dictionary for nodes {number: NodeObject}
+        self._nodes = [] # Nodes in model insertion order
+        self._node_index = {} # Node object -> contiguous internal solver index
         self._elements = {} # Dictionary for elements {number: ElementObject}
         
     def add_node(self,node):
@@ -40,10 +41,19 @@ class Model:
         -------
         None
         """
+        labels = [current.label for current in self._nodes]
         if node.label is None:
-            node.label = self.n_nodes
+            label = 0
+            while label in labels:
+                label += 1
+            node.label = label
+        elif node.label in labels:
+            raise ValueError(
+                f"Node label {node.label!r} already exists in this model"
+            )
 
-        self._nodes[node.label] = node
+        self._node_index[node] = len(self._nodes)
+        self._nodes.append(node)
 
     def add_nodes(self, nodes):
         """
@@ -117,7 +127,7 @@ class Model:
         list
             List of Node instances.
         """
-        return list(self._nodes.values())
+        return list(self._nodes)
 
     @property
     def n_nodes(self):
@@ -130,6 +140,14 @@ class Model:
             Total number of nodes.
         """
         return len(self._nodes)
+
+    def _get_node_index(self, node):
+        """Return the model-owned contiguous index for a node."""
+        try:
+            return self._node_index[node]
+        except KeyError:
+            raise ValueError("Node does not belong to this model")
+
     
     @property
     def elements(self):
@@ -216,7 +234,7 @@ class Model:
         from tabulate import tabulate
         D = [["Node","UX","UY"]]
         for n in self.nodes:
-            D.append([n.label+1,n.ux,n.uy])
+            D.append([n.label,n.ux,n.uy])
         return tabulate(D, **options)
         
     def _get_nforces(self,options):
@@ -236,7 +254,7 @@ class Model:
         from tabulate import tabulate
         F = [["Node","FX","FY"]]
         for n in self.nodes:
-            F.append([n.label+1,n.fx,n.fy])
+            F.append([n.label,n.fx,n.fy])
         return tabulate(F, **options)
         
     def _get_eforces(self,options):
@@ -296,7 +314,7 @@ class Model:
         from tabulate import tabulate
         F = [["Node","X","Y"]]
         for n in self.nodes:
-            F.append([n.label+1, n.x, n.y])
+            F.append([n.label, n.x, n.y])
         return tabulate(F, **options)
     
     def _get_elements_info(self,options):
@@ -317,7 +335,7 @@ class Model:
         S = [["Element","NI","NJ"]]
         for elm in self.elements:
             ni, nj = elm.get_nodes()
-            S.append([elm.label+1, ni.label+1, nj.label+1])
+            S.append([elm.label+1, ni.label, nj.label])
         return tabulate(S, **options)
             
 
