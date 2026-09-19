@@ -29,6 +29,7 @@ class Model:
         self._elements = {} # Dictionary for elements {number: ElementObject}
         self._applied_forces = {} # Node -> explicitly applied nodal loads
         self._prescribed_displacements = {} # Node -> explicitly prescribed DOFs
+        self._is_assembled = False
         
     def add_node(self,node):
         """
@@ -56,7 +57,7 @@ class Model:
 
         self._node_index[node] = len(self._nodes)
         self._nodes.append(node)
-        self._invalidate_analysis_state()
+        self._invalidate_assembly()
 
     def add_nodes(self, nodes):
         """
@@ -107,7 +108,7 @@ class Model:
 
         for node in element.nodes:
             node.add_element(element)
-        self._invalidate_analysis_state()
+        self._invalidate_assembly()
 
     def add_elements(self, elements):
         """
@@ -163,28 +164,16 @@ class Model:
         return self.dof * self._get_node_index(node) + component
 
     def _record_applied_forces(self, node, **values):
-        """Persist explicitly applied nodal loads independently of solver results."""
+        """Persist explicitly applied nodal loads and invalidate solved state."""
         self._get_node_index(node)
         self._applied_forces.setdefault(node, {}).update(values)
-
-        for variable, value in values.items():
-            setattr(node, variable, value)
-            if hasattr(self, "_f") and variable in self.force_dofs:
-                index = self._global_dof_index(node, variable, self.force_dofs)
-                self._f[index] = value
+        self._invalidate_solution()
 
     def _record_prescribed_displacements(self, node, **values):
-        """Persist explicitly prescribed nodal DOFs independently of solver results."""
+        """Persist explicitly prescribed nodal DOFs and invalidate solved state."""
         self._get_node_index(node)
         self._prescribed_displacements.setdefault(node, {}).update(values)
-
-        if hasattr(self, "_u"):
-            for variable, value in values.items():
-                if variable in self.displacement_dofs:
-                    index = self._global_dof_index(
-                        node, variable, self.displacement_dofs
-                    )
-                    self._u[index] = value
+        self._invalidate_solution()
 
     def _restore_input_state(self):
         """Restore explicit loads and prescribed DOFs into vectors and Node state."""
@@ -263,31 +252,25 @@ class Model:
             for component, name in enumerate(self.force_dofs)
         }
 
-    def _invalidate_analysis_state(self):
-        """Invalidate assembled and solved state after a topology change."""
-        if hasattr(self, "IS_KG_BUILDED"):
-            self.IS_KG_BUILDED = False
+    @property
+    def stiffness_matrix(self):
+        """Return a copy of the assembled global stiffness matrix."""
+        if not self._is_assembled or not hasattr(self, "_K"):
+            raise RuntimeError(
+                "Stiffness matrix is available only after assemble() or solve()"
+            )
+        return self._K.copy()
 
-        for attribute in (
-            "KG",
-            "_K_reduced",
-            "_rhs_reduced",
-            "_free_dofs",
-            "_prescribed_dofs",
-            "_u",
-            "_f",
-            "_nodal_forces",
-            "_reactions",
-            # Remove legacy state if present on an existing model instance.
-            "U",
-            "F",
-            "NF",
-            "VU",
-            "VF",
-        ):
-            if hasattr(self, attribute):
-                delattr(self, attribute)
+    def _reset_input_vectors(self):
+        """Rebuild numeric input vectors from persistent loads and constraints."""
+        if not self._is_assembled:
+            return
+        matrix_size = self.dof * self.n_nodes
+        self._f = np.zeros(matrix_size, dtype=float)
+        self._u = np.full(matrix_size, np.nan, dtype=float)
 
+    def _reset_node_state(self):
+        """Clear solved nodal state and restore explicit model inputs."""
         for node in self._nodes:
             node.ux = np.nan
             node.uy = np.nan
@@ -297,6 +280,35 @@ class Model:
             node.m = 0.0
 
         self._restore_input_state()
+
+    def _invalidate_solution(self):
+        """Invalidate solved state while preserving a valid assembly."""
+        for attribute in (
+            "_K_reduced",
+            "_rhs_reduced",
+            "_free_dofs",
+            "_prescribed_dofs",
+            "_nodal_forces",
+            "_reactions",
+        ):
+            if hasattr(self, attribute):
+                delattr(self, attribute)
+
+        if self._is_assembled:
+            self._reset_input_vectors()
+        else:
+            for attribute in ("_u", "_f"):
+                if hasattr(self, attribute):
+                    delattr(self, attribute)
+
+        self._reset_node_state()
+
+    def _invalidate_assembly(self):
+        """Invalidate global assembly and every dependent solved result."""
+        self._is_assembled = False
+        if hasattr(self, "_K"):
+            del self._K
+        self._invalidate_solution()
 
     
     @property
