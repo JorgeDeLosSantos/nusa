@@ -4,6 +4,26 @@ This file contains information related to the development of the project, such a
 
 ---
 
+## [0.3.0.dev0] - 2026-09-19
+
+### Changed
+- Recovered active development and stabilized the finite-element solver architecture.
+- Replaced legacy nested solver state with vector-based global force and displacement state.
+- Introduced explicit `assemble()` / `stiffness_matrix` semantics and separated assembly invalidation from solution invalidation.
+- Decoupled internal solver indexing from public node labels.
+- Normalized the visualization API and clarified applied loads, generalized nodal forces, and reactions.
+- Defined an explicit top-level public API instead of wildcard package exports.
+- Modernized packaging around `pyproject.toml`, optional mesh dependencies, and automated CI.
+
+### Fixed
+- Added explicit singular-system errors instead of least-squares fallback.
+- Corrected nonzero prescribed-displacement handling in the reduced system.
+- Corrected CST orientation handling using signed area.
+- Improved topology-state invalidation and persistence of loads and boundary conditions.
+
+### Tests
+- Expanded numerical and API regression coverage across Spring, Bar, Truss, Beam, and LinearTriangle models.
+
 ## [0.3.dev0] - 2020-09-02
 
 ### Added
