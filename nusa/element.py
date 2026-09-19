@@ -7,7 +7,6 @@
 import numpy as np
 from .core import Element
 import nusa.templates as tmp
-from scipy.sparse import csr_matrix
 
 class Spring(Element):
     """
