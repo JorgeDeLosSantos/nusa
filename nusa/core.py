@@ -163,28 +163,32 @@ class Model:
         self._prescribed_displacements.setdefault(node, {}).update(values)
 
     def _restore_input_state(self):
-        """Restore explicit loads and prescribed DOFs into F/U and Node state."""
-        if hasattr(self, "F"):
-            for node, values in self._applied_forces.items():
-                if node not in self._node_index:
-                    continue
-                node_index = self._get_node_index(node)
-                if node_index in self.F:
-                    for variable, value in values.items():
-                        if variable in self.F[node_index]:
-                            self.F[node_index][variable] = value
-                            setattr(node, variable, value)
+        """Restore explicit loads and prescribed DOFs into model and Node state."""
+        for node, values in self._applied_forces.items():
+            if node not in self._node_index:
+                continue
+            node_index = self._get_node_index(node)
+            for variable, value in values.items():
+                setattr(node, variable, value)
+                if (
+                    hasattr(self, "F")
+                    and node_index in self.F
+                    and variable in self.F[node_index]
+                ):
+                    self.F[node_index][variable] = value
 
-        if hasattr(self, "U"):
-            for node, values in self._prescribed_displacements.items():
-                if node not in self._node_index:
-                    continue
-                node_index = self._get_node_index(node)
-                if node_index in self.U:
-                    for variable, value in values.items():
-                        if variable in self.U[node_index]:
-                            self.U[node_index][variable] = value
-                            setattr(node, variable, value)
+        for node, values in self._prescribed_displacements.items():
+            if node not in self._node_index:
+                continue
+            node_index = self._get_node_index(node)
+            for variable, value in values.items():
+                setattr(node, variable, value)
+                if (
+                    hasattr(self, "U")
+                    and node_index in self.U
+                    and variable in self.U[node_index]
+                ):
+                    self.U[node_index][variable] = value
 
     def _invalidate_analysis_state(self):
         """Invalidate assembled and solved state after a topology change."""
