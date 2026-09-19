@@ -87,7 +87,7 @@ def test_beam_solve_indexes_property_based_node_collection_with_integers():
 
 
 
-def test_shared_solver_preserves_observable_solver_state():
+def test_shared_solver_uses_vector_state():
     model = SpringModel("Solver state")
     n1 = Node((0.0, 0.0))
     n2 = Node((0.0, 0.0))
@@ -99,13 +99,15 @@ def test_shared_solver_preserves_observable_solver_state():
     model.add_force(n2, (750.0,))
     model.solve()
 
-    np.testing.assert_allclose(model.VU, [0.0, 2.5])
-    np.testing.assert_allclose(model.VF, [0.0, 750.0])
+    np.testing.assert_allclose(model._u, [0.0, 2.5])
+    np.testing.assert_allclose(model._f, [0.0, 750.0])
+    np.testing.assert_allclose(model._nodal_forces, [-750.0, 750.0])
     np.testing.assert_allclose(model.K2S, [[300.0]])
     np.testing.assert_allclose(model.F2S, [750.0])
     np.testing.assert_allclose(model.solved_u, [2.5])
-    assert np.isclose(model.NF[0]["fx"], -750.0)
-    assert np.isclose(model.NF[1]["fx"], 750.0)
+
+    for legacy_name in ("U", "F", "NF", "VU", "VF"):
+        assert not hasattr(model, legacy_name)
 
 
 

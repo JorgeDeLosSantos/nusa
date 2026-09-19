@@ -29,8 +29,8 @@ def test_spring_solver_accepts_string_labels_and_label_mutation():
     assert np.isclose(n2.ux, 0.5)
     assert np.isclose(n1.fx, -50.0)
     assert np.isclose(n2.fx, 50.0)
-    assert list(model.U) == [0, 1]
-    assert list(model.F) == [0, 1]
+    np.testing.assert_allclose(model._u, [0.0, 0.5])
+    np.testing.assert_allclose(model._f, [0.0, 50.0])
 
 
 def test_bar_solver_accepts_sparse_integer_labels():
