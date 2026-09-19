@@ -221,7 +221,8 @@ class TestModel:
                 self.nodes = nodes
         
         element = MockElement([n1, n2])
-        
+
+        model.add_nodes([n1, n2])
         model.add_element(element)
         assert model.n_elements == 1
         assert element in model.elements
