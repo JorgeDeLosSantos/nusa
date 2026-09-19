@@ -19,8 +19,14 @@ RESULTS
 NODAL DISPLACEMENTS
 {nodal_displacements}
 
-NODAL FORCES
+APPLIED LOADS
+{applied_loads}
+
+NODAL FORCES (K @ U)
 {nodal_forces}
+
+REACTIONS
+{reactions}
 
 ELEMENT FORCES
 {element_forces}
@@ -52,8 +58,14 @@ RESULTS
 NODAL DISPLACEMENTS
 {nodal_displacements}
 
-NODAL FORCES
+APPLIED LOADS
+{applied_loads}
+
+NODAL FORCES (K @ U)
 {nodal_forces}
+
+REACTIONS
+{reactions}
 
 ELEMENT FORCES
 {element_forces}
