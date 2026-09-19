@@ -153,7 +153,7 @@ def test_shared_assembly_accumulates_overlapping_beam_dofs():
 
     model.add_nodes([n1, n2, n3])
     model.add_elements([e1, e2])
-    model.build_global_matrix()
+    model.assemble()
 
     expected = np.array(
         [
@@ -166,5 +166,5 @@ def test_shared_assembly_accumulates_overlapping_beam_dofs():
         ]
     )
 
-    np.testing.assert_allclose(model.KG, expected)
-    assert model.IS_KG_BUILDED is True
+    np.testing.assert_allclose(model.stiffness_matrix, expected)
+    assert model._is_assembled is True
