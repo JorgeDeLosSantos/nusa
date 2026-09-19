@@ -167,11 +167,11 @@ class Model:
         self._get_node_index(node)
         self._applied_forces.setdefault(node, {}).update(values)
 
-        if hasattr(self, "_f"):
-            for variable, value in values.items():
-                if variable in self.force_dofs:
-                    index = self._global_dof_index(node, variable, self.force_dofs)
-                    self._f[index] = value
+        for variable, value in values.items():
+            setattr(node, variable, value)
+            if hasattr(self, "_f") and variable in self.force_dofs:
+                index = self._global_dof_index(node, variable, self.force_dofs)
+                self._f[index] = value
 
     def _record_prescribed_displacements(self, node, **values):
         """Persist explicitly prescribed nodal DOFs independently of solver results."""
@@ -208,6 +208,61 @@ class Model:
                     )
                     self._u[index] = value
 
+    @property
+    def applied_loads(self):
+        """Return the global vector of explicitly applied nodal loads."""
+        vector = np.zeros(self.dof * self.n_nodes, dtype=float)
+        for node, values in self._applied_forces.items():
+            if node not in self._node_index:
+                continue
+            for variable, value in values.items():
+                if variable in self.force_dofs:
+                    index = self._global_dof_index(node, variable, self.force_dofs)
+                    vector[index] = value
+        return vector
+
+    @property
+    def nodal_forces(self):
+        """Return the solved global generalized nodal-force vector."""
+        if not hasattr(self, "_nodal_forces"):
+            raise RuntimeError("Nodal forces are available only after solve()")
+        return self._nodal_forces.copy()
+
+    @property
+    def reactions(self):
+        """Return the solved global reaction vector at prescribed DOFs."""
+        if not hasattr(self, "_reactions"):
+            raise RuntimeError("Reactions are available only after solve()")
+        return self._reactions.copy()
+
+    def get_applied_load(self, node):
+        """Return explicitly applied load components for one node."""
+        self._get_node_index(node)
+        values = self._applied_forces.get(node, {})
+        return {name: values.get(name, 0.0) for name in self.force_dofs}
+
+    def get_nodal_force(self, node):
+        """Return solved generalized nodal-force components for one node."""
+        self._get_node_index(node)
+        vector = self.nodal_forces
+        node_index = self._get_node_index(node)
+        start = self.dof * node_index
+        return {
+            name: vector[start + component]
+            for component, name in enumerate(self.force_dofs)
+        }
+
+    def get_reaction(self, node):
+        """Return solved reaction components for one node."""
+        self._get_node_index(node)
+        vector = self.reactions
+        node_index = self._get_node_index(node)
+        start = self.dof * node_index
+        return {
+            name: vector[start + component]
+            for component, name in enumerate(self.force_dofs)
+        }
+
     def _invalidate_analysis_state(self):
         """Invalidate assembled and solved state after a topology change."""
         if hasattr(self, "IS_KG_BUILDED"):
@@ -222,6 +277,7 @@ class Model:
             "_u",
             "_f",
             "_nodal_forces",
+            "_reactions",
             # Remove legacy state if present on an existing model instance.
             "U",
             "F",

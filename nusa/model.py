@@ -89,6 +89,11 @@ def _solve_model_system(model):
         setattr(model.nodes[node_index], model.displacement_dofs[component], value)
 
     model._nodal_forces = np.dot(model.KG, model._u)
+    model._reactions = np.zeros_like(model._nodal_forces)
+    model._reactions[model._prescribed_dofs] = (
+        model._nodal_forces[model._prescribed_dofs]
+        - model._f[model._prescribed_dofs]
+    )
 
     for dof_index, value in enumerate(model._nodal_forces):
         node_index, component = divmod(dof_index, model.dof)
