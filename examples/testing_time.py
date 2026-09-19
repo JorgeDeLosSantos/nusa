@@ -5,7 +5,7 @@
 #  License: MIT License
 # ***********************************
 import numpy as np
-from nusa import *
+from nusa import Node, Spring, SpringModel
 import itertools
 from timeit import default_timer as timer
 
