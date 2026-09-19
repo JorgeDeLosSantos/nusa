@@ -13,20 +13,25 @@ from .core import Model
 
 
 def _partition_system(K, F, U):
-    """Build the reduced linear system for prescribed displacements."""
+    """Build the reduced system for prescribed and free displacement DOFs."""
     U = np.asarray(U, dtype=float)
     F = np.asarray(F, dtype=float)
 
-    known = np.flatnonzero(~np.isnan(U))
-    unknown = np.flatnonzero(np.isnan(U))
+    prescribed_dofs = np.flatnonzero(~np.isnan(U))
+    free_dofs = np.flatnonzero(np.isnan(U))
 
-    Kuu = K[np.ix_(unknown, unknown)]
-    Fu = F[unknown].copy()
-    if known.size:
-        Kuk = K[np.ix_(unknown, known)]
-        Fu -= np.dot(Kuk, U[known])
+    K_reduced = K[np.ix_(free_dofs, free_dofs)]
+    rhs_reduced = F[free_dofs].copy()
+    if prescribed_dofs.size:
+        K_free_prescribed = K[np.ix_(free_dofs, prescribed_dofs)]
+        rhs_reduced -= np.dot(K_free_prescribed, U[prescribed_dofs])
 
-    return known.tolist(), unknown.tolist(), Kuu, Fu
+    return (
+        prescribed_dofs.tolist(),
+        free_dofs.tolist(),
+        K_reduced,
+        rhs_reduced,
+    )
 
 
 def _element_dof_indices(model, element):
@@ -60,18 +65,24 @@ def _solve_model_system(model):
     if not model.IS_KG_BUILDED:
         model.build_global_matrix()
 
-    _, unknown, model.K2S, model.F2S = _partition_system(
-        model.KG, model._f, model._u
-    )
+    (
+        model._prescribed_dofs,
+        model._free_dofs,
+        model._K_reduced,
+        model._rhs_reduced,
+    ) = _partition_system(model.KG, model._f, model._u)
 
-    if model.K2S.size and np.linalg.matrix_rank(model.K2S) < model.K2S.shape[0]:
+    if (
+        model._K_reduced.size
+        and np.linalg.matrix_rank(model._K_reduced) < model._K_reduced.shape[0]
+    ):
         raise np.linalg.LinAlgError(
             "Singular stiffness matrix: the model may be underconstrained "
             "or contain a mechanism."
         )
 
-    model.solved_u = la.solve(model.K2S, model.F2S)
-    model._u[unknown] = model.solved_u
+    free_displacements = la.solve(model._K_reduced, model._rhs_reduced)
+    model._u[model._free_dofs] = free_displacements
 
     for dof_index, value in enumerate(model._u):
         node_index, component = divmod(dof_index, model.dof)
