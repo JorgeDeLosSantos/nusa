@@ -71,6 +71,10 @@ def test_truss_solver_accepts_string_labels():
     assert np.isclose(n2.ux, 0.1)
     assert np.isclose(element.f, 10.0)
 
+    report = model.simple_report(report_type="string")
+    assert "A" in report
+    assert "B" in report
+
 
 def test_beam_solver_accepts_string_labels():
     model = BeamModel("Labeled beam")
@@ -110,3 +114,6 @@ def test_linear_triangle_solver_accepts_string_labels():
         [0.0, 0.0],
         atol=1e-8,
     )
+
+    triangulation = model._get_tri()
+    np.testing.assert_array_equal(triangulation.triangles, [[0, 1, 2]])
