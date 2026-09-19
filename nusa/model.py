@@ -47,30 +47,28 @@ def _element_dof_indices(model, element):
 def _assemble_global_stiffness(model):
     """Assemble the dense global stiffness matrix from element matrices."""
     matrix_size = model.dof * model.n_nodes
-    model.KG = np.zeros((matrix_size, matrix_size))
+    model._K = np.zeros((matrix_size, matrix_size))
 
     for element in model.elements:
         element_stiffness = element.get_element_stiffness()
         global_dofs = _element_dof_indices(model, element)
-        model.KG[np.ix_(global_dofs, global_dofs)] += element_stiffness
+        model._K[np.ix_(global_dofs, global_dofs)] += element_stiffness
 
-    model._f = np.zeros(matrix_size, dtype=float)
-    model._u = np.full(matrix_size, np.nan, dtype=float)
-    model._restore_input_state()
-    model.IS_KG_BUILDED = True
+    model._is_assembled = True
+    model._invalidate_solution()
 
 
 def _solve_model_system(model):
     """Solve a model using vector-based global force and displacement state."""
-    if not model.IS_KG_BUILDED:
-        model.build_global_matrix()
+    if not model._is_assembled:
+        model.assemble()
 
     (
         model._prescribed_dofs,
         model._free_dofs,
         model._K_reduced,
         model._rhs_reduced,
-    ) = _partition_system(model.KG, model._f, model._u)
+    ) = _partition_system(model._K, model._f, model._u)
 
     if (
         model._K_reduced.size
@@ -88,7 +86,7 @@ def _solve_model_system(model):
         node_index, component = divmod(dof_index, model.dof)
         setattr(model.nodes[node_index], model.displacement_dofs[component], value)
 
-    model._nodal_forces = np.dot(model.KG, model._u)
+    model._nodal_forces = np.dot(model._K, model._u)
     model._reactions = np.zeros_like(model._nodal_forces)
     model._reactions[model._prescribed_dofs] = (
         model._nodal_forces[model._prescribed_dofs]
@@ -113,9 +111,9 @@ class SpringModel(Model):
     def __init__(self,name="Spring Model 01"):
         Model.__init__(self,name=name,mtype="spring")
         self.dof = 1 # 1 DOF per Node
-        self.IS_KG_BUILDED = False
 
-    def build_global_matrix(self):
+    def assemble(self):
+        """Assemble the current global finite-element system."""
         _assemble_global_stiffness(self)
         
     def add_force(self,node,force):
@@ -175,9 +173,9 @@ class BarModel(Model):
     def __init__(self,name="Bar Model 01"):
         Model.__init__(self,name=name,mtype="bar")
         self.dof = 1 # 1 DOF for bar element (per node)
-        self.IS_KG_BUILDED = False
         
-    def build_global_matrix(self):
+    def assemble(self):
+        """Assemble the current global finite-element system."""
         _assemble_global_stiffness(self)
         
     def add_force(self,node,force):
@@ -205,9 +203,9 @@ class TrussModel(Model):
     def __init__(self,name="Truss Model 01"):
         Model.__init__(self,name=name,mtype="truss")
         self.dof = 2 # 2 DOF for truss element
-        self.IS_KG_BUILDED = False
         
-    def build_global_matrix(self):
+    def assemble(self):
+        """Assemble the current global finite-element system."""
         _assemble_global_stiffness(self)
         
     def add_force(self,node,force):
@@ -426,9 +424,9 @@ class BeamModel(Model):
     def __init__(self,name="Beam Model 01"):
         Model.__init__(self,name=name,mtype="beam")
         self.dof = 2 # 2 DOF for beam element
-        self.IS_KG_BUILDED = False
         
-    def build_global_matrix(self):
+    def assemble(self):
+        """Assemble the current global finite-element system."""
         _assemble_global_stiffness(self)
     
     def add_force(self,node,force):
@@ -608,10 +606,9 @@ class LinearTriangleModel(Model):
     def __init__(self,name="LT Model 01"):
         Model.__init__(self,name=name,mtype="triangle")
         self.dof = 2 # 2 DOF for triangle element (per node)
-        self.IS_KG_BUILDED = False
         
-    def build_global_matrix(self):
-        """Build global stiffness matrix."""
+    def assemble(self):
+        """Assemble the current global finite-element system."""
         _assemble_global_stiffness(self)
 
     def add_force(self,node,force):
