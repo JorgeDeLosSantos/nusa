@@ -156,9 +156,10 @@ class SpringModel(Model):
 
     def _get_eforces(self,options):
         from tabulate import tabulate
-        F = [["Element","F"]]
+        F = [["Element","Fi","Fj"]]
         for elm in self.elements:
-            F.append([elm.label+1, elm.fx])
+            values = np.asarray(elm.fx, dtype=float).reshape(-1)
+            F.append([elm.label+1, values[0], values[-1]])
         return tabulate(F, **options)
         
 
@@ -354,6 +355,8 @@ class TrussModel(Model):
         xmn,xmx,ymn,ymx = min(nx),max(nx),min(ny),max(ny)
         kx = (xmx-xmn)/factor
         ky = (ymx-ymn)/factor
+        if ky == 0:
+            ky = 1.0/factor
         return xmn-kx, xmx+kx, ymn-ky, ymx+ky
         
     def simple_report(self,report_type="print",fname="nusa_rpt.txt"):
