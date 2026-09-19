@@ -1,5 +1,6 @@
 """Regression tests for model topology validation before assembly."""
 
+import numpy as np
 import pytest
 
 from nusa.core import Node
@@ -109,12 +110,12 @@ def test_solve_reports_topology_error_before_solver_singularity():
 def test_linear_triangle_does_not_auto_restrain_orphan_node():
     model, orphan = _triangle_case()
 
-    assert pytest.approx(float("nan"), nan_ok=True) == orphan.ux
-    assert pytest.approx(float("nan"), nan_ok=True) == orphan.uy
+    assert np.isnan(orphan.ux)
+    assert np.isnan(orphan.uy)
 
     with pytest.raises(ValueError, match=str(orphan.label)):
         model.solve()
 
-    assert pytest.approx(float("nan"), nan_ok=True) == orphan.ux
-    assert pytest.approx(float("nan"), nan_ok=True) == orphan.uy
+    assert np.isnan(orphan.ux)
+    assert np.isnan(orphan.uy)
     assert model._prescribed_displacements.get(orphan) is None
