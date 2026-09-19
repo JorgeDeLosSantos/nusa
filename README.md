@@ -255,4 +255,3 @@ You can also explore more examples in the following Jupyter Notebooks:
 
 **Developer:** Pedro Jorge De Los Santos
 **E-mail:** delossantosmfq@gmail.com
-```
