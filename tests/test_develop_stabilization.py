@@ -121,6 +121,28 @@ def test_shared_solver_uses_vector_state():
 
 
 
+def test_reduced_rhs_includes_nonzero_prescribed_displacements():
+    model = SpringModel("Reduced RHS")
+    n1 = Node((0.0, 0.0))
+    n2 = Node((0.0, 0.0))
+    n3 = Node((0.0, 0.0))
+
+    model.add_nodes([n1, n2, n3])
+    model.add_elements([
+        Spring((n1, n2), 100.0),
+        Spring((n2, n3), 100.0),
+    ])
+    model.add_constraint(n1, ux=0.0)
+    model.add_constraint(n3, ux=0.03)
+    model.solve()
+
+    assert model._prescribed_dofs == [0, 2]
+    assert model._free_dofs == [1]
+    np.testing.assert_allclose(model._K_reduced, [[200.0]])
+    np.testing.assert_allclose(model._rhs_reduced, [3.0])
+    assert np.isclose(n2.ux, 0.015)
+
+
 def test_shared_assembly_accumulates_overlapping_beam_dofs():
     model = BeamModel("Assembly regression")
     n1 = Node((0.0, 0.0))
