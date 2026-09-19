@@ -28,7 +28,7 @@ def simple_case():
     ms.solve()
     
     # print("Node displacements")
-    # for n in ms.get_nodes():
+    # for n in ms.nodes:
     #     print(n.ux, n.uy)
 
     print(ms.simple_report())

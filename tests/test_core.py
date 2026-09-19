@@ -108,9 +108,9 @@ class TestElement:
         assert element.label is None
     
     def test_element_label(self):
-        """Test element label setting"""
+        """Test element label property."""
         element = Element("test")
-        element.set_label(1)
+        element.label = 1
         assert element.label == 1
     
     def test_element_forces(self):
@@ -128,9 +128,8 @@ class TestElement:
         assert element.fx == 150.0
         assert element.fy == 75.0
         
-        # Test get_element_forces method
-        forces = element.get_element_forces()
-        assert forces == (150.0, 75.0)
+        # Force results are exposed directly through properties.
+        assert (element.fx, element.fy) == (150.0, 75.0)
     
     def test_element_str(self):
         """Test string representation of element"""
