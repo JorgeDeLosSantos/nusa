@@ -7,7 +7,9 @@
 import numpy as np
 import numpy.linalg as la
 import json
-from nusa import *
+from .core import Node
+from .element import Spring, Truss
+from .model import SpringModel, TrussModel
 
 # class NusaModelReader(object):
 #   def __init__(self,filename):
