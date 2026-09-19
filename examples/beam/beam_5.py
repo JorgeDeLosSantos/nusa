@@ -4,10 +4,7 @@
 #  E-mail: delossantosmfq@gmail.com 
 #  License: MIT License
 # ***********************************
-import numpy as np
-from nusa.core import *
-from nusa.model import *
-from nusa.element import *
+from nusa import Beam, BeamModel, Node
 
 def test5():
     """
@@ -52,6 +49,7 @@ def test5():
     
     # Slope and deflection in n1
     print("Displacement in node 1: {0}\nSlope in node 1: {1}".format(n1.uy, n1.ur))
+    return m1
 
 
 if __name__ == '__main__':
