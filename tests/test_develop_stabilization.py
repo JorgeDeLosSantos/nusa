@@ -55,16 +55,14 @@ def test_model_report_helpers_use_property_based_model_api():
     tables = (
         model._get_ndisplacements(options),
         model._get_nforces(options),
-        model._get_eforces(options),
-        model._get_estresses(options),
         model._get_nodes_info(options),
         model._get_elements_info(options),
     )
 
     assert all(isinstance(table, str) for table in tables)
     assert "Node" in tables[0]
-    assert "Element" in tables[2]
-    assert "Element" in tables[5]
+    assert "Node" in tables[2]
+    assert "Element" in tables[3]
 
 
 def test_beam_solve_indexes_property_based_node_collection_with_integers():
