@@ -122,12 +122,10 @@ class SpringModel(Model):
         self._record_applied_forces(node, fx=force[0])
         
     def add_constraint(self,node,**constraint):
-        """
-        Only displacement in x-dir 
-        """
+        """Prescribe the spring displacement in the x direction."""
         if "ux" in constraint:
-            ux = constraint.get("ux")
-            node.set_displacements(ux=ux)
+            ux = constraint["ux"]
+            node.ux = ux
             self._record_prescribed_displacements(node, ux=ux)
         
     def solve(self):
@@ -187,8 +185,8 @@ class BarModel(Model):
         
     def add_constraint(self,node,**constraint):
         if "ux" in constraint:
-            ux = constraint.get('ux')
-            node.set_displacements(ux=ux)
+            ux = constraint["ux"]
+            node.ux = ux
             self._record_prescribed_displacements(node, ux=ux)
         
     def solve(self):
@@ -214,25 +212,16 @@ class TrussModel(Model):
         
     def add_force(self,node,force):
         self._record_applied_forces(node, fx=force[0], fy=force[1])
-        node.fx = force[0]
-        node.fy = force[1]
         
     def add_constraint(self,node,**constraint):
-        cs = constraint
-        if "ux" in cs and "uy" in cs: #
-            ux = cs.get('ux')
-            uy = cs.get('uy')
-            node.set_displacements(ux=ux, uy=uy) # eqv to node.ux = ux, node.uy = uy
-            self._record_prescribed_displacements(node, ux=ux, uy=uy)
-        elif "ux" in cs:
-            ux = cs.get('ux')
-            node.set_displacements(ux=ux)
-            self._record_prescribed_displacements(node, ux=ux)
-        elif "uy" in cs:
-            uy = cs.get('uy')
-            node.set_displacements(uy=uy)
-            self._record_prescribed_displacements(node, uy=uy)
-        else: pass # todo
+        values = {}
+        for variable in self.displacement_dofs:
+            if variable in constraint:
+                value = constraint[variable]
+                setattr(node, variable, value)
+                values[variable] = value
+        if values:
+            self._record_prescribed_displacements(node, **values)
         
     def solve(self):
         _solve_model_system(self)
@@ -444,32 +433,19 @@ class BeamModel(Model):
     
     def add_force(self,node,force):
         self._record_applied_forces(node, fy=force[0])
-        node.fy = force[0]
         
     def add_moment(self,node,moment):
         self._record_applied_forces(node, m=moment[0])
-        node.m = moment[0]
         
     def add_constraint(self,node,**constraint):
-        cs = constraint
-        if "ux" in cs and "uy" in cs and "ur" in cs: # 
-            ux = cs.get('ux')
-            uy = cs.get('uy')
-            ur = cs.get('ur')
-            node.set_displacements(ux=ux, uy=uy, ur=ur)
-            #~ print("Encastre")
-            self._record_prescribed_displacements(node, uy=uy, ur=ur)
-        elif "ux" in cs and "uy" in cs: # 
-            ux = cs.get('ux')
-            uy = cs.get('uy')
-            node.set_displacements(ux=ux, uy=uy)
-            #~ print("Fixed")
-            self._record_prescribed_displacements(node, uy=uy)
-        elif "uy" in cs:
-            uy = cs.get('uy')
-            node.set_displacements(uy=uy)
-            #~ print("Simple support")
-            self._record_prescribed_displacements(node, uy=uy)
+        values = {}
+        for variable in ("ux",) + self.displacement_dofs:
+            if variable in constraint:
+                value = constraint[variable]
+                setattr(node, variable, value)
+                values[variable] = value
+        if values:
+            self._record_prescribed_displacements(node, **values)
         
     def solve(self):
         _solve_model_system(self)
@@ -640,23 +616,16 @@ class LinearTriangleModel(Model):
 
     def add_force(self,node,force):
         self._record_applied_forces(node, fx=force[0], fy=force[1])
-        node.fx = force[0]
-        node.fy = force[1]
-        
-    def add_moment(self,node,moment):
-        pass
         
     def add_constraint(self,node,**constraint):
-        cs = constraint
-        if "ux" in cs and "uy" in cs: # 
-            ux = cs.get('ux')
-            uy = cs.get('uy')
-            node.set_displacements(ux=ux, uy=uy)
-            self._record_prescribed_displacements(node, ux=ux, uy=uy)
-        elif "uy" in cs:
-            uy = cs.get('uy')
-            node.set_displacements(uy=uy)
-            self._record_prescribed_displacements(node, uy=uy)
+        values = {}
+        for variable in self.displacement_dofs:
+            if variable in constraint:
+                value = constraint[variable]
+                setattr(node, variable, value)
+                values[variable] = value
+        if values:
+            self._record_prescribed_displacements(node, **values)
         
     def _check_nodes(self):
         for node in self.nodes:
