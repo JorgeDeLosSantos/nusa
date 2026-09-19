@@ -27,6 +27,8 @@ class Model:
         self._nodes = [] # Nodes in model insertion order
         self._node_index = {} # Node object -> contiguous internal solver index
         self._elements = {} # Dictionary for elements {number: ElementObject}
+        self._applied_forces = {} # Node -> explicitly applied nodal loads
+        self._prescribed_displacements = {} # Node -> explicitly prescribed DOFs
         
     def add_node(self,node):
         """
@@ -54,6 +56,7 @@ class Model:
 
         self._node_index[node] = len(self._nodes)
         self._nodes.append(node)
+        self._invalidate_analysis_state()
 
     def add_nodes(self, nodes):
         """
@@ -104,6 +107,7 @@ class Model:
 
         for node in element.nodes:
             node.add_element(element)
+        self._invalidate_analysis_state()
 
     def add_elements(self, elements):
         """
@@ -147,6 +151,68 @@ class Model:
             return self._node_index[node]
         except KeyError:
             raise ValueError("Node does not belong to this model")
+
+    def _record_applied_forces(self, node, **values):
+        """Persist explicitly applied nodal loads independently of solver results."""
+        self._get_node_index(node)
+        self._applied_forces.setdefault(node, {}).update(values)
+
+    def _record_prescribed_displacements(self, node, **values):
+        """Persist explicitly prescribed nodal DOFs independently of solver results."""
+        self._get_node_index(node)
+        self._prescribed_displacements.setdefault(node, {}).update(values)
+
+    def _restore_input_state(self):
+        """Restore explicit loads and prescribed DOFs into model and Node state."""
+        for node, values in self._applied_forces.items():
+            if node not in self._node_index:
+                continue
+            node_index = self._get_node_index(node)
+            for variable, value in values.items():
+                setattr(node, variable, value)
+                if (
+                    hasattr(self, "F")
+                    and node_index in self.F
+                    and variable in self.F[node_index]
+                ):
+                    self.F[node_index][variable] = value
+
+        for node, values in self._prescribed_displacements.items():
+            if node not in self._node_index:
+                continue
+            node_index = self._get_node_index(node)
+            for variable, value in values.items():
+                setattr(node, variable, value)
+                if (
+                    hasattr(self, "U")
+                    and node_index in self.U
+                    and variable in self.U[node_index]
+                ):
+                    self.U[node_index][variable] = value
+
+    def _invalidate_analysis_state(self):
+        """Invalidate assembled and solved state after a topology change."""
+        if hasattr(self, "IS_KG_BUILDED"):
+            self.IS_KG_BUILDED = False
+
+        for attribute in ("KG", "K2S", "F2S", "VU", "VF", "solved_u", "NF"):
+            if hasattr(self, attribute):
+                delattr(self, attribute)
+
+        if hasattr(self, "F"):
+            self.F = {}
+        if hasattr(self, "U"):
+            self.U = {}
+
+        for node in self._nodes:
+            node.ux = np.nan
+            node.uy = np.nan
+            node.ur = np.nan
+            node.fx = 0.0
+            node.fy = 0.0
+            node.m = 0.0
+
+        self._restore_input_state()
 
     
     @property

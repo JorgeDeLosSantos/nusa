@@ -51,6 +51,7 @@ def _assemble_global_stiffness(model):
 
     model.build_forces_vector()
     model.build_displacements_vector()
+    model._restore_input_state()
     model.IS_KG_BUILDED = True
 
 
@@ -62,6 +63,9 @@ def _solve_model_system(
     allow_lstsq=False,
 ):
     """Solve a model using its assembled stiffness matrix and DOF dictionaries."""
+    if not model.IS_KG_BUILDED:
+        model.build_global_matrix()
+
     model.VU = [
         node[key]
         for node in model.U.values()
@@ -133,6 +137,7 @@ class SpringModel(Model):
     def add_force(self,node,force):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
         self.F[self._get_node_index(node)]["fx"] = force[0]
+        self._record_applied_forces(node, fx=force[0])
         
     def add_constraint(self,node,**constraint):
         """
@@ -143,6 +148,7 @@ class SpringModel(Model):
             ux = constraint.get("ux")
             node.set_displacements(ux=ux)
             self.U[self._get_node_index(node)]["ux"] = ux
+            self._record_prescribed_displacements(node, ux=ux)
         
     def solve(self):
         _solve_model_system(self, ("ux",), ("fx",))
@@ -211,6 +217,7 @@ class BarModel(Model):
     def add_force(self,node,force):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
         self.F[self._get_node_index(node)]["fx"] = force[0]
+        self._record_applied_forces(node, fx=force[0])
         
     def add_constraint(self,node,**constraint):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
@@ -218,6 +225,7 @@ class BarModel(Model):
             ux = constraint.get('ux')
             node.set_displacements(ux=ux)
             self.U[self._get_node_index(node)]["ux"] = ux
+            self._record_prescribed_displacements(node, ux=ux)
         
     def solve(self):
         _solve_model_system(self, ("ux",), ("fx",))
@@ -258,6 +266,7 @@ class TrussModel(Model):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
         self.F[self._get_node_index(node)]["fx"] = force[0]
         self.F[self._get_node_index(node)]["fy"] = force[1]
+        self._record_applied_forces(node, fx=force[0], fy=force[1])
         node.fx = force[0]
         node.fy = force[1]
         
@@ -270,14 +279,17 @@ class TrussModel(Model):
             node.set_displacements(ux=ux, uy=uy) # eqv to node.ux = ux, node.uy = uy
             self.U[self._get_node_index(node)]["ux"] = ux
             self.U[self._get_node_index(node)]["uy"] = uy
+            self._record_prescribed_displacements(node, ux=ux, uy=uy)
         elif "ux" in cs:
             ux = cs.get('ux')
             node.set_displacements(ux=ux)
             self.U[self._get_node_index(node)]["ux"] = ux
+            self._record_prescribed_displacements(node, ux=ux)
         elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
             self.U[self._get_node_index(node)]["uy"] = uy
+            self._record_prescribed_displacements(node, uy=uy)
         else: pass # todo
         
     def solve(self):
@@ -497,11 +509,13 @@ class BeamModel(Model):
     def add_force(self,node,force):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
         self.F[self._get_node_index(node)]["fy"] = force[0]
+        self._record_applied_forces(node, fy=force[0])
         node.fy = force[0]
         
     def add_moment(self,node,moment):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
         self.F[self._get_node_index(node)]["m"] = moment[0]
+        self._record_applied_forces(node, m=moment[0])
         node.m = moment[0]
         
     def add_constraint(self,node,**constraint):
@@ -515,17 +529,20 @@ class BeamModel(Model):
             #~ print("Encastre")
             self.U[self._get_node_index(node)]["uy"] = uy
             self.U[self._get_node_index(node)]["ur"] = ur
+            self._record_prescribed_displacements(node, uy=uy, ur=ur)
         elif "ux" in cs and "uy" in cs: # 
             ux = cs.get('ux')
             uy = cs.get('uy')
             node.set_displacements(ux=ux, uy=uy)
             #~ print("Fixed")
             self.U[self._get_node_index(node)]["uy"] = uy
+            self._record_prescribed_displacements(node, uy=uy)
         elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
             #~ print("Simple support")
             self.U[self._get_node_index(node)]["uy"] = uy
+            self._record_prescribed_displacements(node, uy=uy)
         
     def solve(self):
         _solve_model_system(self, ("uy", "ur"), ("fy", "m"))
@@ -701,6 +718,7 @@ class LinearTriangleModel(Model):
         if not(self.IS_KG_BUILDED): self.build_global_matrix()
         self.F[self._get_node_index(node)]["fx"] = force[0]
         self.F[self._get_node_index(node)]["fy"] = force[1]
+        self._record_applied_forces(node, fx=force[0], fy=force[1])
         node.fx = force[0]
         node.fy = force[1]
         
@@ -716,10 +734,12 @@ class LinearTriangleModel(Model):
             node.set_displacements(ux=ux, uy=uy)
             self.U[self._get_node_index(node)]["ux"] = ux
             self.U[self._get_node_index(node)]["uy"] = uy
+            self._record_prescribed_displacements(node, ux=ux, uy=uy)
         elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
             self.U[self._get_node_index(node)]["uy"] = uy
+            self._record_prescribed_displacements(node, uy=uy)
         
     def _check_nodes(self):
         for node in self.nodes:
