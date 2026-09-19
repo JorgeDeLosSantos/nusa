@@ -45,6 +45,7 @@ def _element_dof_indices(model, element):
 
 def _assemble_global_stiffness(model):
     """Assemble the dense global stiffness matrix from element matrices."""
+    model._validate_topology()
     matrix_size = model.dof * model.n_nodes
     model._K = np.zeros((matrix_size, matrix_size))
 
@@ -580,12 +581,7 @@ class LinearTriangleModel(Model):
         if values:
             self._record_prescribed_displacements(node, **values)
         
-    def _check_nodes(self):
-        for node in self.nodes:
-            if node._elements == []: self.add_constraint(node, ux=0, uy=0)
-        
     def solve(self):
-        self._check_nodes()
         _solve_model_system(self)
 
     def _get_element_results(self, options):
