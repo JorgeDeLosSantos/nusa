@@ -15,19 +15,24 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+from pathlib import Path
+
 import sphinx_rtd_theme
+
+version_ns = {}
+version_file = Path(__file__).resolve().parents[2] / "nusa" / "version.py"
+exec(version_file.read_text(encoding="utf-8"), version_ns)
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'nusa'
-copyright = '2025, Pedro Jorge De Los Santos'
+copyright = '2016-2026, Pedro Jorge De Los Santos'
 author = 'Pedro Jorge De Los Santos'
 
 # The short X.Y version
-version = '0.3'
-# The full version, including alpha/beta/rc tags
-release = '0.3.0.dev0'
+release = version_ns["__version__"]
+version = ".".join(release.split(".")[:2])
 
 
 # -- General configuration ---------------------------------------------------
