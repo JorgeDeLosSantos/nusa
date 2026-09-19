@@ -1,23 +1,32 @@
-"""
-NuSA (Numerical Structural Analysis in Python)
-Author: Pedro Jorge De Los Santos
-E-mail: delossantosmfq@gmail.com
-Blog: jorgedelossantos.github.io // numython.github.io
-License: MIT License
-"""
+"""NuSA: Numerical Structural Analysis in Python."""
+
 from .version import __version__
+from .core import Element, Model, Node
+from .element import Bar, Beam, LinearTriangle, Spring, Truss
+from .model import (
+    BarModel,
+    BeamModel,
+    LinearTriangleModel,
+    SpringModel,
+    TrussModel,
+)
 
 __author__ = "P.J. De Los Santos"
 __email__ = "delossantosmfq@gmail.com"
 
-from .core import *
-from .element import *
-from .model import *
-from ._experimental import *
-from .mesh import *
-from .io import *
-
-import matplotlib as mpl
-mpl.rc("figure", facecolor="#FAFAFA", titleweight="bold")
-mpl.rc("axes", facecolor="#FFFFFF")
-mpl.rc("font", size=9)
+__all__ = [
+    "__version__",
+    "Model",
+    "Element",
+    "Node",
+    "Spring",
+    "Bar",
+    "Truss",
+    "Beam",
+    "LinearTriangle",
+    "SpringModel",
+    "BarModel",
+    "TrussModel",
+    "BeamModel",
+    "LinearTriangleModel",
+]
