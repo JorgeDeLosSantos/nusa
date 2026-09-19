@@ -387,25 +387,28 @@ class Model:
             D.append([n.label,n.ux,n.uy])
         return tabulate(D, **options)
         
-    def _get_nforces(self,options):
-        """
-        Generate a table of nodal forces.
-
-        Parameters
-        ----------
-        options : dict
-            Tabulate formatting options.
-
-        Returns
-        -------
-        str
-            Tabulated string of nodal forces.
-        """
+    def _get_force_table(self, options, getter):
+        """Generate a named-component nodal force table."""
         from tabulate import tabulate
-        F = [["Node","FX","FY"]]
-        for n in self.nodes:
-            F.append([n.label,n.fx,n.fy])
-        return tabulate(F, **options)
+
+        headers = ["Node"] + [name.upper() for name in self.force_dofs]
+        rows = [headers]
+        for node in self.nodes:
+            values = getter(node)
+            rows.append([node.label] + [values[name] for name in self.force_dofs])
+        return tabulate(rows, **options)
+
+    def _get_applied_loads(self, options):
+        """Generate a table of explicitly applied nodal loads."""
+        return self._get_force_table(options, self.get_applied_load)
+
+    def _get_nforces(self, options):
+        """Generate a table of solved generalized nodal forces (K @ u)."""
+        return self._get_force_table(options, self.get_nodal_force)
+
+    def _get_reactions(self, options):
+        """Generate a table of support reactions."""
+        return self._get_force_table(options, self.get_reaction)
         
     def _get_eforces(self,options):
         """
