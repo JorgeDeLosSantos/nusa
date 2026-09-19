@@ -59,8 +59,6 @@ def _solve_model_system(
     model,
     displacement_keys,
     force_keys,
-    *,
-    allow_lstsq=False,
 ):
     """Solve a model using its assembled stiffness matrix and DOF dictionaries."""
     if not model.IS_KG_BUILDED:
@@ -81,14 +79,13 @@ def _solve_model_system(
         model.KG, model.VF, model.VU
     )
 
-    if allow_lstsq:
-        try:
-            model.solved_u = la.solve(model.K2S, model.F2S)
-        except:
-            print("Solved using LSTSQ")
-            model.solved_u = la.lstsq(model.K2S, model.F2S)[0]
-    else:
-        model.solved_u = la.solve(model.K2S, model.F2S)
+    if model.K2S.size and np.linalg.matrix_rank(model.K2S) < model.K2S.shape[0]:
+        raise np.linalg.LinAlgError(
+            "Singular stiffness matrix: the model may be underconstrained "
+            "or contain a mechanism."
+        )
+
+    model.solved_u = la.solve(model.K2S, model.F2S)
 
     for value, dof_index in zip(model.solved_u, unknown):
         node_index, variable = model.index2key(dof_index, displacement_keys)
@@ -751,7 +748,6 @@ class LinearTriangleModel(Model):
             self,
             ("ux", "uy"),
             ("fx", "fy"),
-            allow_lstsq=True,
         )
                 
     def index2key(self,idx,opts=("ux","uy")):
