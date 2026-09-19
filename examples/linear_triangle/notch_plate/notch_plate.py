@@ -46,6 +46,6 @@ for node in nodos:
 m.plot_model()
 m.solve()
 # Plotting
-m.plot_nsol("sxx")
+m.plot_nodal_result("sxx")
 m.show()
 
