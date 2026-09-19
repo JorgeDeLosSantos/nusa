@@ -21,14 +21,20 @@ def test_topology_change_invalidates_and_rebuilds_spring_analysis_state():
 
     assert model.IS_KG_BUILDED is True
     assert np.isclose(n2.ux, 1.0)
-    assert hasattr(model, "solved_u")
+    assert hasattr(model, "_K_reduced")
+    assert hasattr(model, "_rhs_reduced")
+    assert hasattr(model, "_free_dofs")
+    assert hasattr(model, "_prescribed_dofs")
 
     n3 = Node((0.0, 0.0))
     model.add_node(n3)
 
     assert model.IS_KG_BUILDED is False
     assert not hasattr(model, "KG")
-    assert not hasattr(model, "solved_u")
+    assert not hasattr(model, "_K_reduced")
+    assert not hasattr(model, "_rhs_reduced")
+    assert not hasattr(model, "_free_dofs")
+    assert not hasattr(model, "_prescribed_dofs")
     assert np.isclose(n1.ux, 0.0)
     assert np.isnan(n2.ux)
     assert np.isnan(n3.ux)
