@@ -404,7 +404,15 @@ class Model:
 
     def _get_nforces(self, options):
         """Generate a table of solved generalized nodal forces (K @ u)."""
-        return self._get_force_table(options, self.get_nodal_force)
+        if hasattr(self, "force_dofs") and hasattr(self, "_nodal_forces"):
+            return self._get_force_table(options, self.get_nodal_force)
+
+        # Base Model compatibility for unsolved/non-solver subclasses.
+        from tabulate import tabulate
+        rows = [["Node", "FX", "FY"]]
+        for node in self.nodes:
+            rows.append([node.label, node.fx, node.fy])
+        return tabulate(rows, **options)
 
     def _get_reactions(self, options):
         """Generate a table of support reactions."""
