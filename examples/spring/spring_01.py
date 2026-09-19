@@ -5,10 +5,7 @@
 #  License: MIT License
 # ***********************************
 
-from nusa.core import *
-from nusa.model import *
-from nusa.element import *
-from nusa.graph import *
+from nusa import Node, Spring, SpringModel
 
 def test1():
     """
@@ -55,6 +52,7 @@ def test1():
     print("FE1:\n {0}".format(e1.fx))
     print("FE2:\n {0}".format(e2.fx))
     print("FE3:\n {0}".format(e3.fx))
+    return m1
 
 if __name__ == '__main__':
     test1()

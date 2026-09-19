@@ -4,10 +4,7 @@
 #  E-mail: delossantosmfq@gmail.com 
 #  License: MIT License
 # ***********************************
-import numpy as np
-from nusa.core import *
-from nusa.model import *
-from nusa.element import *
+from nusa import Beam, BeamModel, Node
 
 def test1():
     """
@@ -48,6 +45,7 @@ def test1():
     print(n2.uy)
     m1.plot_deformed_shape(scale=100) # scale = deformation factor
     m1.show()
+    return m1
 
 
 if __name__ == '__main__':

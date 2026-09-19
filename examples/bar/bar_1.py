@@ -4,9 +4,7 @@
 #  E-mail: delossantosmfq@gmail.com 
 #  License: MIT License
 # ***********************************
-from nusa.core import *
-from nusa.model import *
-from nusa.element import *
+from nusa import Bar, BarModel, Node
 
 def test1():
     """
@@ -45,7 +43,8 @@ def test1():
     
     print("Node | Displacements | Forces")
     for node in m1.nodes:
-        print("{0}\t{1:0.6f}\t{2}".format(node.label, node.ux, node.fx)) 
+        print("{0}\t{1:0.6f}\t{2}".format(node.label, node.ux, node.fx))
+    return m1
     
     
 if __name__ == '__main__':

@@ -5,7 +5,7 @@
 #  License: MIT License
 # ***********************************
 import numpy as np
-from nusa import *
+from nusa import Beam, BeamModel, Node
 import itertools
 import matplotlib.pyplot as plt
 

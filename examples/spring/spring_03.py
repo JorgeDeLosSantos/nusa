@@ -5,9 +5,7 @@
 #  License: MIT License
 # ***********************************
 
-from nusa.core import *
-from nusa.model import *
-from nusa.element import *
+from nusa import Node, Spring, SpringModel
 
 def test3():
     """
@@ -37,6 +35,7 @@ def test3():
     
     for n in m3.nodes:
         print(n.ux, n.uy)
+    return m3
         
 
 if __name__ == '__main__':

@@ -4,9 +4,7 @@
 #  E-mail: delossantosmfq@gmail.com 
 #  License: MIT License
 # ***********************************
-from nusa.core import *
-from nusa.model import *
-from nusa.element import *
+from nusa import Bar, BarModel, Node
 
 def test2():
     """
@@ -40,6 +38,7 @@ def test2():
     print(f"2. Displacement in node 2: {n2.ux:0.6f}")
     print(f"3. Reactions at nodes 1 and 3: R1={n1.fx:0.2f} R3={n3.fx:0.2f}")
     print(f"4. Stress in each bar:\n Element 1: {e1.sx} \n Element 2: {e2.sx}")
+    return m1
     
     
 if __name__ == '__main__':
