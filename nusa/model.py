@@ -49,34 +49,19 @@ def _assemble_global_stiffness(model):
         global_dofs = _element_dof_indices(model, element)
         model.KG[np.ix_(global_dofs, global_dofs)] += element_stiffness
 
-    model.build_forces_vector()
-    model.build_displacements_vector()
+    model._f = np.zeros(matrix_size, dtype=float)
+    model._u = np.full(matrix_size, np.nan, dtype=float)
     model._restore_input_state()
     model.IS_KG_BUILDED = True
 
 
-def _solve_model_system(
-    model,
-    displacement_keys,
-    force_keys,
-):
-    """Solve a model using its assembled stiffness matrix and DOF dictionaries."""
+def _solve_model_system(model):
+    """Solve a model using vector-based global force and displacement state."""
     if not model.IS_KG_BUILDED:
         model.build_global_matrix()
 
-    model.VU = [
-        node[key]
-        for node in model.U.values()
-        for key in displacement_keys
-    ]
-    model.VF = [
-        node[key]
-        for node in model.F.values()
-        for key in force_keys
-    ]
-
     _, unknown, model.K2S, model.F2S = _partition_system(
-        model.KG, model.VF, model.VU
+        model.KG, model._f, model._u
     )
 
     if model.K2S.size and np.linalg.matrix_rank(model.K2S) < model.K2S.shape[0]:
@@ -86,23 +71,18 @@ def _solve_model_system(
         )
 
     model.solved_u = la.solve(model.K2S, model.F2S)
+    model._u[unknown] = model.solved_u
 
-    for value, dof_index in zip(model.solved_u, unknown):
-        node_index, variable = model.index2key(dof_index, displacement_keys)
-        model.U[node_index][variable] = value
+    for dof_index, value in enumerate(model._u):
+        node_index, component = divmod(dof_index, model.dof)
+        variable = model.displacement_dofs[component]
         setattr(model.nodes[node_index], variable, value)
 
-    model.NF = model.F.copy()
-    model.VU = [
-        node[key]
-        for node in model.U.values()
-        for key in displacement_keys
-    ]
-    nodal_forces = np.dot(model.KG, model.VU)
+    model._nodal_forces = np.dot(model.KG, model._u)
 
-    for dof_index, value in enumerate(nodal_forces):
-        node_index, variable = model.index2key(dof_index, force_keys)
-        model.NF[node_index][variable] = value
+    for dof_index, value in enumerate(model._nodal_forces):
+        node_index, component = divmod(dof_index, model.dof)
+        variable = model.force_dofs[component]
         setattr(model.nodes[node_index], variable, value)
 
 #~ *********************************************************************
@@ -113,48 +93,32 @@ class SpringModel(Model):
     """
     Spring Model for finite element analysis
     """
+    displacement_dofs = ("ux",)
+    force_dofs = ("fx",)
+
     def __init__(self,name="Spring Model 01"):
         Model.__init__(self,name=name,mtype="spring")
-        self.F = {} # Forces
-        self.U = {} # Displacements
         self.dof = 1 # 1 DOF per Node
         self.IS_KG_BUILDED = False
 
     def build_global_matrix(self):
         _assemble_global_stiffness(self)
         
-    def build_forces_vector(self):
-        for node in self.nodes:
-            self.F[self._get_node_index(node)] = {"fx":0, "fy":0}
-        
-    def build_displacements_vector(self):
-        for node in self.nodes:
-            self.U[self._get_node_index(node)] = {"ux":np.nan, "uy":np.nan}
-        
     def add_force(self,node,force):
-        if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        self.F[self._get_node_index(node)]["fx"] = force[0]
         self._record_applied_forces(node, fx=force[0])
         
     def add_constraint(self,node,**constraint):
         """
         Only displacement in x-dir 
         """
-        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         if "ux" in constraint:
             ux = constraint.get("ux")
             node.set_displacements(ux=ux)
-            self.U[self._get_node_index(node)]["ux"] = ux
             self._record_prescribed_displacements(node, ux=ux)
         
     def solve(self):
-        _solve_model_system(self, ("ux",), ("fx",))
+        _solve_model_system(self)
             
-    def index2key(self,idx,opts=("ux",)):
-        node = idx
-        var = opts[0]
-        return node,var
-
     def simple_report(self,report_type="print",fname="nusa_rpt.txt"):
         from .templates import SPRING_SIMPLE_REPORT
         options = {"headers":"firstrow",
@@ -190,116 +154,54 @@ class BarModel(Model):
     """
     Bar model for finite element analysis
     """
+    displacement_dofs = ("ux",)
+    force_dofs = ("fx",)
+
     def __init__(self,name="Bar Model 01"):
         Model.__init__(self,name=name,mtype="bar")
-        self.F = {} # Forces
-        self.U = {} # Displacements
         self.dof = 1 # 1 DOF for bar element (per node)
         self.IS_KG_BUILDED = False
         
-    def build_forces_vector(self):
-        """
-        Build forces vector, where each node has a dict with "fx" and "fy" keys, but only "fx" is used for bar model
-        """
-        for node in self.nodes:
-            self.F[self._get_node_index(node)] = {"fx":0, "fy":0}
-        
     def build_global_matrix(self):
         _assemble_global_stiffness(self)
         
-    def build_displacements_vector(self):
-        for node in self.nodes:
-            self.U[self._get_node_index(node)] = {"ux":np.nan, "uy":np.nan}
-        
     def add_force(self,node,force):
-        if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        self.F[self._get_node_index(node)]["fx"] = force[0]
         self._record_applied_forces(node, fx=force[0])
         
     def add_constraint(self,node,**constraint):
-        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         if "ux" in constraint:
             ux = constraint.get('ux')
             node.set_displacements(ux=ux)
-            self.U[self._get_node_index(node)]["ux"] = ux
             self._record_prescribed_displacements(node, ux=ux)
         
     def solve(self):
-        _solve_model_system(self, ("ux",), ("fx",))
+        _solve_model_system(self)
 
-    def index2key(self,idx,opts=("ux",)):
-        node = idx
-        var = opts[0]
-        return node,var
-
-
-
-#~ *********************************************************************
-#~ ****************************  TrussModel ****************************
-#~ *********************************************************************
-class TrussModel(Model):
-    """
-    Truss model for finite element analysis
-    """
-    def __init__(self,name="Truss Model 01"):
-        Model.__init__(self,name=name,mtype="truss")
-        self.F = {} # Forces
-        self.U = {} # Displacements
-        self.dof = 2 # 2 DOF for truss element
-        self.IS_KG_BUILDED = False
-        
-    def build_global_matrix(self):
-        _assemble_global_stiffness(self)
-        
-    def build_forces_vector(self):
-        for node in self.nodes:
-            self.F[self._get_node_index(node)] = {"fx":0, "fy":0}
-        
-    def build_displacements_vector(self):
-        for node in self.nodes:
-            self.U[self._get_node_index(node)] = {"ux":np.nan, "uy":np.nan}
-    
     def add_force(self,node,force):
-        if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        self.F[self._get_node_index(node)]["fx"] = force[0]
-        self.F[self._get_node_index(node)]["fy"] = force[1]
         self._record_applied_forces(node, fx=force[0], fy=force[1])
         node.fx = force[0]
         node.fy = force[1]
         
     def add_constraint(self,node,**constraint):
-        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         cs = constraint
         if "ux" in cs and "uy" in cs: #
             ux = cs.get('ux')
             uy = cs.get('uy')
             node.set_displacements(ux=ux, uy=uy) # eqv to node.ux = ux, node.uy = uy
-            self.U[self._get_node_index(node)]["ux"] = ux
-            self.U[self._get_node_index(node)]["uy"] = uy
             self._record_prescribed_displacements(node, ux=ux, uy=uy)
         elif "ux" in cs:
             ux = cs.get('ux')
             node.set_displacements(ux=ux)
-            self.U[self._get_node_index(node)]["ux"] = ux
             self._record_prescribed_displacements(node, ux=ux)
         elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
-            self.U[self._get_node_index(node)]["uy"] = uy
             self._record_prescribed_displacements(node, uy=uy)
         else: pass # todo
         
     def solve(self):
-        _solve_model_system(self, ("ux", "uy"), ("fx", "fy"))
+        _solve_model_system(self)
                 
-    def index2key(self,idx,opts=("ux","uy")):
-        """
-        Index to key, where key can be ux or uy
-        """
-        node = idx//2
-        var = opts[0] if ((-1)**idx)==1 else opts[1]
-        return node,var
-        
     def plot_model(self):
         """
         Plot the mesh model, including bcs
@@ -485,38 +387,26 @@ class BeamModel(Model):
     """
     Model for finite element analysis
     """
+    displacement_dofs = ("uy", "ur")
+    force_dofs = ("fy", "m")
+
     def __init__(self,name="Beam Model 01"):
         Model.__init__(self,name=name,mtype="beam")
-        self.F = {} # Forces
-        self.U = {} # Displacements
         self.dof = 2 # 2 DOF for beam element
         self.IS_KG_BUILDED = False
         
     def build_global_matrix(self):
         _assemble_global_stiffness(self)
     
-    def build_forces_vector(self):
-        for node in self.nodes:
-            self.F[self._get_node_index(node)] = {"fy":0.0, "m":0.0} # (fy, m)
-            
-    def build_displacements_vector(self):
-        for node in self.nodes:
-            self.U[self._get_node_index(node)] = {"uy":np.nan, "ur":np.nan} # (uy, r)
-    
     def add_force(self,node,force):
-        if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        self.F[self._get_node_index(node)]["fy"] = force[0]
         self._record_applied_forces(node, fy=force[0])
         node.fy = force[0]
         
     def add_moment(self,node,moment):
-        if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        self.F[self._get_node_index(node)]["m"] = moment[0]
         self._record_applied_forces(node, m=moment[0])
         node.m = moment[0]
         
     def add_constraint(self,node,**constraint):
-        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         cs = constraint
         if "ux" in cs and "uy" in cs and "ur" in cs: # 
             ux = cs.get('ux')
@@ -524,31 +414,22 @@ class BeamModel(Model):
             ur = cs.get('ur')
             node.set_displacements(ux=ux, uy=uy, ur=ur)
             #~ print("Encastre")
-            self.U[self._get_node_index(node)]["uy"] = uy
-            self.U[self._get_node_index(node)]["ur"] = ur
             self._record_prescribed_displacements(node, uy=uy, ur=ur)
         elif "ux" in cs and "uy" in cs: # 
             ux = cs.get('ux')
             uy = cs.get('uy')
             node.set_displacements(ux=ux, uy=uy)
             #~ print("Fixed")
-            self.U[self._get_node_index(node)]["uy"] = uy
             self._record_prescribed_displacements(node, uy=uy)
         elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
             #~ print("Simple support")
-            self.U[self._get_node_index(node)]["uy"] = uy
             self._record_prescribed_displacements(node, uy=uy)
         
     def solve(self):
-        _solve_model_system(self, ("uy", "ur"), ("fy", "m"))
+        _solve_model_system(self)
             
-    def index2key(self,idx,opts=("uy","ur")):
-        node = idx//2
-        var = opts[0] if ((-1)**idx)==1 else opts[1]
-        return node,var
-        
     def plot_model(self):
         import matplotlib.pyplot as plt
         
@@ -692,10 +573,11 @@ class LinearTriangleModel(Model):
     """
     Model for finite element analysis
     """
+    displacement_dofs = ("ux", "uy")
+    force_dofs = ("fx", "fy")
+
     def __init__(self,name="LT Model 01"):
         Model.__init__(self,name=name,mtype="triangle")
-        self.F = {} # Forces
-        self.U = {} # Displacements
         self.dof = 2 # 2 DOF for triangle element (per node)
         self.IS_KG_BUILDED = False
         
@@ -703,18 +585,7 @@ class LinearTriangleModel(Model):
         """Build global stiffness matrix."""
         _assemble_global_stiffness(self)
 
-    def build_forces_vector(self):
-        for node in self.nodes:
-            self.F[self._get_node_index(node)] = {"fx":0.0, "fy":0.0} # (fy, m)
-            
-    def build_displacements_vector(self):
-        for node in self.nodes:
-            self.U[self._get_node_index(node)] = {"ux":np.nan, "uy":np.nan} # (uy, r)
-    
     def add_force(self,node,force):
-        if not(self.IS_KG_BUILDED): self.build_global_matrix()
-        self.F[self._get_node_index(node)]["fx"] = force[0]
-        self.F[self._get_node_index(node)]["fy"] = force[1]
         self._record_applied_forces(node, fx=force[0], fy=force[1])
         node.fx = force[0]
         node.fy = force[1]
@@ -723,19 +594,15 @@ class LinearTriangleModel(Model):
         pass
         
     def add_constraint(self,node,**constraint):
-        if not(self.IS_KG_BUILDED): self.build_global_matrix()
         cs = constraint
         if "ux" in cs and "uy" in cs: # 
             ux = cs.get('ux')
             uy = cs.get('uy')
             node.set_displacements(ux=ux, uy=uy)
-            self.U[self._get_node_index(node)]["ux"] = ux
-            self.U[self._get_node_index(node)]["uy"] = uy
             self._record_prescribed_displacements(node, ux=ux, uy=uy)
         elif "uy" in cs:
             uy = cs.get('uy')
             node.set_displacements(uy=uy)
-            self.U[self._get_node_index(node)]["uy"] = uy
             self._record_prescribed_displacements(node, uy=uy)
         
     def _check_nodes(self):
@@ -744,20 +611,8 @@ class LinearTriangleModel(Model):
         
     def solve(self):
         self._check_nodes()
-        _solve_model_system(
-            self,
-            ("ux", "uy"),
-            ("fx", "fy"),
-        )
+        _solve_model_system(self)
                 
-    def index2key(self,idx,opts=("ux","uy")):
-        """
-        Index to key, where key can be ux or uy
-        """
-        node = idx//2
-        var = opts[0] if ((-1)**idx)==1 else opts[1]
-        return node,var
-
     def plot_model(self):
         """
         Plot the mesh model, including bcs
