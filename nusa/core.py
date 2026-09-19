@@ -101,8 +101,25 @@ class Model:
                 f"Element type '{element.etype}' incompatible with model '{self.mtype}'"
             )
 
+        if element in self._elements.values():
+            raise ValueError("Element already belongs to this model")
+
+        missing_nodes = [node for node in element.nodes if node not in self._node_index]
+        if missing_nodes:
+            raise ValueError(
+                "Element references nodes that do not belong to this model"
+            )
+
+        labels = set(self._elements)
         if element.label is None:
-            element.label = self.n_elements
+            label = 0
+            while label in labels:
+                label += 1
+            element.label = label
+        elif element.label in labels:
+            raise ValueError(
+                f"Element label {element.label!r} already exists in this model"
+            )
 
         self._elements[element.label] = element
 
@@ -366,39 +383,79 @@ class Model:
             f"Elements: {self.n_elements}"
         )
 
-    def simple_report(self,report_type="print",fname="nusa_rpt.txt"):
-        """
-        Placeholder for a future implementation of a simple report.
+    def simple_report(self, report_type="print", fname="nusa_rpt.txt"):
+        """Generate a compact text report for a solved finite-element model."""
+        if not hasattr(self, "_nodal_forces"):
+            raise RuntimeError("simple_report() is available only after solve()")
 
-        Parameters
-        ----------
-        report_type : str, optional
-            Type of report to generate ('print', 'file', etc.).
-        fname : str, optional
-            Output filename for file-based reports.
-        """
-        pass
-        
-    def _get_ndisplacements(self,options):
-        """
-        Generate a table of node displacements.
+        valid_report_types = {"print", "string", "write"}
+        if report_type not in valid_report_types:
+            raise ValueError(
+                f"Unknown report_type {report_type!r}; "
+                f"expected one of {sorted(valid_report_types)}"
+            )
 
-        Parameters
-        ----------
-        options : dict
-            Tabulate formatting options.
+        options = {
+            "headers": "firstrow",
+            "tablefmt": "rst",
+            "numalign": "right",
+        }
+        sections = [
+            "==========================",
+            "    NuSA Simple Report",
+            "==========================",
+            "",
+            f"Model: {self.name}",
+            f"Number of nodes: {self.n_nodes}",
+            f"Number of elements: {self.n_elements}",
+            "",
+            "RESULTS",
+            "",
+            "NODAL DISPLACEMENTS",
+            self._get_ndisplacements(options),
+            "",
+            "APPLIED LOADS",
+            self._get_applied_loads(options),
+            "",
+            "NODAL FORCES (K @ U)",
+            self._get_nforces(options),
+            "",
+            "REACTIONS",
+            self._get_reactions(options),
+            "",
+            "ELEMENT RESULTS",
+            self._get_element_results(options),
+            "",
+            "FINITE ELEMENT MODEL INFO",
+            "",
+            "NODES",
+            self._get_nodes_info(options),
+            "",
+            "ELEMENTS",
+            self._get_elements_info(options),
+        ]
+        report = "\n".join(sections) + "\n"
 
-        Returns
-        -------
-        str
-            Tabulated string of displacements.
-        """
+        if report_type == "print":
+            print(report)
+            return None
+        if report_type == "write":
+            with open(fname, "w", encoding="utf-8") as report_file:
+                report_file.write(report)
+            return None
+        return report
+
+    def _get_ndisplacements(self, options):
+        """Generate a table of solved nodal displacement components."""
         from tabulate import tabulate
-        D = [["Node","UX","UY"]]
-        for n in self.nodes:
-            D.append([n.label,n.ux,n.uy])
-        return tabulate(D, **options)
-        
+
+        dof_names = getattr(self, "displacement_dofs", ("ux", "uy"))
+        headers = ["Node"] + [name.upper() for name in dof_names]
+        rows = [headers]
+        for node in self.nodes:
+            rows.append([node.label] + [getattr(node, name) for name in dof_names])
+        return tabulate(rows, **options)
+
     def _get_force_table(self, options, getter):
         """Generate a named-component nodal force table."""
         from tabulate import tabulate
@@ -419,8 +476,8 @@ class Model:
         if hasattr(self, "force_dofs") and hasattr(self, "_nodal_forces"):
             return self._get_force_table(options, self.get_nodal_force)
 
-        # Base Model compatibility for unsolved/non-solver subclasses.
         from tabulate import tabulate
+
         rows = [["Node", "FX", "FY"]]
         for node in self.nodes:
             rows.append([node.label, node.fx, node.fy])
@@ -429,88 +486,37 @@ class Model:
     def _get_reactions(self, options):
         """Generate a table of support reactions."""
         return self._get_force_table(options, self.get_reaction)
-        
-    def _get_eforces(self,options):
-        """
-        Generate a table of element internal forces.
 
-        Parameters
-        ----------
-        options : dict
-            Tabulate formatting options.
+    def _get_element_results(self, options):
+        """Generate the model-specific element-results table."""
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement _get_element_results()"
+        )
 
-        Returns
-        -------
-        str
-            Tabulated string of element forces.
-        """
+    def _get_nodes_info(self, options):
+        """Generate a table of node coordinates."""
         from tabulate import tabulate
-        F = [["Element","F"]]
-        for elm in self.elements:
-            F.append([elm.label+1, elm.f])
-        return tabulate(F, **options)
-        
-    def _get_estresses(self,options):
-        """
-        Generate a table of element stresses.
 
-        Parameters
-        ----------
-        options : dict
-            Tabulate formatting options.
+        rows = [["Node", "X", "Y"]]
+        for node in self.nodes:
+            rows.append([node.label, node.x, node.y])
+        return tabulate(rows, **options)
 
-        Returns
-        -------
-        str
-            Tabulated string of element stresses.
-        """
+    def _get_elements_info(self, options):
+        """Generate a table of element connectivity."""
         from tabulate import tabulate
-        S = [["Element","S"]]
-        for elm in self.elements:
-            S.append([elm.label+1, elm.s])
-        return tabulate(S, **options)
-    
-    def _get_nodes_info(self,options):
-        """
-        Generate a table of node coordinates.
 
-        Parameters
-        ----------
-        options : dict
-            Tabulate formatting options.
-
-        Returns
-        -------
-        str
-            Tabulated string of node positions.
-        """
-        from tabulate import tabulate
-        F = [["Node","X","Y"]]
-        for n in self.nodes:
-            F.append([n.label, n.x, n.y])
-        return tabulate(F, **options)
-    
-    def _get_elements_info(self,options):
-        """
-        Generate a table of element connectivity.
-
-        Parameters
-        ----------
-        options : dict
-            Tabulate formatting options.
-
-        Returns
-        -------
-        str
-            Tabulated string of element-node relationships.
-        """
-        from tabulate import tabulate
-        S = [["Element","NI","NJ"]]
-        for elm in self.elements:
-            ni, nj = elm.nodes
-            S.append([elm.label+1, ni.label, nj.label])
-        return tabulate(S, **options)
-            
+        max_nodes = max((len(element.nodes) for element in self.elements), default=0)
+        headers = ["Element"] + [f"N{k + 1}" for k in range(max_nodes)]
+        rows = [headers]
+        for element in self.elements:
+            labels = [node.label for node in element.nodes]
+            rows.append(
+                [element.label]
+                + labels
+                + [""] * (max_nodes - len(labels))
+            )
+        return tabulate(rows, **options)
 
 
 
