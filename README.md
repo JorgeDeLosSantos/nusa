@@ -12,34 +12,47 @@ A Python library for structural analysis using the finite element method, design
 
 * **0.1.0** (16/11/2016)
 * **0.2.0** (14/07/2019)
-* **0.3.dev0** Development version
+* **0.3.0.dev0** Development version
 
 ## Requirements
 
-NuSA depends on the following Python packages:
+NuSA requires Python 3.10 or newer. The core FEM package depends on:
 
-- numpy
-- matplotlib
+- NumPy
+- Matplotlib
 - tabulate
-- meshio
 
-For mesh generation, **Gmsh** is required:
-
-https://gmsh.info/
-
+Mesh utilities are optional and use `meshio`. Mesh generation also requires the external
+[Gmsh](https://gmsh.info/) executable to be available on your system.
 
 ## Installation
 
-From PyPI (0.2.0 version):
+Install the current PyPI release:
 
-```
+```bash
 pip install nusa
 ```
 
-Or install the latest development version directly from GitHub:
+Install NuSA with mesh utilities:
 
+```bash
+pip install "nusa[mesh]"
 ```
-pip install git+https://github.com/JorgeDeLosSantos/nusa.git
+
+Install the current development branch directly from GitHub:
+
+```bash
+pip install "nusa[mesh] @ git+https://github.com/JorgeDeLosSantos/nusa.git@develop"
+```
+
+For local development:
+
+```bash
+git clone https://github.com/JorgeDeLosSantos/nusa.git
+cd nusa
+git checkout develop
+python -m pip install -e ".[test]"
+python -m pytest
 ```
 
 
@@ -56,7 +69,15 @@ pip install git+https://github.com/JorgeDeLosSantos/nusa.git
 ### Linear Triangle Element
 
 ```python
-from nusa import *
+from nusa import (
+    Beam,
+    BeamModel,
+    LinearTriangle,
+    LinearTriangleModel,
+    Node,
+    Spring,
+    SpringModel,
+)
 import nusa.mesh as nmsh
 
 md = nmsh.Modeler()
@@ -114,7 +135,15 @@ Nodes 1 and 2 are fixed.
 
 ```python
 # NuSA Demo
-from nusa import *
+from nusa import (
+    Beam,
+    BeamModel,
+    LinearTriangle,
+    LinearTriangleModel,
+    Node,
+    Spring,
+    SpringModel,
+)
     
 def test1():
     """
@@ -165,7 +194,15 @@ Use E = 29 x 10<sup>6</sup> psi.
 Beer & Johnston. (2012) Mechanics of materials. 
 Problem 9.13 , pp. 568.
 """
-from nusa import *
+from nusa import (
+    Beam,
+    BeamModel,
+    LinearTriangle,
+    LinearTriangleModel,
+    Node,
+    Spring,
+    SpringModel,
+)
 
 # Input data 
 E = 29e6
