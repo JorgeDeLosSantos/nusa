@@ -4,6 +4,13 @@ This file contains information related to the development of the project, such a
 
 ---
 
+## [Unreleased]
+
+### Removed
+- Removed unsupported legacy modules for ad-hoc I/O, JSON model loading, frozen plotting helpers, incomplete 3D experiments, obsolete report templates, and unintegrated material/section helpers.
+- Removed the legacy `.nusa` sample data and materials example that depended on those modules.
+- Kept `nusa.mesh` as the supported optional peripheral subsystem.
+
 ## [0.3.0.dev0] - 2026-09-19
 
 ### Changed
