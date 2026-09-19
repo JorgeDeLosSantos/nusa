@@ -27,5 +27,5 @@ m.add_force(n3, (9375,0))
 m.plot_model()
 m.solve()
 
-m.plot_nsol("seqv")
+m.plot_nodal_result("seqv")
 m.show()
