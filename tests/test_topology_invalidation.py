@@ -19,7 +19,7 @@ def test_topology_change_invalidates_and_rebuilds_spring_analysis_state():
     model.add_force(n2, (100.0,))
     model.solve()
 
-    assert model.IS_KG_BUILDED is True
+    assert model._is_assembled is True
     assert np.isclose(n2.ux, 1.0)
     assert hasattr(model, "_K_reduced")
     assert hasattr(model, "_rhs_reduced")
@@ -29,8 +29,8 @@ def test_topology_change_invalidates_and_rebuilds_spring_analysis_state():
     n3 = Node((0.0, 0.0))
     model.add_node(n3)
 
-    assert model.IS_KG_BUILDED is False
-    assert not hasattr(model, "KG")
+    assert model._is_assembled is False
+    assert not hasattr(model, "_K")
     assert not hasattr(model, "_K_reduced")
     assert not hasattr(model, "_rhs_reduced")
     assert not hasattr(model, "_free_dofs")
@@ -42,13 +42,13 @@ def test_topology_change_invalidates_and_rebuilds_spring_analysis_state():
     e2 = Spring((n2, n3), 100.0)
     model.add_element(e2)
 
-    assert model.IS_KG_BUILDED is False
+    assert model._is_assembled is False
 
     # solve() rebuilds automatically and restores only explicit inputs.
     model.solve()
 
-    assert model.IS_KG_BUILDED is True
-    assert model.KG.shape == (3, 3)
+    assert model._is_assembled is True
+    assert model.stiffness_matrix.shape == (3, 3)
     np.testing.assert_allclose([n1.ux, n2.ux, n3.ux], [0.0, 1.0, 1.0])
     np.testing.assert_allclose([n1.fx, n2.fx, n3.fx], [-100.0, 100.0, 0.0])
 
@@ -73,7 +73,7 @@ def test_beam_rebuild_preserves_explicit_load_moment_and_constraints():
     model.add_node(n3)
     model.add_element(Beam((n2, n3), E=1.0, I=1.0))
 
-    assert model.IS_KG_BUILDED is False
+    assert model._is_assembled is False
     assert np.isclose(n1.uy, 0.0)
     assert np.isclose(n1.ur, 0.0)
     assert np.isnan(n2.uy)
@@ -89,7 +89,7 @@ def test_beam_rebuild_preserves_explicit_load_moment_and_constraints():
         model._f[:4],
         [0.0, 0.0, -1.0, 0.5],
     )
-    assert model.KG.shape == (6, 6)
+    assert model.stiffness_matrix.shape == (6, 6)
 
     # The added segment is unloaded and free at n3, so it carries no
     # additional end forces and does not change the response at n2.
