@@ -75,15 +75,13 @@ def _solve_model_system(model):
 
     for dof_index, value in enumerate(model._u):
         node_index, component = divmod(dof_index, model.dof)
-        variable = model.displacement_dofs[component]
-        setattr(model.nodes[node_index], variable, value)
+        setattr(model.nodes[node_index], model.displacement_dofs[component], value)
 
     model._nodal_forces = np.dot(model.KG, model._u)
 
     for dof_index, value in enumerate(model._nodal_forces):
         node_index, component = divmod(dof_index, model.dof)
-        variable = model.force_dofs[component]
-        setattr(model.nodes[node_index], variable, value)
+        setattr(model.nodes[node_index], model.force_dofs[component], value)
 
 #~ *********************************************************************
 #~ ****************************  SpringModel ***************************
@@ -177,6 +175,31 @@ class BarModel(Model):
     def solve(self):
         _solve_model_system(self)
 
+    def index2key(self,idx,opts=("ux",)):
+        node = idx
+        var = opts[0]
+        return node,var
+
+
+
+#~ *********************************************************************
+#~ ****************************  TrussModel ****************************
+#~ *********************************************************************
+class TrussModel(Model):
+    """
+    Truss model for finite element analysis
+    """
+    displacement_dofs = ("ux", "uy")
+    force_dofs = ("fx", "fy")
+
+    def __init__(self,name="Truss Model 01"):
+        Model.__init__(self,name=name,mtype="truss")
+        self.dof = 2 # 2 DOF for truss element
+        self.IS_KG_BUILDED = False
+        
+    def build_global_matrix(self):
+        _assemble_global_stiffness(self)
+        
     def add_force(self,node,force):
         self._record_applied_forces(node, fx=force[0], fy=force[1])
         node.fx = force[0]
