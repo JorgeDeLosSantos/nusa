@@ -83,4 +83,7 @@ def test_beam_rebuild_preserves_explicit_load_moment_and_constraints():
     assert np.isclose(model.F[i2]["fy"], -1.0)
     assert np.isclose(model.F[i2]["m"], 0.5)
     assert model.KG.shape == (6, 6)
-    assert not np.isclose(n2.uy, old_tip_displacement)
+
+    # The added segment is unloaded and free at n3, so it carries no
+    # additional end forces and does not change the response at n2.
+    assert np.isclose(n2.uy, old_tip_displacement)
