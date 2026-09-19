@@ -152,57 +152,84 @@ class Model:
         except KeyError:
             raise ValueError("Node does not belong to this model")
 
+    def _global_dof_index(self, node, variable, dof_names):
+        """Return the global vector index for one nodal degree of freedom."""
+        try:
+            component = dof_names.index(variable)
+        except ValueError:
+            raise ValueError(
+                f"Unknown degree of freedom {variable!r}; expected one of {dof_names}"
+            )
+        return self.dof * self._get_node_index(node) + component
+
     def _record_applied_forces(self, node, **values):
         """Persist explicitly applied nodal loads independently of solver results."""
         self._get_node_index(node)
         self._applied_forces.setdefault(node, {}).update(values)
+
+        if hasattr(self, "_f"):
+            for variable, value in values.items():
+                if variable in self.force_dofs:
+                    index = self._global_dof_index(node, variable, self.force_dofs)
+                    self._f[index] = value
 
     def _record_prescribed_displacements(self, node, **values):
         """Persist explicitly prescribed nodal DOFs independently of solver results."""
         self._get_node_index(node)
         self._prescribed_displacements.setdefault(node, {}).update(values)
 
+        if hasattr(self, "_u"):
+            for variable, value in values.items():
+                if variable in self.displacement_dofs:
+                    index = self._global_dof_index(
+                        node, variable, self.displacement_dofs
+                    )
+                    self._u[index] = value
+
     def _restore_input_state(self):
-        """Restore explicit loads and prescribed DOFs into model and Node state."""
+        """Restore explicit loads and prescribed DOFs into vectors and Node state."""
         for node, values in self._applied_forces.items():
             if node not in self._node_index:
                 continue
-            node_index = self._get_node_index(node)
             for variable, value in values.items():
                 setattr(node, variable, value)
-                if (
-                    hasattr(self, "F")
-                    and node_index in self.F
-                    and variable in self.F[node_index]
-                ):
-                    self.F[node_index][variable] = value
+                if hasattr(self, "_f") and variable in self.force_dofs:
+                    index = self._global_dof_index(node, variable, self.force_dofs)
+                    self._f[index] = value
 
         for node, values in self._prescribed_displacements.items():
             if node not in self._node_index:
                 continue
-            node_index = self._get_node_index(node)
             for variable, value in values.items():
                 setattr(node, variable, value)
-                if (
-                    hasattr(self, "U")
-                    and node_index in self.U
-                    and variable in self.U[node_index]
-                ):
-                    self.U[node_index][variable] = value
+                if hasattr(self, "_u") and variable in self.displacement_dofs:
+                    index = self._global_dof_index(
+                        node, variable, self.displacement_dofs
+                    )
+                    self._u[index] = value
 
     def _invalidate_analysis_state(self):
         """Invalidate assembled and solved state after a topology change."""
         if hasattr(self, "IS_KG_BUILDED"):
             self.IS_KG_BUILDED = False
 
-        for attribute in ("KG", "K2S", "F2S", "VU", "VF", "solved_u", "NF"):
+        for attribute in (
+            "KG",
+            "K2S",
+            "F2S",
+            "solved_u",
+            "_u",
+            "_f",
+            "_nodal_forces",
+            # Remove legacy state if present on an existing model instance.
+            "U",
+            "F",
+            "NF",
+            "VU",
+            "VF",
+        ):
             if hasattr(self, attribute):
                 delattr(self, attribute)
-
-        if hasattr(self, "F"):
-            self.F = {}
-        if hasattr(self, "U"):
-            self.U = {}
 
         for node in self._nodes:
             node.ux = np.nan
