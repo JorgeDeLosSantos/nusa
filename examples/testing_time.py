@@ -38,14 +38,14 @@ from timeit import default_timer as timer
 #~ m.add_force(nodos[-1], (-10,0))
 #~ 
 #~ t0 = timer()
-#~ m.build_global_matrix()
-#~ KG1 = m.KG
+#~ m.assemble()
+#~ KG1 = m.stiffness_matrix
 #~ t1 = timer()
 #~ print(t1-t0)
 #~ 
 #~ t0 = timer() 
-#~ m._build_global_matrix()
-#~ KG2 = m.KG
+#~ m._assemble()
+#~ KG2 = m.stiffness_matrix
 #~ t1 = timer()
 #~ print(t1-t0)
 #~ 
