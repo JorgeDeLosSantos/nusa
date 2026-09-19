@@ -138,7 +138,28 @@ class Model:
         """
         for element in elements:
             self.add_element(element)
-    
+
+    def _validate_topology(self):
+        """Validate structural connectivity before global assembly."""
+        if not self._elements:
+            raise ValueError("Cannot assemble a model without elements")
+
+        connected_nodes = {
+            node
+            for element in self.elements
+            for node in element.nodes
+        }
+        orphan_nodes = [
+            node for node in self.nodes
+            if node not in connected_nodes
+        ]
+        if orphan_nodes:
+            labels = [node.label for node in orphan_nodes]
+            raise ValueError(
+                "Model contains nodes not connected to any element: "
+                f"{labels}"
+            )
+
     @property
     def nodes(self):
         """
