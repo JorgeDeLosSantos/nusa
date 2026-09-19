@@ -175,13 +175,6 @@ class BarModel(Model):
     def solve(self):
         _solve_model_system(self)
 
-    def index2key(self,idx,opts=("ux",)):
-        node = idx
-        var = opts[0]
-        return node,var
-
-
-
 #~ *********************************************************************
 #~ ****************************  TrussModel ****************************
 #~ *********************************************************************
