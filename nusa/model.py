@@ -256,7 +256,7 @@ class TrussModel(Model):
             if nd.ux == 0: self._draw_xconstraint(ax,nd.x,nd.y)
             if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
         
-        x0,x1,y0,y1 = self.rect_region()
+        x0,x1,y0,y1 = self._rect_region()
         plt.axis('equal')
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
@@ -290,34 +290,34 @@ class TrussModel(Model):
         axes.plot(x, y, "gv", markersize=10, alpha=0.6)
         
     def _calculate_arrow_size(self):
-        x0,x1,y0,y1 = self.rect_region(factor=50)
+        x0,x1,y0,y1 = self._rect_region(factor=50)
         sf = 5e-2
         kfx = sf*(x1-x0)
         kfy = sf*(y1-y0)
         return np.mean([kfx,kfy])
         
-    def plot_deformed_shape(self,dfactor=1.0):
+    def plot_deformed_shape(self, scale=1.0):
         import matplotlib.pyplot as plt
         fig = plt.figure()
         ax = fig.add_subplot(111)
         
-        df = dfactor*self._calculate_deformed_factor()
+        df = scale*self._calculate_deformed_factor()
         
         for elm in self.elements:
             ni,nj = elm.nodes
             x, y = [ni.x,nj.x], [ni.y,nj.y]
             xx = [ni.x+ni.ux*df, nj.x+nj.ux*df]
-            yy = [ni.y+ni.uy*df, nj.y+nj.uy*df]
+            yy = [ni.y+ni.uy*scale, nj.y+nj.uy*scale]
             ax.plot(x,y,'bo-')
             ax.plot(xx,yy,'ro--')
 
-        x0,x1,y0,y1 = self.rect_region()
+        x0,x1,y0,y1 = self._rect_region()
         plt.axis('equal')
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
         
     def _calculate_deformed_factor(self):
-        x0,x1,y0,y1 = self.rect_region()
+        x0,x1,y0,y1 = self._rect_region()
         ux = np.abs(np.array([n.ux for n in self.nodes]))
         uy = np.abs(np.array([n.uy for n in self.nodes]))
         sf = 1.5e-2
@@ -336,7 +336,7 @@ class TrussModel(Model):
         import matplotlib.pyplot as plt
         plt.show()
         
-    def rect_region(self,factor=7.0):
+    def _rect_region(self,factor=7.0):
         nx,ny = [],[]
         for n in self.nodes:
             nx.append(n.x)
@@ -477,7 +477,7 @@ class BeamModel(Model):
             if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
             
         ax.axis("equal")
-        x0,x1,y0,y1 = self.rect_region()
+        x0,x1,y0,y1 = self._rect_region()
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
 
@@ -510,13 +510,13 @@ class BeamModel(Model):
         axes.plot(x, y, "gv", markersize=10, alpha=0.6)
         
     def _calculate_arrow_size(self):
-        x0,x1,y0,y1 = self.rect_region(factor=10)
+        x0,x1,y0,y1 = self._rect_region(factor=10)
         sf = 5e-2
         kfx = sf*(x1-x0)
         kfy = sf*(y1-y0)
         return np.mean([kfx,kfy])
 
-    def rect_region(self,factor=7.0):
+    def _rect_region(self,factor=7.0):
         nx,ny = [],[]
         for n in self.nodes:
             nx.append(n.x)
@@ -529,7 +529,7 @@ class BeamModel(Model):
             ky = (ymx-ymn)/factor
         return xmn-kx, xmx+kx, ymn-ky, ymx+ky
         
-    def plot_disp(self, df = 1000, **kwargs):
+    def plot_deformed_shape(self, scale=1000, **kwargs):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         
@@ -539,8 +539,8 @@ class BeamModel(Model):
             ni,nj = elm.nodes
             xx.append( ni.x )
             xx.append( nj.x )
-            yy.append( ni.y+ni.uy*df )
-            yy.append( nj.y+nj.uy*df )
+            yy.append( ni.y+ni.uy*scale )
+            yy.append( nj.y+nj.uy*scale )
         
         ax.plot(xx, yy, "ro--", **kwargs)
             
@@ -674,7 +674,7 @@ class LinearTriangleModel(Model):
 
         pc = PatchCollection(patches, color="#7CE7FF", edgecolor="k", alpha=0.4)
         ax.add_collection(pc)
-        x0,x1,y0,y1 = self.rect_region()
+        x0,x1,y0,y1 = self._rect_region()
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
         ax.set_title("Model %s"%(self.name))
@@ -707,7 +707,7 @@ class LinearTriangleModel(Model):
         axes.plot(x, y, "g<", markersize=10, alpha=0.6)
         
     def _calculate_arrow_size(self):
-        x0,x1,y0,y1 = self.rect_region(factor=10)
+        x0,x1,y0,y1 = self._rect_region(factor=10)
         sf = 8e-2
         kfx = sf*(x1-x0)
         kfy = sf*(y1-y0)
@@ -737,7 +737,7 @@ class LinearTriangleModel(Model):
         return tr
 
 
-    def plot_nsol(self,var="ux"):
+    def plot_nodal_result(self, var="ux"):
         import matplotlib.pyplot as plt
         import numpy as np
         
@@ -765,7 +765,7 @@ class LinearTriangleModel(Model):
         if isinstance(fsol,list): fsol = np.array(fsol)
         tp = ax.tricontourf(tr, fsol, cmap="jet")
         fig.colorbar(tp)
-        x0,x1,y0,y1 = self.rect_region()
+        x0,x1,y0,y1 = self._rect_region()
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
@@ -773,7 +773,7 @@ class LinearTriangleModel(Model):
         ax.set_title(ax_title, fontsize=8)
 
 
-    def plot_esol(self,var="ux"):
+    def plot_element_result(self, var="sxx"):
         import matplotlib.pyplot as plt
         import numpy as np
         from matplotlib.patches import Polygon
@@ -805,7 +805,7 @@ class LinearTriangleModel(Model):
         pc.set_array(fsol)
         ax.add_collection(pc)
         fig.colorbar(pc)
-        x0,x1,y0,y1 = self.rect_region()
+        x0,x1,y0,y1 = self._rect_region()
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
         ax.set_aspect("equal")
@@ -819,8 +819,8 @@ class LinearTriangleModel(Model):
         import matplotlib.pyplot as plt
         plt.show()
     
-    def calculate_deformed_factor(self):
-        x0,x1,y0,y1 = self.rect_region()
+    def _calculate_deformed_factor(self):
+        x0,x1,y0,y1 = self._rect_region()
         ux = np.array([n.ux for n in self.nodes])
         uy = np.array([n.uy for n in self.nodes])
         sf = 1.5e-2
@@ -828,7 +828,7 @@ class LinearTriangleModel(Model):
         kfy = sf*(y1-y0)/uy.max()
         return np.mean([kfx,kfy])
                 
-    def rect_region(self,factor=7.0):
+    def _rect_region(self,factor=7.0):
         nx,ny = [],[]
         for n in self.nodes:
             nx.append(n.x)
