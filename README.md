@@ -69,15 +69,7 @@ python -m pytest
 ### Linear Triangle Element
 
 ```python
-from nusa import (
-    Beam,
-    BeamModel,
-    LinearTriangle,
-    LinearTriangleModel,
-    Node,
-    Spring,
-    SpringModel,
-)
+from nusa import LinearTriangle, LinearTriangleModel, Node
 import nusa.mesh as nmsh
 
 md = nmsh.Modeler()
@@ -135,15 +127,7 @@ Nodes 1 and 2 are fixed.
 
 ```python
 # NuSA Demo
-from nusa import (
-    Beam,
-    BeamModel,
-    LinearTriangle,
-    LinearTriangleModel,
-    Node,
-    Spring,
-    SpringModel,
-)
+from nusa import Node, Spring, SpringModel
     
 def test1():
     """
@@ -194,15 +178,7 @@ Use E = 29 x 10<sup>6</sup> psi.
 Beer & Johnston. (2012) Mechanics of materials. 
 Problem 9.13 , pp. 568.
 """
-from nusa import (
-    Beam,
-    BeamModel,
-    LinearTriangle,
-    LinearTriangleModel,
-    Node,
-    Spring,
-    SpringModel,
-)
+from nusa import Beam, BeamModel, Node
 
 # Input data 
 E = 29e6
