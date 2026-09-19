@@ -4,10 +4,7 @@
 #  E-mail: delossantosmfq@gmail.com 
 #  License: MIT License
 # ***********************************
-import numpy as np
-from nusa.core import *
-from nusa.model import *
-from nusa.element import *
+from nusa import Beam, BeamModel, Node
 
 def test4():
     """
@@ -43,6 +40,7 @@ def test4():
     m1.plot_moment_diagram()
     m1.plot_shear_diagram()
     m1.show()
+    return m1
 
 
 if __name__ == '__main__':
