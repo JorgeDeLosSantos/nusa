@@ -215,9 +215,10 @@ class Model:
 
         for attribute in (
             "KG",
-            "K2S",
-            "F2S",
-            "solved_u",
+            "_K_reduced",
+            "_rhs_reduced",
+            "_free_dofs",
+            "_prescribed_dofs",
             "_u",
             "_f",
             "_nodal_forces",
