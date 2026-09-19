@@ -47,14 +47,30 @@ def test_peripheral_modules_do_not_leak_into_top_level_namespace():
         assert not hasattr(nusa, name)
 
 
-def test_mesh_and_io_remain_available_as_explicit_submodules():
+def test_mesh_remains_available_as_explicit_submodule():
     mesh = importlib.import_module("nusa.mesh")
-    io = importlib.import_module("nusa.io")
 
     assert hasattr(mesh, "Modeler")
-    assert hasattr(io, "read_file")
-    assert hasattr(io, "read_msh")
-    assert hasattr(io, "ModelFromFiles")
+
+
+def test_removed_legacy_modules_are_not_importable():
+    legacy_modules = (
+        "nusa.io",
+        "nusa._experimental",
+        "nusa._3d_experimental",
+        "nusa.graph",
+        "nusa.templates",
+        "nusa.lib",
+        "nusa._lib",
+    )
+
+    for module_name in legacy_modules:
+        try:
+            importlib.import_module(module_name)
+        except ModuleNotFoundError:
+            pass
+        else:
+            raise AssertionError(f"{module_name} should not be importable")
 
 
 def test_importing_nusa_does_not_override_matplotlib_rcparams():
