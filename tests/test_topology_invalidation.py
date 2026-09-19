@@ -75,13 +75,14 @@ def test_beam_rebuild_preserves_explicit_load_moment_and_constraints():
 
     model.solve()
 
-    i1 = model._get_node_index(n1)
-    i2 = model._get_node_index(n2)
-
-    assert np.isclose(model.U[i1]["uy"], 0.0)
-    assert np.isclose(model.U[i1]["ur"], 0.0)
-    assert np.isclose(model.F[i2]["fy"], -1.0)
-    assert np.isclose(model.F[i2]["m"], 0.5)
+    np.testing.assert_allclose(
+        model._u[:4],
+        [0.0, 0.0, n2.uy, n2.ur],
+    )
+    np.testing.assert_allclose(
+        model._f[:4],
+        [0.0, 0.0, -1.0, 0.5],
+    )
     assert model.KG.shape == (6, 6)
 
     # The added segment is unloaded and free at n3, so it carries no
