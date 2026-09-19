@@ -6,7 +6,6 @@
 # ***********************************
 import numpy as np
 from .core import Element
-import nusa.templates as tmp
 
 class Spring(Element):
     """
@@ -62,20 +61,6 @@ class Spring(Element):
         self._KE = np.array([[self.k,-self.k],[-self.k,self.k]])
         return self._KE
     
-    def get_global_stiffness(self,msz):
-        pass
-        #~ ni, nj = self.nodes
-        #~ self.keg = np.zeros((msz,msz))
-        #~ idx = np.ix_([ni.label, nj.label],[ni.label, nj.label])
-        #~ row = np.array([ni.label, ni.label, nj.label, nj.label])
-        #~ col = np.array([ni.label, nj.label, ni.label, nj.label])
-        #~ data = self.get_element_stiffness().reshape(-1)
-        #~ print data, row, col
-        #~ self.keg =  csr_matrix((data, (row, col)), shape=(msz,msz)).toarray()
-        #~ return self.keg
-    
-
-
 
 class Bar(Element):
     """
