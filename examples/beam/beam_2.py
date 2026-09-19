@@ -4,10 +4,7 @@
 #  E-mail: delossantosmfq@gmail.com 
 #  License: MIT License
 # ***********************************
-import numpy as np
-from nusa.core import *
-from nusa.model import *
-from nusa.element import *
+from nusa import Beam, BeamModel, Node
 
 def test2():
     """
@@ -44,6 +41,7 @@ def test2():
     print(m1.stiffness_matrix)
     print([node.uy for node in m1.nodes])
     print(m1.nodal_forces)
+    return m1
 
 
 if __name__ == '__main__':
