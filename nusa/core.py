@@ -101,8 +101,25 @@ class Model:
                 f"Element type '{element.etype}' incompatible with model '{self.mtype}'"
             )
 
+        if element in self._elements.values():
+            raise ValueError("Element already belongs to this model")
+
+        missing_nodes = [node for node in element.nodes if node not in self._node_index]
+        if missing_nodes:
+            raise ValueError(
+                "Element references nodes that do not belong to this model"
+            )
+
+        labels = set(self._elements)
         if element.label is None:
-            element.label = self.n_elements
+            label = 0
+            while label in labels:
+                label += 1
+            element.label = label
+        elif element.label in labels:
+            raise ValueError(
+                f"Element label {element.label!r} already exists in this model"
+            )
 
         self._elements[element.label] = element
 
