@@ -495,7 +495,7 @@ class Model:
         from tabulate import tabulate
         S = [["Element","NI","NJ"]]
         for elm in self.elements:
-            ni, nj = elm.get_nodes()
+            ni, nj = elm.nodes
             S.append([elm.label+1, ni.label, nj.label])
         return tabulate(S, **options)
             
@@ -532,39 +532,6 @@ class Element:
     @fy.setter
     def fy(self,val):
         self._fy = val
-        
-    def set_label(self,label):
-        """
-        Set the label property
-        
-        *label* : int
-            Label, must be an integer
-        """
-        self.label = label
-        
-    def set_element_forces(self,fx=0.0,fy=0.0):
-        """
-        Set element forces
-        
-        *fx* : float
-            Force in x-dir
-        *fy* : float
-            Force in y-dir
-        
-        Normally this method is used by the `solve` method to 
-        update computed element-forces.
-        """
-        self._fx = fx
-        self._fy = fy
-        
-    def get_element_forces(self):
-        """
-        Returns a tuple with element forces:  (fx, fy)
-        """
-        return self._fx, self._fy
-        
-    def get_nodes(self):
-        return self.nodes
         
     def __str__(self):
         _str = str(self.__class__)
@@ -769,27 +736,6 @@ class Node:
     def exy(self,val):
         self._exy = val
 
-    def get_label(self):
-        return self._label
-    
-    def set_label(self,label):
-        self._label = label
-    
-    def get_displacements(self):
-        return self._ux,self._uy,self._ur
-        
-    def set_displacements(self,ux=np.nan, uy=np.nan, ur=np.nan):
-        self._ux = ux
-        self._uy = uy
-        self._ur = ur
-    
-    def get_forces(self):
-        return (self._fx,self._fy)
-    
-    def set_forces(self,fx=np.nan,fy=np.nan):
-        self._fx = fx
-        self._fy = fy
-        
     def __str__(self):
         _str = self.__class__
         _str = "%s\nU:(%g,%g)\n"%(_str,self.ux, self.uy)
