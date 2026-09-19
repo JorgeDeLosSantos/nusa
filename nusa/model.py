@@ -236,9 +236,9 @@ class TrussModel(Model):
     def solve(self):
         _solve_model_system(self)
                 
-    def plot_model(self):
+    def plot_model(self, show_reactions=False):
         """
-        Plot the mesh model, including bcs
+        Plot model geometry, applied loads, constraints, and optional reactions.
         """
         import matplotlib.pyplot as plt
         
@@ -248,37 +248,49 @@ class TrussModel(Model):
         for elm in self.elements:
             ni, nj = elm.get_nodes()
             ax.plot([ni.x,nj.x],[ni.y,nj.y],"b-")
-            for nd in (ni,nj):
-                if nd.fx > 0: self._draw_xforce(ax,nd.x,nd.y,1)
-                if nd.fx < 0: self._draw_xforce(ax,nd.x,nd.y,-1)
-                if nd.fy > 0: self._draw_yforce(ax,nd.x,nd.y,1)
-                if nd.fy < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
-                if nd.ux == 0: self._draw_xconstraint(ax,nd.x,nd.y)
-                if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
+
+        for nd in self.nodes:
+            applied = self.get_applied_load(nd)
+            if applied["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1)
+            if applied["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1)
+            if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
+            if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
+
+            if show_reactions:
+                reaction = self.get_reaction(nd)
+                if reaction["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1,reaction=True)
+                if reaction["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1,reaction=True)
+                if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
+                if reaction["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1,reaction=True)
+
+            if nd.ux == 0: self._draw_xconstraint(ax,nd.x,nd.y)
+            if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
         
         x0,x1,y0,y1 = self.rect_region()
         plt.axis('equal')
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
 
-    def _draw_xforce(self,axes,x,y,ddir=1):
+    def _draw_xforce(self,axes,x,y,ddir=1,reaction=False):
         """
-        Draw horizontal arrow -> Force in x-dir
+        Draw horizontal applied-load or reaction arrow.
         """
         dx, dy = self._calculate_arrow_size(), 0
         HW = dx/5.0
         HL = dx/3.0
-        arrow_props = dict(head_width=HW, head_length=HL, fc='r', ec='r')
+        color = 'b' if reaction else 'r'
+        arrow_props = dict(head_width=HW, head_length=HL, fc=color, ec=color)
         axes.arrow(x, y, ddir*dx, dy, **arrow_props)
         
-    def _draw_yforce(self,axes,x,y,ddir=1):
+    def _draw_yforce(self,axes,x,y,ddir=1,reaction=False):
         """
-        Draw vertical arrow -> Force in y-dir
+        Draw vertical applied-load or reaction arrow.
         """
         dx,dy = 0, self._calculate_arrow_size()
         HW = dy/5.0
         HL = dy/3.0
-        arrow_props = dict(head_width=HW, head_length=HL, fc='r', ec='r')
+        color = 'b' if reaction else 'r'
+        arrow_props = dict(head_width=HW, head_length=HL, fc=color, ec=color)
         axes.arrow(x, y, dx, ddir*dy, **arrow_props)
         
     def _draw_xconstraint(self,axes,x,y):
@@ -459,7 +471,8 @@ class BeamModel(Model):
     def solve(self):
         _solve_model_system(self)
             
-    def plot_model(self):
+    def plot_model(self, show_reactions=False):
+        """Plot beam geometry, applied transverse loads, and optional reactions."""
         import matplotlib.pyplot as plt
         
         fig = plt.figure()
@@ -470,37 +483,45 @@ class BeamModel(Model):
             xx = [ni.x, nj.x]
             yy = [ni.y, nj.y]
             ax.plot(xx, yy, "r.-")
-            for nd in (ni,nj):
-                if nd.fx > 0: self._draw_xforce(ax,nd.x,nd.y,1)
-                if nd.fx < 0: self._draw_xforce(ax,nd.x,nd.y,-1)
-                if nd.fy > 0: self._draw_yforce(ax,nd.x,nd.y,1)
-                if nd.fy < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
-                if nd.ux == 0: self._draw_xconstraint(ax,nd.x,nd.y)
-                if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
+
+        for nd in self.nodes:
+            applied = self.get_applied_load(nd)
+            if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
+            if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
+
+            if show_reactions:
+                reaction = self.get_reaction(nd)
+                if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
+                if reaction["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1,reaction=True)
+
+            if nd.ux == 0: self._draw_xconstraint(ax,nd.x,nd.y)
+            if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
             
         ax.axis("equal")
         x0,x1,y0,y1 = self.rect_region()
         ax.set_xlim(x0,x1)
         ax.set_ylim(y0,y1)
 
-    def _draw_xforce(self,axes,x,y,ddir=1):
+    def _draw_xforce(self,axes,x,y,ddir=1,reaction=False):
         """
-        Draw horizontal arrow -> Force in x-dir
+        Draw horizontal applied-load or reaction arrow.
         """
         dx, dy = self._calculate_arrow_size(), 0
         HW = dx/5.0
         HL = dx/3.0
-        arrow_props = dict(head_width=HW, head_length=HL, fc='r', ec='r')
+        color = 'b' if reaction else 'r'
+        arrow_props = dict(head_width=HW, head_length=HL, fc=color, ec=color)
         axes.arrow(x, y, ddir*dx, dy, **arrow_props)
         
-    def _draw_yforce(self,axes,x,y,ddir=1):
+    def _draw_yforce(self,axes,x,y,ddir=1,reaction=False):
         """
-        Draw vertical arrow -> Force in y-dir
+        Draw vertical applied-load or reaction arrow.
         """
         dx,dy = 0, self._calculate_arrow_size()
         HW = dy/5.0
         HL = dy/3.0
-        arrow_props = dict(head_width=HW, head_length=HL, fc='r', ec='r')
+        color = 'b' if reaction else 'r'
+        arrow_props = dict(head_width=HW, head_length=HL, fc=color, ec=color)
         axes.arrow(x, y, dx, ddir*dy, **arrow_props)
         
     def _draw_xconstraint(self,axes,x,y):
@@ -642,9 +663,9 @@ class LinearTriangleModel(Model):
         self._check_nodes()
         _solve_model_system(self)
                 
-    def plot_model(self):
+    def plot_model(self, show_reactions=False):
         """
-        Plot the mesh model, including bcs
+        Plot mesh geometry, applied loads, constraints, and optional reactions.
         """
         import matplotlib.pyplot as plt
         from matplotlib.patches import Polygon
@@ -653,18 +674,31 @@ class LinearTriangleModel(Model):
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-        _x,_y = [],[]
         patches = []
-        for k,elm in enumerate(self.elements):
-            _x,_y,_ux,_uy = [],[],[],[]
+        for elm in self.elements:
+            _x,_y = [],[]
             for nd in elm.nodes:
-                if nd.fx != 0: self._draw_xforce(ax,nd.x,nd.y)
-                if nd.fy != 0: self._draw_yforce(ax,nd.x,nd.y)
-                if nd.ux == 0 and nd.uy == 0: self._draw_xyconstraint(ax,nd.x,nd.y)
                 _x.append(nd.x)
                 _y.append(nd.y)
             polygon = Polygon(list(zip(_x,_y)))
             patches.append(polygon)
+
+        for nd in self.nodes:
+            applied = self.get_applied_load(nd)
+            if applied["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1)
+            if applied["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1)
+            if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
+            if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
+
+            if show_reactions:
+                reaction = self.get_reaction(nd)
+                if reaction["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1,reaction=True)
+                if reaction["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1,reaction=True)
+                if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
+                if reaction["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1,reaction=True)
+
+            if nd.ux == 0 and nd.uy == 0:
+                self._draw_xyconstraint(ax,nd.x,nd.y)
 
         pc = PatchCollection(patches, color="#7CE7FF", edgecolor="k", alpha=0.4)
         ax.add_collection(pc)
@@ -674,25 +708,27 @@ class LinearTriangleModel(Model):
         ax.set_title("Model %s"%(self.name))
         ax.set_aspect("equal")
 
-    def _draw_xforce(self,axes,x,y):
+    def _draw_xforce(self,axes,x,y,ddir=1,reaction=False):
         """
-        Draw horizontal arrow -> Force in x-dir
+        Draw horizontal applied-load or reaction arrow.
         """
         dx, dy = self._calculate_arrow_size(), 0
         HW = dx/5.0
         HL = dx/3.0
-        arrow_props = dict(head_width=HW, head_length=HL, fc='r', ec='r')
-        axes.arrow(x, y, dx, dy, **arrow_props)
+        color = 'b' if reaction else 'r'
+        arrow_props = dict(head_width=HW, head_length=HL, fc=color, ec=color)
+        axes.arrow(x, y, ddir*dx, dy, **arrow_props)
         
-    def _draw_yforce(self,axes,x,y):
+    def _draw_yforce(self,axes,x,y,ddir=1,reaction=False):
         """
-        Draw vertical arrow -> Force in y-dir
+        Draw vertical applied-load or reaction arrow.
         """
         dx,dy = 0, self._calculate_arrow_size()
         HW = dy/5.0
         HL = dy/3.0
-        arrow_props = dict(head_width=HW, head_length=HL, fc='r', ec='r')
-        axes.arrow(x, y, dx, dy, **arrow_props)
+        color = 'b' if reaction else 'r'
+        arrow_props = dict(head_width=HW, head_length=HL, fc=color, ec=color)
+        axes.arrow(x, y, dx, ddir*dy, **arrow_props)
         
     def _draw_xyconstraint(self,axes,x,y):
         axes.plot(x, y, "gv", markersize=10, alpha=0.6)
