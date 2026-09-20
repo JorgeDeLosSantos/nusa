@@ -10,7 +10,7 @@ from nusa.mesh import Modeler
 
 modeler = Modeler()
 a = modeler.add_poly((0,0),(1,0),(1,1),(0.6,1),(0.5,0.9),(0.4,1),(0,1), esize=0.08)
-nc, ec = modeler.geom.generate_mesh()
+nc, ec = modeler.generate_mesh()
 x,y = nc[:,0], nc[:,1]
 
 nodos = []
