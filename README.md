@@ -86,15 +86,15 @@ for k,nd in enumerate(nc):
     cn = Node((x[k],y[k]))
     nodes.append(cn)
     
-for k,elm in enumerate(ec):
-    i,j,m = int(elm[0]),int(elm[1]),int(elm[2])
-    ni,nj,nm = nodes[i],nodes[j],nodes[m]
-    ce = LinearTriangle((ni,nj,nm),200e9,0.3,0.1)
+for elm in ec:
+    i, j, k = int(elm[0]), int(elm[1]), int(elm[2])
+    ni, nj, nk = nodes[i], nodes[j], nodes[k]
+    ce = LinearTriangle((ni, nj, nk), 200e9, 0.3, 0.1)
     elements.append(ce)
 
-m = LinearTriangleModel()
-for node in nodes: m.add_node(node)
-for elm in elements: m.add_element(elm)
+model = LinearTriangleModel()
+for node in nodes: model.add_node(node)
+for elm in elements: model.add_element(elm)
     
 # Boundary conditions and loads
 minx, maxx = min(x), max(x)
@@ -102,13 +102,13 @@ miny, maxy = min(y), max(y)
 
 for node in nodes:
     if node.x == minx:
-        m.add_constraint(node, ux=0, uy=0)
+        model.add_constraint(node, ux=0, uy=0)
     if node.x == maxx:
-        m.add_force(node, (10e3,0))
+        model.add_force(node, (10e3,0))
 
-m.plot_model()
-m.solve()
-m.plot_nodal_result("seqv")
+model.plot_model()
+model.solve()
+model.plot_nodal_result("seqv")
 ```
 
 ![](docs/nusa-info/es/src/linear-triangle-element/model_plot.png)
