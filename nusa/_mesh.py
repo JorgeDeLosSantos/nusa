@@ -62,13 +62,12 @@ class SimpleGMSH:
         self.GMSH_CODE.append(f"Line({name}) = {{ {p0},{p1} }};")
         return name
 
-    def add_circle(self, p0, p1, p2=None):
+    def add_circle_arc(self, center, start, end):
         self.ID_CIRCLE += 1
         name = str(self.ID_CIRCLE)
-        if p2 is None:
-            self.GMSH_CODE.append(f"Circle({name}) = {{ {p1},{p0},{p1} }};")
-        else:
-            self.GMSH_CODE.append(f"Circle({name}) = {{ {p1},{p0},{p2} }};")
+        self.GMSH_CODE.append(
+            f"Circle({name}) = {{ {start},{center},{end} }};"
+        )
         return name
 
     def add_line_loop(self, *lines):
