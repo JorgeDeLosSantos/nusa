@@ -75,7 +75,7 @@ import nusa.mesh as nmsh
 md = nmsh.Modeler()
 a = md.add_rectangle((0,0),(1,1), esize=0.1)
 b = md.add_circle((0.5,0.5), 0.1, esize=0.05)
-md.substract_surfaces(a,b)
+md.subtract_surfaces(a,b)
 nc, ec = md.generate_mesh()
 x,y = nc[:,0], nc[:,1]
 
