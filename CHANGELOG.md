@@ -6,6 +6,11 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
+### Changed
+- Hardened the optional mesh subsystem around explicit Gmsh execution, temporary-file cleanup, meshio-based triangle loading, and clearer errors.
+- Corrected full-circle geometry generation to use four valid Gmsh quarter-circle arcs.
+- Renamed the public surface-hole helper to `subtract_surfaces()` and removed the invalid unused arc-surface helper.
+
 ### Removed
 - Removed unsupported legacy modules for ad-hoc I/O, JSON model loading, frozen plotting helpers, incomplete 3D experiments, obsolete report templates, and unintegrated material/section helpers.
 - Removed the legacy `.nusa` sample data and materials example that depended on those modules.
