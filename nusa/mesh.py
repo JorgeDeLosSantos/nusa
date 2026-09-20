@@ -65,16 +65,6 @@ class Modeler:
         surface = self.geom.add_plane_surface(loop)
         return loop, surface
 
-    def add_arc_circle(self, p0, p1, p2, esize=0.1):
-        """Add a circular-arc surface boundary from center/start/end points."""
-        center = self.geom.add_point((p0[0], p0[1], 0), esize)
-        start = self.geom.add_point((p1[0], p1[1], 0), esize)
-        end = self.geom.add_point((p2[0], p2[1], 0), esize)
-        circle = self.geom.add_circle(center, start, end)
-        loop = self.geom.add_line_loop(circle)
-        surface = self.geom.add_plane_surface(loop)
-        return loop, surface
-
     def subtract_surfaces(self, outer, inner):
         """Create a plane surface with an inner hole."""
         outer_loop, outer_surface = outer
