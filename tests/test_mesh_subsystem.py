@@ -119,6 +119,41 @@ def test_generate_mesh_from_file_uses_triangle_reader(monkeypatch, tmp_path):
     assert modeler.ec is elements
 
 
+def test_generate_mesh_from_file_reads_triangle_cells_with_meshio(tmp_path):
+    import meshio
+
+    nodes = np.array([
+        [0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+    ])
+    elements = np.array([[0, 1, 2]], dtype=int)
+    mesh_path = tmp_path / "triangle.vtu"
+    meshio.write_points_cells(mesh_path, nodes, [("triangle", elements)])
+
+    modeler = Modeler()
+    loaded_nodes, loaded_elements = modeler.generate_mesh_from_file(mesh_path)
+
+    np.testing.assert_allclose(loaded_nodes, nodes)
+    np.testing.assert_array_equal(loaded_elements, elements)
+
+
+def test_generate_mesh_from_file_rejects_mesh_without_triangles(tmp_path):
+    import meshio
+
+    nodes = np.array([
+        [0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0],
+    ])
+    lines = np.array([[0, 1]], dtype=int)
+    mesh_path = tmp_path / "lines.vtu"
+    meshio.write_points_cells(mesh_path, nodes, [("line", lines)])
+
+    modeler = Modeler()
+    with pytest.raises(ValueError, match="does not contain triangle"):
+        modeler.generate_mesh_from_file(mesh_path)
+
+
 def test_plot_mesh_requires_generated_or_loaded_mesh():
     modeler = Modeler()
 
