@@ -11,7 +11,7 @@ from nusa.mesh import Modeler
 modeler = Modeler()
 a = modeler.add_rectangle((0,0),(1,1), esize=0.1)
 b = modeler.add_circle((0.5,0.5),0.15, esize=0.02)
-modeler.substract_surfaces(a,b)
+modeler.subtract_surfaces(a,b)
 nc, ec = modeler.generate_mesh()
 x,y = nc[:,0], nc[:,1]
 
