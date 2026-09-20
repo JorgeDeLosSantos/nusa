@@ -53,15 +53,24 @@ class Modeler:
         return loop, surface
 
     def add_circle(self, p0, r, esize=0.1):
-        """Add a circular surface."""
+        """Add a circular surface using four quarter-circle arcs."""
         if r <= 0:
             raise ValueError("Circle radius must be positive")
 
         xc, yc = p0[:2]
         center = self.geom.add_point((xc, yc, 0), esize)
-        point = self.geom.add_point((xc + r, yc, 0), esize)
-        circle = self.geom.add_circle(center, point)
-        loop = self.geom.add_line_loop(circle)
+        east = self.geom.add_point((xc + r, yc, 0), esize)
+        north = self.geom.add_point((xc, yc + r, 0), esize)
+        west = self.geom.add_point((xc - r, yc, 0), esize)
+        south = self.geom.add_point((xc, yc - r, 0), esize)
+
+        arcs = [
+            self.geom.add_circle_arc(center, east, north),
+            self.geom.add_circle_arc(center, north, west),
+            self.geom.add_circle_arc(center, west, south),
+            self.geom.add_circle_arc(center, south, east),
+        ]
+        loop = self.geom.add_line_loop(*arcs)
         surface = self.geom.add_plane_surface(loop)
         return loop, surface
 
