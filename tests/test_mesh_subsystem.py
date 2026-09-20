@@ -45,6 +45,18 @@ def test_circle_requires_positive_radius():
         modeler.add_circle((0.0, 0.0), 0.0)
 
 
+def test_circle_uses_four_quarter_arcs():
+    modeler = Modeler()
+
+    loop, surface = modeler.add_circle((1.0, 2.0), 0.5, esize=0.1)
+    code = modeler.geom.get_code()
+
+    assert loop == "1"
+    assert surface == "1"
+    assert code.count("Circle(") == 4
+    assert "Line Loop(1) = {10001,10002,10003,10004};" in code
+
+
 def test_subtract_surfaces_uses_outer_and_inner_loops():
     modeler = Modeler()
     outer = modeler.add_rectangle((0.0, 0.0), (2.0, 2.0))
