@@ -1,5 +1,7 @@
 """Regression tests for the develop-branch API stabilization."""
 
+import re
+
 import numpy as np
 
 from nusa.core import Element, Model, Node
@@ -34,7 +36,10 @@ class MockBeam(Element):
 
 
 def test_develop_version_remains_marked_as_development():
-    assert __version__.startswith("0.3.0.dev")
+    assert re.fullmatch(
+        r"0\\.3\\.0(?:\\.dev\\d+|(?:a|b|rc)\\d+(?:\\.dev\\d+)?)",
+        __version__,
+    )
 
 
 def test_model_report_helpers_use_property_based_model_api():
