@@ -237,7 +237,10 @@ class Model:
 
     @property
     def applied_loads(self):
-        """Return the global vector of explicitly applied nodal loads."""
+        """Return the global vector of explicitly applied nodal loads.
+
+        Components follow node insertion order and ``force_dofs``.
+        """
         vector = np.zeros(self.dof * self.n_nodes, dtype=float)
         for node, values in self._applied_forces.items():
             if node not in self._node_index:
@@ -249,46 +252,96 @@ class Model:
         return vector
 
     @property
+    def prescribed_displacements(self):
+        """Return the global prescribed-displacement vector.
+
+        Free degrees of freedom are represented by ``numpy.nan``. Components
+        follow node insertion order and ``displacement_dofs``.
+        """
+        vector = np.full(self.dof * self.n_nodes, np.nan, dtype=float)
+        for node, values in self._prescribed_displacements.items():
+            if node not in self._node_index:
+                continue
+            for variable, value in values.items():
+                if variable in self.displacement_dofs:
+                    index = self._global_dof_index(
+                        node, variable, self.displacement_dofs
+                    )
+                    vector[index] = value
+        return vector
+
+    @property
+    def displacements(self):
+        """Return the solved global displacement vector.
+
+        Results are available only after ``solve()``.
+        """
+        if not hasattr(self, "_nodal_forces"):
+            raise RuntimeError("Displacements are available only after solve()")
+        return self._u.copy()
+
+    @property
     def nodal_forces(self):
-        """Return the solved global generalized nodal-force vector."""
+        """Return the solved generalized nodal-force vector ``K @ u``."""
         if not hasattr(self, "_nodal_forces"):
             raise RuntimeError("Nodal forces are available only after solve()")
         return self._nodal_forces.copy()
 
     @property
     def reactions(self):
-        """Return the solved global reaction vector at prescribed DOFs."""
+        """Return the solved global support-reaction vector.
+
+        Entries are nonzero only at prescribed solver degrees of freedom and
+        are computed as ``K @ u - applied_loads`` at those DOFs.
+        """
         if not hasattr(self, "_reactions"):
             raise RuntimeError("Reactions are available only after solve()")
         return self._reactions.copy()
 
-    def get_applied_load(self, node):
+    def _get_node_vector_components(self, node, vector, names):
+        """Return named components from a model-ordered global vector."""
+        node_index = self._get_node_index(node)
+        start = self.dof * node_index
+        return {
+            name: vector[start + component]
+            for component, name in enumerate(names)
+        }
+
+    def applied_load(self, node):
         """Return explicitly applied load components for one node."""
         self._get_node_index(node)
         values = self._applied_forces.get(node, {})
         return {name: values.get(name, 0.0) for name in self.force_dofs}
 
-    def get_nodal_force(self, node):
-        """Return solved generalized nodal-force components for one node."""
+    def prescribed_displacement(self, node):
+        """Return prescribed displacement components for one node.
+
+        Unprescribed degrees of freedom are returned as ``numpy.nan``.
+        """
         self._get_node_index(node)
-        vector = self.nodal_forces
-        node_index = self._get_node_index(node)
-        start = self.dof * node_index
+        values = self._prescribed_displacements.get(node, {})
         return {
-            name: vector[start + component]
-            for component, name in enumerate(self.force_dofs)
+            name: values.get(name, np.nan)
+            for name in self.displacement_dofs
         }
 
-    def get_reaction(self, node):
-        """Return solved reaction components for one node."""
-        self._get_node_index(node)
-        vector = self.reactions
-        node_index = self._get_node_index(node)
-        start = self.dof * node_index
-        return {
-            name: vector[start + component]
-            for component, name in enumerate(self.force_dofs)
-        }
+    def displacement(self, node):
+        """Return solved displacement components for one node."""
+        return self._get_node_vector_components(
+            node, self.displacements, self.displacement_dofs
+        )
+
+    def nodal_force(self, node):
+        """Return solved generalized nodal-force components ``K @ u``."""
+        return self._get_node_vector_components(
+            node, self.nodal_forces, self.force_dofs
+        )
+
+    def reaction(self, node):
+        """Return solved support-reaction components for one node."""
+        return self._get_node_vector_components(
+            node, self.reactions, self.force_dofs
+        )
 
     @property
     def stiffness_matrix(self):
@@ -490,12 +543,12 @@ class Model:
 
     def _get_applied_loads(self, options):
         """Generate a table of explicitly applied nodal loads."""
-        return self._get_force_table(options, self.get_applied_load)
+        return self._get_force_table(options, self.applied_load)
 
     def _get_nforces(self, options):
         """Generate a table of solved generalized nodal forces (K @ u)."""
         if hasattr(self, "force_dofs") and hasattr(self, "_nodal_forces"):
-            return self._get_force_table(options, self.get_nodal_force)
+            return self._get_force_table(options, self.nodal_force)
 
         from tabulate import tabulate
 
@@ -506,7 +559,7 @@ class Model:
 
     def _get_reactions(self, options):
         """Generate a table of support reactions."""
-        return self._get_force_table(options, self.get_reaction)
+        return self._get_force_table(options, self.reaction)
 
     def _get_element_results(self, options):
         """Generate the model-specific element-results table."""
@@ -669,6 +722,7 @@ class Node:
         
     @property
     def fx(self):
+        """Solved generalized nodal x-force (``K @ u``), not a reaction."""
         return self._fx
     
     @fx.setter
@@ -677,6 +731,7 @@ class Node:
     
     @property
     def fy(self):
+        """Solved generalized nodal y-force (``K @ u``), not a reaction."""
         return self._fy
     
     @fy.setter
@@ -685,6 +740,7 @@ class Node:
         
     @property
     def m(self):
+        """Solved generalized nodal moment (``K @ u``), not a reaction."""
         return self._m
     
     @m.setter
