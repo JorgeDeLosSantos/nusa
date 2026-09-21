@@ -6,6 +6,25 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
+### Changed
+- Added constructor-time validation for element connectivity and physical properties.
+- Completed the symmetric model-level results API with explicit global vectors and noun-style per-node accessors.
+- Moved `meshio` into the default installation and hardened Gmsh discovery, Windows launcher handling, and cross-platform setup documentation.
+- Added a real Gmsh integration smoke test to CI.
+
+### Release preparation
+- Development version advanced to `0.3.0b1.dev0` after the `0.3.0a1` alpha baseline.
+
+## [0.3.0a1] - 2026-09-20
+
+### Changed
+- Promoted the stabilized 0.3 development line to its first alpha release.
+- Established the current package-root API, solver lifecycle, result semantics, topology validation, reporting behavior, executable examples, and mesh subsystem as the alpha baseline.
+
+### Notes
+- This is a pre-release intended for broader real-world testing before 0.3.0.
+- Backward-incompatible API changes may still occur before the final 0.3.0 release.
+
 ## [0.3.0.dev1] - 2026-09-20
 
 ### Changed
