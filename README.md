@@ -105,7 +105,7 @@ miny, maxy = min(y), max(y)
 
 for node in nodes:
     if node.x == minx:
-        model.add_constraint(node, ux=0, uy=0)
+        model.add_constraint(node, uy=0)
     if node.x == maxx:
         model.add_force(node, (10e3,0))
 
@@ -204,7 +204,7 @@ for nd in (n1,n2,n3): m1.add_node(nd)
 for el in (e1,e2): m1.add_element(el)
     
 m1.add_force(n2, (-P,))
-m1.add_constraint(n1, ux=0, uy=0) # pin
+m1.add_constraint(n1, uy=0) # pin
 m1.add_constraint(n3, uy=0) # roller
 m1.solve() # Solve model
 
