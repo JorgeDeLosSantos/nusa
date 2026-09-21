@@ -54,7 +54,7 @@ def test_beam_force_api_uses_named_force_and_moment_components():
     model.add_nodes([n1, n2])
     model.add_element(Beam((n1, n2), E=1.0, I=1.0))
 
-    model.add_constraint(n1, ux=0.0, uy=0.0, ur=0.0)
+    model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-1.0,))
     model.solve()
 
