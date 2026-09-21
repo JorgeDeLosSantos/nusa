@@ -577,15 +577,15 @@ class LinearTriangleModel(Model):
         _assemble_global_stiffness(self)
 
     def add_force(self,node,force):
-        self._record_applied_forces(node, fx=force[0], fy=force[1])
+        values = self._validated_component_vector(force, self.force_dofs, "force")
+        self._record_applied_forces(node, **values)
         
     def add_constraint(self,node,**constraint):
-        values = {}
-        for variable in self.displacement_dofs:
-            if variable in constraint:
-                value = constraint[variable]
-                setattr(node, variable, value)
-                values[variable] = value
+        values = self._validated_named_components(
+            constraint, self.displacement_dofs, "constraint"
+        )
+        for variable, value in values.items():
+            setattr(node, variable, value)
         if values:
             self._record_prescribed_displacements(node, **values)
         
