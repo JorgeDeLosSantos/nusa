@@ -5,10 +5,7 @@
 #  License: MIT License
 # ***********************************
 
-from nusa.core import *
-from nusa.model import *
-from nusa.element import *
-from nusa.graph import *
+from nusa import Node, Spring, SpringModel
 
 def test1():
     """
@@ -41,7 +38,7 @@ def test1():
     m1.solve()
     
     # a) Global matrix
-    print("a) Global matrix:\n {0}".format(m1.KG))
+    print("a) Global matrix:\n {0}".format(m1.stiffness_matrix))
     # b) Nodal displacement -> 3 and 4
     print("\nb) Nodal displacement (3 and 4)")
     print("UX3: {0}".format(n3.ux))
@@ -55,6 +52,7 @@ def test1():
     print("FE1:\n {0}".format(e1.fx))
     print("FE2:\n {0}".format(e2.fx))
     print("FE3:\n {0}".format(e3.fx))
+    return m1
 
 if __name__ == '__main__':
     test1()

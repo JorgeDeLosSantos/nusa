@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nusa"
+dynamic = ["version"]
+description = "Numerical Structural Analysis in Python using the finite element method"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+  {name = "Pedro Jorge De Los Santos", email = "delossantosmfq@gmail.com"}
+]
+keywords = [
+  "structural analysis",
+  "finite element analysis",
+  "mechanical engineering",
+  "engineering education",
+]
+dependencies = [
+  "numpy",
+  "matplotlib",
+  "tabulate",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Education",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Scientific/Engineering",
+]
+
+[project.optional-dependencies]
+mesh = [
+  "meshio",
+]
+test = [
+  "pytest>=8",
+  "pytest-cov>=5",
+  "meshio",
+]
+docs = [
+  "sphinx>=7",
+  "sphinx-rtd-theme>=2",
+  "numpydoc>=1.6",
+]
+
+[project.urls]
+Homepage = "https://github.com/JorgeDeLosSantos/nusa"
+Documentation = "https://jorgedelossantos.github.io/nusa/"
+Repository = "https://github.com/JorgeDeLosSantos/nusa"
+Issues = "https://github.com/JorgeDeLosSantos/nusa/issues"
+
+[tool.setuptools]
+packages = ["nusa"]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "nusa.version.__version__"}
+
+[tool.setuptools.package-data]
+nusa = ["img/*.png"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

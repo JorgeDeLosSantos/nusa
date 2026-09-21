@@ -1,18 +1,15 @@
 # ***********************************
 #  Author: Pedro Jorge De Los Santos    
 #  E-mail: delossantosmfq@gmail.com 
-#  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
 import numpy as np
 
 #~ ===========================  MODEL  ===========================
-class Model(object):
+class Model:
     """
-    Superclass for all Finite Element Analysis (FEA) models.
-
-    This class serves as a base container to manage nodes and elements,
-    allowing derived models to build and manipulate FEA structures. 
+    Base class for all Finite Element Analysis (FEA) models.
+    This class provides a base container for nodes and elements, enabling derived models to construct and manipulate FEA structures.
     """
     def __init__(self,name,mtype):
         """
@@ -27,8 +24,12 @@ class Model(object):
         """
         self.mtype = mtype # Model type
         self.name = name # Name 
-        self.nodes = {} # Dictionary for nodes {number: NodeObject}
-        self.elements = {} # Dictionary for elements {number: ElementObject}
+        self._nodes = [] # Nodes in model insertion order
+        self._node_index = {} # Node object -> contiguous internal solver index
+        self._elements = {} # Dictionary for elements {number: ElementObject}
+        self._applied_forces = {} # Node -> explicitly applied nodal loads
+        self._prescribed_displacements = {} # Node -> explicitly prescribed DOFs
+        self._is_assembled = False
         
     def add_node(self,node):
         """
@@ -43,10 +44,33 @@ class Model(object):
         -------
         None
         """
-        current_label = self.get_number_of_nodes()
+        labels = [current.label for current in self._nodes]
         if node.label is None:
-            node.set_label(current_label)
-        self.nodes[node.label] = node
+            label = 0
+            while label in labels:
+                label += 1
+            node.label = label
+        elif node.label in labels:
+            raise ValueError(
+                f"Node label {node.label!r} already exists in this model"
+            )
+
+        self._node_index[node] = len(self._nodes)
+        self._nodes.append(node)
+        self._invalidate_assembly()
+
+    def add_nodes(self, nodes):
+        """
+        Add multiple nodes to the model.
+
+        Parameters
+        ----------  
+
+        nodes : list
+            List of Node instances to be added.
+        """
+        for node in nodes:
+            self.add_node(node)
         
     def add_element(self,element):
         """
@@ -71,39 +95,73 @@ class Model(object):
         >>> e1 = Bar((n1,n2), E, A)
         >>> m1.add_element(e1)
         """
-        if self.mtype != element.etype:
-            raise ValueError("Element type must be "+self.mtype)
-        current_label = self.get_number_of_elements()
+
+        if element.etype != self.mtype:
+            raise ValueError(
+                f"Element type '{element.etype}' incompatible with model '{self.mtype}'"
+            )
+
+        if element in self._elements.values():
+            raise ValueError("Element already belongs to this model")
+
+        missing_nodes = [node for node in element.nodes if node not in self._node_index]
+        if missing_nodes:
+            raise ValueError(
+                "Element references nodes that do not belong to this model"
+            )
+
+        labels = set(self._elements)
         if element.label is None:
-            element.set_label(current_label)
-        self.elements[element.label] = element
-        # Assign this element to "xxxx" 
-        for node in element.get_nodes():
-            node._elements.append(element)
+            label = 0
+            while label in labels:
+                label += 1
+            element.label = label
+        elif element.label in labels:
+            raise ValueError(
+                f"Element label {element.label!r} already exists in this model"
+            )
 
-    def get_number_of_nodes(self):
-        """
-        Return the number of nodes in the model.
+        self._elements[element.label] = element
 
-        Returns
-        -------
-        int
-            Total number of nodes.
-        """
-        return len(self.nodes)
-        
-    def get_number_of_elements(self):
-        """
-        Return the number of elements in the model.
+        for node in element.nodes:
+            node.add_element(element)
+        self._invalidate_assembly()
 
-        Returns
-        -------
-        int
-            Total number of elements.
+    def add_elements(self, elements):
         """
-        return len(self.elements)
-        
-    def get_nodes(self):
+        Add multiple elements to the model.
+
+        Parameters
+        ----------
+        elements : list
+            List of Element instances to be added.
+        """
+        for element in elements:
+            self.add_element(element)
+
+    def _validate_topology(self):
+        """Validate structural connectivity before global assembly."""
+        if not self._elements:
+            raise ValueError("Cannot assemble a model without elements")
+
+        connected_nodes = {
+            node
+            for element in self.elements
+            for node in element.nodes
+        }
+        orphan_nodes = [
+            node for node in self.nodes
+            if node not in connected_nodes
+        ]
+        if orphan_nodes:
+            labels = [node.label for node in orphan_nodes]
+            raise ValueError(
+                "Model contains nodes not connected to any element: "
+                f"{labels}"
+            )
+
+    @property
+    def nodes(self):
         """
         Return a list of node objects.
 
@@ -112,9 +170,187 @@ class Model(object):
         list
             List of Node instances.
         """
-        return self.nodes.values()
-        
-    def get_elements(self):
+        return list(self._nodes)
+
+    @property
+    def n_nodes(self):
+        """
+        Return the number of nodes in the model.
+
+        Returns
+        -------
+        int
+            Total number of nodes.
+        """
+        return len(self._nodes)
+
+    def _get_node_index(self, node):
+        """Return the model-owned contiguous index for a node."""
+        try:
+            return self._node_index[node]
+        except KeyError:
+            raise ValueError("Node does not belong to this model")
+
+    def _global_dof_index(self, node, variable, dof_names):
+        """Return the global vector index for one nodal degree of freedom."""
+        try:
+            component = dof_names.index(variable)
+        except ValueError:
+            raise ValueError(
+                f"Unknown degree of freedom {variable!r}; expected one of {dof_names}"
+            )
+        return self.dof * self._get_node_index(node) + component
+
+    def _record_applied_forces(self, node, **values):
+        """Persist explicitly applied nodal loads and invalidate solved state."""
+        self._get_node_index(node)
+        self._applied_forces.setdefault(node, {}).update(values)
+        self._invalidate_solution()
+
+    def _record_prescribed_displacements(self, node, **values):
+        """Persist explicitly prescribed nodal DOFs and invalidate solved state."""
+        self._get_node_index(node)
+        self._prescribed_displacements.setdefault(node, {}).update(values)
+        self._invalidate_solution()
+
+    def _restore_input_state(self):
+        """Restore explicit loads and prescribed DOFs into vectors and Node state."""
+        for node, values in self._applied_forces.items():
+            if node not in self._node_index:
+                continue
+            for variable, value in values.items():
+                setattr(node, variable, value)
+                if hasattr(self, "_f") and variable in self.force_dofs:
+                    index = self._global_dof_index(node, variable, self.force_dofs)
+                    self._f[index] = value
+
+        for node, values in self._prescribed_displacements.items():
+            if node not in self._node_index:
+                continue
+            for variable, value in values.items():
+                setattr(node, variable, value)
+                if hasattr(self, "_u") and variable in self.displacement_dofs:
+                    index = self._global_dof_index(
+                        node, variable, self.displacement_dofs
+                    )
+                    self._u[index] = value
+
+    @property
+    def applied_loads(self):
+        """Return the global vector of explicitly applied nodal loads."""
+        vector = np.zeros(self.dof * self.n_nodes, dtype=float)
+        for node, values in self._applied_forces.items():
+            if node not in self._node_index:
+                continue
+            for variable, value in values.items():
+                if variable in self.force_dofs:
+                    index = self._global_dof_index(node, variable, self.force_dofs)
+                    vector[index] = value
+        return vector
+
+    @property
+    def nodal_forces(self):
+        """Return the solved global generalized nodal-force vector."""
+        if not hasattr(self, "_nodal_forces"):
+            raise RuntimeError("Nodal forces are available only after solve()")
+        return self._nodal_forces.copy()
+
+    @property
+    def reactions(self):
+        """Return the solved global reaction vector at prescribed DOFs."""
+        if not hasattr(self, "_reactions"):
+            raise RuntimeError("Reactions are available only after solve()")
+        return self._reactions.copy()
+
+    def get_applied_load(self, node):
+        """Return explicitly applied load components for one node."""
+        self._get_node_index(node)
+        values = self._applied_forces.get(node, {})
+        return {name: values.get(name, 0.0) for name in self.force_dofs}
+
+    def get_nodal_force(self, node):
+        """Return solved generalized nodal-force components for one node."""
+        self._get_node_index(node)
+        vector = self.nodal_forces
+        node_index = self._get_node_index(node)
+        start = self.dof * node_index
+        return {
+            name: vector[start + component]
+            for component, name in enumerate(self.force_dofs)
+        }
+
+    def get_reaction(self, node):
+        """Return solved reaction components for one node."""
+        self._get_node_index(node)
+        vector = self.reactions
+        node_index = self._get_node_index(node)
+        start = self.dof * node_index
+        return {
+            name: vector[start + component]
+            for component, name in enumerate(self.force_dofs)
+        }
+
+    @property
+    def stiffness_matrix(self):
+        """Return a copy of the assembled global stiffness matrix."""
+        if not self._is_assembled or not hasattr(self, "_K"):
+            raise RuntimeError(
+                "Stiffness matrix is available only after assemble() or solve()"
+            )
+        return self._K.copy()
+
+    def _reset_input_vectors(self):
+        """Rebuild numeric input vectors from persistent loads and constraints."""
+        if not self._is_assembled:
+            return
+        matrix_size = self.dof * self.n_nodes
+        self._f = np.zeros(matrix_size, dtype=float)
+        self._u = np.full(matrix_size, np.nan, dtype=float)
+
+    def _reset_node_state(self):
+        """Clear solved nodal state and restore explicit model inputs."""
+        for node in self._nodes:
+            node.ux = np.nan
+            node.uy = np.nan
+            node.ur = np.nan
+            node.fx = 0.0
+            node.fy = 0.0
+            node.m = 0.0
+
+        self._restore_input_state()
+
+    def _invalidate_solution(self):
+        """Invalidate solved state while preserving a valid assembly."""
+        for attribute in (
+            "_K_reduced",
+            "_rhs_reduced",
+            "_free_dofs",
+            "_prescribed_dofs",
+            "_nodal_forces",
+            "_reactions",
+        ):
+            if hasattr(self, attribute):
+                delattr(self, attribute)
+
+        if self._is_assembled:
+            self._reset_input_vectors()
+        else:
+            for attribute in ("_u", "_f"):
+                if hasattr(self, attribute):
+                    delattr(self, attribute)
+
+        self._reset_node_state()
+
+    def _invalidate_assembly(self):
+        """Invalidate global assembly and every dependent solved result."""
+        self._is_assembled = False
+        if hasattr(self, "_K"):
+            del self._K
+        self._invalidate_solution()
+
+    
+    @property
+    def elements(self):
         """
         Return a list of element objects.
 
@@ -123,7 +359,20 @@ class Model(object):
         list
             List of Element instances.
         """
-        return self.elements.values()
+        return list(self._elements.values())
+
+    @property
+    def n_elements(self):
+        """
+        Return the number of elements in the model.
+
+        Returns
+        -------
+        int
+            Total number of elements.
+        """
+        return len(self._elements)
+
     
     def __str__(self):
         """
@@ -136,8 +385,8 @@ class Model(object):
         """
         return (
             f"Model: {self.name}\n"
-            f"Nodes: {self.get_number_of_nodes()}\n"
-            f"Elements: {self.get_number_of_elements()}"
+            f"Nodes: {self.n_nodes}\n"
+            f"Elements: {self.n_elements}"
         )
     
     def __repr__(self):
@@ -151,148 +400,150 @@ class Model(object):
         """
         return (
             f"Model: {self.name}\n"
-            f"Nodes: {self.get_number_of_nodes()}\n"
-            f"Elements: {self.get_number_of_elements()}"
+            f"Nodes: {self.n_nodes}\n"
+            f"Elements: {self.n_elements}"
         )
 
-    def simple_report(self,report_type="print",fname="nusa_rpt.txt"):
-        """
-        Placeholder for a future implementation of a simple report.
+    def simple_report(self, report_type="print", fname="nusa_rpt.txt"):
+        """Generate a compact text report for a solved finite-element model."""
+        if not hasattr(self, "_nodal_forces"):
+            raise RuntimeError("simple_report() is available only after solve()")
 
-        Parameters
-        ----------
-        report_type : str, optional
-            Type of report to generate ('print', 'file', etc.).
-        fname : str, optional
-            Output filename for file-based reports.
-        """
-        pass
-        
-    def _get_ndisplacements(self,options):
-        """
-        Generate a table of node displacements.
+        valid_report_types = {"print", "string", "write"}
+        if report_type not in valid_report_types:
+            raise ValueError(
+                f"Unknown report_type {report_type!r}; "
+                f"expected one of {sorted(valid_report_types)}"
+            )
 
-        Parameters
-        ----------
-        options : dict
-            Tabulate formatting options.
+        options = {
+            "headers": "firstrow",
+            "tablefmt": "rst",
+            "numalign": "right",
+        }
+        sections = [
+            "==========================",
+            "    NuSA Simple Report",
+            "==========================",
+            "",
+            f"Model: {self.name}",
+            f"Number of nodes: {self.n_nodes}",
+            f"Number of elements: {self.n_elements}",
+            "",
+            "RESULTS",
+            "",
+            "NODAL DISPLACEMENTS",
+            self._get_ndisplacements(options),
+            "",
+            "APPLIED LOADS",
+            self._get_applied_loads(options),
+            "",
+            "NODAL FORCES (K @ U)",
+            self._get_nforces(options),
+            "",
+            "REACTIONS",
+            self._get_reactions(options),
+            "",
+            "ELEMENT RESULTS",
+            self._get_element_results(options),
+            "",
+            "FINITE ELEMENT MODEL INFO",
+            "",
+            "NODES",
+            self._get_nodes_info(options),
+            "",
+            "ELEMENTS",
+            self._get_elements_info(options),
+        ]
+        report = "\n".join(sections) + "\n"
 
-        Returns
-        -------
-        str
-            Tabulated string of displacements.
-        """
+        if report_type == "print":
+            print(report)
+            return None
+        if report_type == "write":
+            with open(fname, "w", encoding="utf-8") as report_file:
+                report_file.write(report)
+            return None
+        return report
+
+    def _get_ndisplacements(self, options):
+        """Generate a table of solved nodal displacement components."""
         from tabulate import tabulate
-        D = [["Node","UX","UY"]]
-        for n in self.get_nodes():
-            D.append([n.label+1,n.ux,n.uy])
-        return tabulate(D, **options)
-        
-    def _get_nforces(self,options):
-        """
-        Generate a table of nodal forces.
 
-        Parameters
-        ----------
-        options : dict
-            Tabulate formatting options.
+        dof_names = getattr(self, "displacement_dofs", ("ux", "uy"))
+        headers = ["Node"] + [name.upper() for name in dof_names]
+        rows = [headers]
+        for node in self.nodes:
+            rows.append([node.label] + [getattr(node, name) for name in dof_names])
+        return tabulate(rows, **options)
 
-        Returns
-        -------
-        str
-            Tabulated string of nodal forces.
-        """
+    def _get_force_table(self, options, getter):
+        """Generate a named-component nodal force table."""
         from tabulate import tabulate
-        F = [["Node","FX","FY"]]
-        for n in self.get_nodes():
-            F.append([n.label+1,n.fx,n.fy])
-        return tabulate(F, **options)
-        
-    def _get_eforces(self,options):
-        """
-        Generate a table of element internal forces.
 
-        Parameters
-        ----------
-        options : dict
-            Tabulate formatting options.
+        headers = ["Node"] + [name.upper() for name in self.force_dofs]
+        rows = [headers]
+        for node in self.nodes:
+            values = getter(node)
+            rows.append([node.label] + [values[name] for name in self.force_dofs])
+        return tabulate(rows, **options)
 
-        Returns
-        -------
-        str
-            Tabulated string of element forces.
-        """
+    def _get_applied_loads(self, options):
+        """Generate a table of explicitly applied nodal loads."""
+        return self._get_force_table(options, self.get_applied_load)
+
+    def _get_nforces(self, options):
+        """Generate a table of solved generalized nodal forces (K @ u)."""
+        if hasattr(self, "force_dofs") and hasattr(self, "_nodal_forces"):
+            return self._get_force_table(options, self.get_nodal_force)
+
         from tabulate import tabulate
-        F = [["Element","F"]]
-        for elm in self.get_elements():
-            F.append([elm.label+1, elm.f])
-        return tabulate(F, **options)
-        
-    def _get_estresses(self,options):
-        """
-        Generate a table of element stresses.
 
-        Parameters
-        ----------
-        options : dict
-            Tabulate formatting options.
+        rows = [["Node", "FX", "FY"]]
+        for node in self.nodes:
+            rows.append([node.label, node.fx, node.fy])
+        return tabulate(rows, **options)
 
-        Returns
-        -------
-        str
-            Tabulated string of element stresses.
-        """
+    def _get_reactions(self, options):
+        """Generate a table of support reactions."""
+        return self._get_force_table(options, self.get_reaction)
+
+    def _get_element_results(self, options):
+        """Generate the model-specific element-results table."""
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement _get_element_results()"
+        )
+
+    def _get_nodes_info(self, options):
+        """Generate a table of node coordinates."""
         from tabulate import tabulate
-        S = [["Element","S"]]
-        for elm in self.get_elements():
-            S.append([elm.label+1, elm.s])
-        return tabulate(S, **options)
-    
-    def _get_nodes_info(self,options):
-        """
-        Generate a table of node coordinates.
 
-        Parameters
-        ----------
-        options : dict
-            Tabulate formatting options.
+        rows = [["Node", "X", "Y"]]
+        for node in self.nodes:
+            rows.append([node.label, node.x, node.y])
+        return tabulate(rows, **options)
 
-        Returns
-        -------
-        str
-            Tabulated string of node positions.
-        """
+    def _get_elements_info(self, options):
+        """Generate a table of element connectivity."""
         from tabulate import tabulate
-        F = [["Node","X","Y"]]
-        for n in self.get_nodes():
-            F.append([n.label+1, n.x, n.y])
-        return tabulate(F, **options)
-    
-    def _get_elements_info(self,options):
-        """
-        Generate a table of element connectivity.
 
-        Parameters
-        ----------
-        options : dict
-            Tabulate formatting options.
+        max_nodes = max((len(element.nodes) for element in self.elements), default=0)
+        headers = ["Element"] + [f"N{k + 1}" for k in range(max_nodes)]
+        rows = [headers]
+        for element in self.elements:
+            labels = [node.label for node in element.nodes]
+            rows.append(
+                [element.label]
+                + labels
+                + [""] * (max_nodes - len(labels))
+            )
+        return tabulate(rows, **options)
 
-        Returns
-        -------
-        str
-            Tabulated string of element-node relationships.
-        """
-        from tabulate import tabulate
-        S = [["Element","NI","NJ"]]
-        for elm in self.get_elements():
-            ni, nj = elm.get_nodes()
-            S.append([elm.label+1, ni.label+1, nj.label+1])
-        return tabulate(S, **options)
-            
+
 
 #~ =========================== ELEMENT ===========================
 
-class Element(object):
+class Element:
     """
     Superclass for all Elements
     """
@@ -321,39 +572,6 @@ class Element(object):
     def fy(self,val):
         self._fy = val
         
-    def set_label(self,label):
-        """
-        Set the label property
-        
-        *label* : int
-            Label, must be an integer
-        """
-        self.label = label
-        
-    def set_element_forces(self,fx=0.0,fy=0.0):
-        """
-        Set element forces
-        
-        *fx* : float
-            Force in x-dir
-        *fy* : float
-            Force in y-dir
-        
-        Normally this method is used by the `solve` method to 
-        update computed element-forces.
-        """
-        self._fx = fx
-        self._fy = fy
-        
-    def get_element_forces(self):
-        """
-        Returns a tuple with element forces:  (fx, fy)
-        """
-        return self._fx, self._fy
-        
-    def get_nodes(self):
-        return self.nodes
-        
     def __str__(self):
         _str = str(self.__class__)
         return _str
@@ -361,30 +579,27 @@ class Element(object):
 
 #~ =========================== NODE ===========================
 
-class Node(object):
+class Node:
     """
     Class for node object.
-    
-    *coordinates* : `tuple`, `list`
-        Coordinates of node
-    
-    *label* : int
-        Label of node
-        
-    ::
-    
-        n1 = Node((0,0))
-        n2 = Node((0,0))
-    
     """
     def __init__(self,coordinates):
-        self.coordinates = coordinates
-        self.x = coordinates[0] # usable prop
-        self.y = coordinates[1] # usable prop
+        """
+        Initialize a node with given coordinates.
+
+        Parameters
+        ----------
+        coordinates : tuple
+            A tuple containing the (x, y) coordinates of the node.
+        """
+        self.coordinates = np.asanyarray(coordinates, dtype=float)
         self._label = None
+
+        # DOF
         self._ux = np.nan
         self._uy = np.nan
         self._ur = np.nan
+        # Nodal forces
         self._fx = 0.0
         self._fy = 0.0
         self._m = 0.0
@@ -393,53 +608,64 @@ class Node(object):
         self._sy = 0.0
         self._sxy = 0.0
         self._seqv = 0.0 
+        # strain
+        self._ex = 0.0
+        self._ey = 0.0
+        self._exy = 0.0
         # Elements ¿what?
         self._elements = []
         
-        
+    @property
+    def x(self):
+        return self.coordinates[0]
+
+    @property
+    def y(self):
+        return self.coordinates[1]
+
     @property
     def label(self):
         return self._label
-        
+
     @label.setter
     def label(self,val):
-        """
-        Experimental setter for adjust range of labels: TO DO
-        """
         self._label = val
+
+    def add_element(self,element):
+        self._elements.append(element)
         
     @property
     def ux(self):
+        """
+        Return the x-displacement of the node.
+        """
         return self._ux
     
     @ux.setter
     def ux(self,val):
-        if True:#type(val) in [int,float]:
-            self._ux = val
-        else:
-            raise ValueError("Value must be float or int")
+        self._ux = val
     
     @property
     def uy(self):
+        """
+        Return the y-displacement of the node.
+        """
         return self._uy
     
     @uy.setter
     def uy(self,val):
-        if True:#type(val) in [int,float]:
-            self._uy = val
-        else:
-            raise ValueError("Value must be float or int")
+        self._uy = val
     
     @property
     def ur(self):
+        """
+        Return the rotational displacement of the node.
+        """
         return self._ur
     
     @ur.setter
     def ur(self,val):
-        if True:#type(val) in [int,float]:
-            self._ur = val
-        else:
-            raise ValueError("Value must be float or int")
+        self._ur = val
         
     @property
     def fx(self):
@@ -549,32 +775,14 @@ class Node(object):
     def exy(self,val):
         self._exy = val
 
-    def get_label(self):
-        return self._label
-    
-    def set_label(self,label):
-        self._label = label
-    
-    def get_displacements(self):
-        return self._ux,self._uy,self._ur
-        
-    def set_displacements(self,ux=np.nan, uy=np.nan, ur=np.nan):
-        self._ux = ux
-        self._uy = uy
-        self._ur = ur
-    
-    def get_forces(self):
-        return (self._fx,self._fy)
-    
-    def set_forces(self,fx=np.nan,fy=np.nan):
-        self._fx = fx
-        self._fy = fy
-        
     def __str__(self):
         _str = self.__class__
         _str = "%s\nU:(%g,%g)\n"%(_str,self.ux, self.uy)
         _str = "%sF:(%g,%g)"%(_str,self.fx,self.fy)
         return _str
+    
+    def __repr__(self):
+        return f"<Node {self.label}: ({self.x},{self.y})>"
         
 
 if __name__=='__main__':

@@ -4,10 +4,7 @@
 #  E-mail: delossantosmfq@gmail.com 
 #  License: MIT License
 # ***********************************
-import numpy as np
-from nusa.core import *
-from nusa.model import *
-from nusa.element import *
+from nusa import Beam, BeamModel, Node
 
 def test3():
     """
@@ -37,8 +34,9 @@ def test3():
     m1.add_constraint(n1, ux=0, uy=0, ur=0) # fixed 
     m1.add_constraint(n3, ux=0, uy=0) # fixed
     m1.solve() # Solve model
-    print(m1.KG)
-    print(m1.U)
+    print(m1.stiffness_matrix)
+    print([node.uy for node in m1.nodes])
+    return m1
 
 
 if __name__ == '__main__':

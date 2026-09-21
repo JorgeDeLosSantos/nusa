@@ -5,7 +5,7 @@
 #  License: MIT License
 # ***********************************
 import numpy as np
-from nusa import *
+from nusa import Beam, BeamModel, Node
 import itertools
 import matplotlib.pyplot as plt
 
@@ -22,7 +22,7 @@ I = 10.
 L = 10.
 P = 10e3
 
-nn= 20.
+nn = 20
 parts = np.linspace(0,L,nn)
 
 nodos = []
@@ -46,7 +46,7 @@ m.add_constraint(nodos[-1], ux=0, uy=0)
 m.add_force(nodos[5], (-P,))
 m.solve()
 
-m.plot_disp(1)
+m.plot_deformed_shape(1)
 
 xa = np.linspace(0, nodos[5].x)
 xb = np.linspace(nodos[5].x, nodos[-1].x)

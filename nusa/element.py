@@ -6,8 +6,6 @@
 # ***********************************
 import numpy as np
 from .core import Element
-import nusa.templates as tmp
-from scipy.sparse import csr_matrix
 
 class Spring(Element):
     """
@@ -35,7 +33,7 @@ class Spring(Element):
     @property
     def fx(self):
         ke = self.get_element_stiffness() # Element stiffness
-        n1, n2 = self.get_nodes()
+        n1, n2 = self.nodes
         un = np.array([[n1.ux],[n2.ux]]) # Nodal displacements
         return np.dot(ke, un) # Return  {fxe} = [Ke]{uxe}
         
@@ -63,25 +61,6 @@ class Spring(Element):
         self._KE = np.array([[self.k,-self.k],[-self.k,self.k]])
         return self._KE
     
-    def get_global_stiffness(self,msz):
-        pass
-        #~ ni, nj = self.get_nodes()
-        #~ self.keg = np.zeros((msz,msz))
-        #~ idx = np.ix_([ni.label, nj.label],[ni.label, nj.label])
-        #~ row = np.array([ni.label, ni.label, nj.label, nj.label])
-        #~ col = np.array([ni.label, nj.label, ni.label, nj.label])
-        #~ data = self.get_element_stiffness().reshape(-1)
-        #~ print data, row, col
-        #~ self.keg =  csr_matrix((data, (row, col)), shape=(msz,msz)).toarray()
-        #~ return self.keg
-    
-    def get_nodes(self):
-        """
-        Returns a tuple of nodes
-        """
-        return self.nodes
-
-
 
 class Bar(Element):
     """
@@ -108,7 +87,7 @@ class Bar(Element):
         Compute force in x-dir (axial-dir)
         """
         ke = self.get_element_stiffness() # Element stiffness
-        n1, n2 = self.get_nodes()
+        n1, n2 = self.nodes
         un = np.array([[n1.ux],[n2.ux]]) # Nodal displacements
         return np.dot(ke, un) # Return  {fxe} = [Ke]{uxe}
         
@@ -134,7 +113,7 @@ class Bar(Element):
         * A - Cross-section of element
         """
         ke = self.get_element_stiffness() # Element stiffness
-        na, nb = self.get_nodes()
+        na, nb = self.nodes
         u = np.array([na.ux, nb.ux]) # Nodes displacements
         sx = np.dot(ke, u/self.A) # matrix multiplication
         return sx
@@ -148,7 +127,7 @@ class Bar(Element):
         """
         Length of element
         """
-        ni,nj = self.get_nodes()
+        ni,nj = self.nodes
         x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
         _l = np.sqrt( (x1-x0)**2 + (y1-y0)**2 )
         return _l
@@ -172,11 +151,6 @@ class Bar(Element):
         self._KE = (self.A*self.E/self.L)*np.array([[1,-1],[-1,1]])
         return self._KE
         
-    def get_nodes(self):
-        """
-        Returns a tuple of nodes
-        """
-        return self.nodes
 
 
 
@@ -206,7 +180,7 @@ class Truss(Element):
         """
         Length of element
         """
-        ni,nj = self.get_nodes()
+        ni,nj = self.nodes
         x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
         _l = np.sqrt( (x1-x0)**2 + (y1-y0)**2 )
         return _l
@@ -216,7 +190,7 @@ class Truss(Element):
         """
         Element angle, measure from X-positive axis counter-clockwise.
         """
-        ni,nj = self.get_nodes()
+        ni,nj = self.nodes
         x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
         # ~ if x0==x1:
             # ~ theta = 90*(np.pi/180)
@@ -259,7 +233,7 @@ class Truss(Element):
         E, A, L = self.E, self.A, self.L
         C = np.cos(theta)
         S = np.sin(theta)
-        ni, nj = self.get_nodes()
+        ni, nj = self.nodes
         u = np.array([ni.ux, ni.uy, nj.ux, nj.uy]).T
         F = (E*A/L)*np.dot(np.array([-C, -S, C, S]), u)
         return F
@@ -278,8 +252,6 @@ class Truss(Element):
                                        [-CS  , -S**2,  CS  , S**2 ]])
         return self._K
         
-    def get_nodes(self):
-        return self.nodes
 
 
 
@@ -325,7 +297,7 @@ class Beam(Element):
         Set fy and m properties.
         """
         ke = self.get_element_stiffness() # Element stiffness
-        n1, n2 = self.get_nodes()
+        n1, n2 = self.nodes
         un = np.array([[n1.uy, n1.ur, n2.uy, n2.ur]]).transpose() # Nodal displacements
         EF = np.dot(ke, un) # Return  {fxe} = [Ke]{uxe}
         self.fy = EF[::2] # Set fy
@@ -360,13 +332,11 @@ class Beam(Element):
         """
         Length of element
         """
-        ni,nj = self.get_nodes()
+        ni,nj = self.nodes
         x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
         _l = np.sqrt( (x1-x0)**2 + (y1-y0)**2 )
         return _l
         
-    def get_nodes(self):
-        return self.nodes
 
 
 
@@ -476,30 +446,34 @@ class LinearTriangle(Element):
                             ])
         return D
     
+    def _signed_area(self):
+        n1, n2, n3 = self.nodes
+        xi, yi = n1.x, n1.y
+        xj, yj = n2.x, n2.y
+        xm, ym = n3.x, n3.y
+        return (xi*(yj-ym) + xj*(ym-yi) + xm*(yi-yj))/2
+
     @property
     def B(self):
         ni, nj, nm = self.nodes
-        A = self.A
+        signed_area = self._signed_area()
+        if signed_area == 0.0:
+            raise ValueError("Degenerate triangle: area must be nonzero")
         betai = nj.y - nm.y
         betaj = nm.y - ni.y
         betam = ni.y - nj.y
         gammai = nm.x - nj.x
         gammaj = ni.x - nm.x
         gammam = nj.x - ni.x
-        B = (1/(2*A))*np.array([[betai, 0, betaj, 0, betam, 0],
-                                 [0, gammai, 0, gammaj, 0, gammam],
-                                 [gammai, betai, gammaj, betaj, gammam, betam]
-                                 ])
+        B = (1/(2*signed_area))*np.array([[betai, 0, betaj, 0, betam, 0],
+                                           [0, gammai, 0, gammaj, 0, gammam],
+                                           [gammai, betai, gammaj, betaj, gammam, betam]
+                                           ])
         return B
     
     @property
     def A(self):
-        n1, n2, n3 = self.nodes
-        xi, yi = n1.x, n1.y
-        xj, yj = n2.x, n2.y
-        xm, ym = n3.x, n3.y
-        A = (xi*(yj-ym) + xj*(ym-yi) + xm*(yi-yj))/2
-        return A
+        return abs(self._signed_area())
     
     def get_element_stiffness(self):
         """
@@ -524,8 +498,6 @@ class LinearTriangle(Element):
         B = self.B
         return np.dot(B,u)
         
-    def get_nodes(self):
-        return self.nodes
 
 
 

@@ -1,91 +1,114 @@
+# NuSA
+
 ![](nusa/img/nusa-logo.png)
 
 A Python library for structural analysis using the finite element method, designed for academic purposes.
 
-## Versions
+![PyPI](https://img.shields.io/pypi/v/nusa)
+![Python](https://img.shields.io/pypi/pyversions/nusa)
+![License](https://img.shields.io/github/license/JorgeDeLosSantos/nusa)
+
+## Releases
 
 * **0.1.0** (16/11/2016)
 * **0.2.0** (14/07/2019)
-* **0.3.dev0** Development version
+* **0.3.0a1** First alpha release (20/09/2026)
 
 ## Requirements
 
-* NumPy
-* Matplotlib
-* Tabulate
-* [GMSH](http://gmsh.info/)
-* meshio
+NuSA requires Python 3.10 or newer. The core FEM package depends on:
 
+- NumPy
+- Matplotlib
+- tabulate
+
+Mesh utilities are optional and use `meshio`. Mesh generation also requires the external
+[Gmsh](https://gmsh.info/) executable to be available on your system.
 
 ## Installation
 
-From PyPI (0.2.0 version):
+Install the current PyPI release:
 
-```
-$ pip install nusa
-```
-
-or from this repo (development version):
-
-```
-$ pip install git+https://github.com/JorgeDeLosSantos/nusa.git
+```bash
+pip install nusa
 ```
 
+Install NuSA with mesh utilities:
 
-## Elements type supported
+```bash
+pip install "nusa[mesh]"
+```
+
+Install the current development branch directly from GitHub:
+
+```bash
+pip install "nusa[mesh] @ git+https://github.com/JorgeDeLosSantos/nusa.git@develop"
+```
+
+For local development:
+
+```bash
+git clone https://github.com/JorgeDeLosSantos/nusa.git
+cd nusa
+git checkout develop
+python -m pip install -e ".[test]"
+python -m pytest
+```
+
+
+## Supported element types
 
 * Spring
 * Bar
 * Truss
 * Beam
-* Linear triangle (currently, only plane stress)
-
+* Linear triangle (plane stress formulation)
 
 ## Mini-Demos
 
 ### Linear Triangle Element
 
 ```python
-from nusa import *
+from nusa import LinearTriangle, LinearTriangleModel, Node
 import nusa.mesh as nmsh
 
 md = nmsh.Modeler()
 a = md.add_rectangle((0,0),(1,1), esize=0.1)
 b = md.add_circle((0.5,0.5), 0.1, esize=0.05)
-md.substract_surfaces(a,b)
+md.subtract_surfaces(a,b)
 nc, ec = md.generate_mesh()
 x,y = nc[:,0], nc[:,1]
 
-nodos = []
-elementos = []
+nodes = []
+elements = []
 
 for k,nd in enumerate(nc):
     cn = Node((x[k],y[k]))
-    nodos.append(cn)
+    nodes.append(cn)
     
-for k,elm in enumerate(ec):
-    i,j,m = int(elm[0]),int(elm[1]),int(elm[2])
-    ni,nj,nm = nodos[i],nodos[j],nodos[m]
-    ce = LinearTriangle((ni,nj,nm),200e9,0.3,0.1)
-    elementos.append(ce)
+for elm in ec:
+    i, j, k = int(elm[0]), int(elm[1]), int(elm[2])
+    ni, nj, nk = nodes[i], nodes[j], nodes[k]
+    ce = LinearTriangle((ni, nj, nk), 200e9, 0.3, 0.1)
+    elements.append(ce)
 
-m = LinearTriangleModel()
-for node in nodos: m.add_node(node)
-for elm in elementos: m.add_element(elm)
+model = LinearTriangleModel()
+for node in nodes: model.add_node(node)
+for elm in elements: model.add_element(elm)
     
 # Boundary conditions and loads
 minx, maxx = min(x), max(x)
 miny, maxy = min(y), max(y)
 
-for node in nodos:
+for node in nodes:
     if node.x == minx:
-        m.add_constraint(node, ux=0, uy=0)
+        model.add_constraint(node, ux=0, uy=0)
     if node.x == maxx:
-        m.add_force(node, (10e3,0))
+        model.add_force(node, (10e3,0))
 
-m.plot_model()
-m.solve()
-m.plot_nsol("seqv")
+model.plot_model()
+model.solve()
+model.plot_nodal_result("seqv")
 ```
 
 ![](docs/nusa-info/es/src/linear-triangle-element/model_plot.png)
@@ -104,7 +127,7 @@ Nodes 1 and 2 are fixed.
 
 ```python
 # NuSA Demo
-from nusa import *
+from nusa import Node, Spring, SpringModel
     
 def test1():
     """
@@ -155,7 +178,7 @@ Use E = 29 x 10<sup>6</sup> psi.
 Beer & Johnston. (2012) Mechanics of materials. 
 Problem 9.13 , pp. 568.
 """
-from nusa import *
+from nusa import Beam, BeamModel, Node
 
 # Input data 
 E = 29e6
@@ -173,13 +196,13 @@ n3 = Node((L1+L2,0))
 e1 = Beam((n1,n2),E,I)
 e2 = Beam((n2,n3),E,I)
 
-# Add elements 
+# Add elements and nodes
 for nd in (n1,n2,n3): m1.add_node(nd)
 for el in (e1,e2): m1.add_element(el)
     
 m1.add_force(n2, (-P,))
-m1.add_constraint(n1, ux=0, uy=0) # fixed 
-m1.add_constraint(n3, uy=0) # fixed
+m1.add_constraint(n1, ux=0, uy=0) # pin
+m1.add_constraint(n3, uy=0) # roller
 m1.solve() # Solve model
 
 # Displacement at C point
@@ -204,19 +227,7 @@ You can also explore more examples in the following Jupyter Notebooks:
 * [Truss element](docs/nusa-info/en/truss-element.ipynb)
 * [LinearTriangle element](docs/nusa-info/en/linear-triangle-element.ipynb)
 
-Spanish versions available:
-
-* [Introducción a NuSA](docs/nusa-info/es/intro-nusa.ipynb)
-* [Elemento Spring](docs/nusa-info/es/spring-element.ipynb)
-* [Elemento Bar](docs/nusa-info/es/bar-element.ipynb)
-* [Elemento Beam](docs/nusa-info/es/beam-element.ipynb)
-* [Elemento Truss](docs/nusa-info/es/truss-element.ipynb)
-* [Elemento LinearTriangle](docs/nusa-info/es/linear-triangle-element.ipynb)
-
-
 ## About...
 
-```
-Developer: Pedro Jorge De Los Santos
-E-mail: delossantosmfq@gmail.com
-```
+**Developer:** Pedro Jorge De Los Santos
+**E-mail:** delossantosmfq@gmail.com
