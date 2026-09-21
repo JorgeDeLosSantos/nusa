@@ -44,6 +44,9 @@ class Model:
         -------
         None
         """
+        if not isinstance(node, Node):
+            raise TypeError("Model nodes must be Node instances")
+
         labels = [current.label for current in self._nodes]
         if node.label is None:
             label = 0
@@ -96,6 +99,9 @@ class Model:
         >>> m1.add_element(e1)
         """
 
+        if not isinstance(element, Element):
+            raise TypeError("Model elements must be Element instances")
+
         if element.etype != self.mtype:
             raise ValueError(
                 f"Element type '{element.etype}' incompatible with model '{self.mtype}'"
@@ -124,7 +130,7 @@ class Model:
         self._elements[element.label] = element
 
         for node in element.nodes:
-            node.add_element(element)
+            node._add_element(element)
         self._invalidate_assembly()
 
     def add_elements(self, elements):
@@ -200,6 +206,60 @@ class Model:
                 f"Unknown degree of freedom {variable!r}; expected one of {dof_names}"
             )
         return self.dof * self._get_node_index(node) + component
+
+
+    def _validated_component_vector(self, values, names, quantity):
+        """Return finite numeric components in the declared model order."""
+        try:
+            array = np.asarray(values, dtype=float)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"{quantity} must contain {len(names)} finite numeric component(s)"
+            ) from exc
+
+        if array.ndim == 0:
+            array = array.reshape(1)
+        else:
+            array = array.reshape(-1)
+
+        if array.size != len(names):
+            raise ValueError(
+                f"{quantity} requires exactly {len(names)} component(s) "
+                f"{names}; got {array.size}"
+            )
+        if not np.isfinite(array).all():
+            raise ValueError(f"{quantity} components must be finite")
+
+        return {
+            name: float(array[index])
+            for index, name in enumerate(names)
+        }
+
+    def _validated_named_components(self, values, names, quantity):
+        """Validate finite named components against the model's active DOFs."""
+        unknown = set(values) - set(names)
+        if unknown:
+            unknown_names = ", ".join(sorted(unknown))
+            expected = ", ".join(names)
+            raise ValueError(
+                f"Unsupported {quantity} component(s): {unknown_names}; "
+                f"expected only: {expected}"
+            )
+
+        validated = {}
+        for name, value in values.items():
+            try:
+                scalar = float(value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"{quantity} component {name!r} must be a finite scalar"
+                ) from exc
+            if not np.isfinite(scalar):
+                raise ValueError(
+                    f"{quantity} component {name!r} must be a finite scalar"
+                )
+            validated[name] = scalar
+        return validated
 
     def _record_applied_forces(self, node, **values):
         """Persist explicitly applied nodal loads and invalidate solved state."""
@@ -645,7 +705,15 @@ class Node:
         coordinates : tuple
             A tuple containing the (x, y) coordinates of the node.
         """
-        self.coordinates = np.asanyarray(coordinates, dtype=float)
+        try:
+            coordinates = np.asarray(coordinates, dtype=float)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Node coordinates must contain two finite numbers") from exc
+        if coordinates.shape != (2,):
+            raise ValueError("Node coordinates must contain exactly two values")
+        if not np.isfinite(coordinates).all():
+            raise ValueError("Node coordinates must be finite")
+        self.coordinates = coordinates.copy()
         self._label = None
 
         # DOF
@@ -684,7 +752,8 @@ class Node:
     def label(self,val):
         self._label = val
 
-    def add_element(self,element):
+    def _add_element(self, element):
+        """Register an attached element for internal nodal post-processing."""
         self._elements.append(element)
         
     @property

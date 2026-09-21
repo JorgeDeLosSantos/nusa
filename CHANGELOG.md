@@ -7,6 +7,8 @@ This file contains information related to the development of the project, such a
 ## [Unreleased]
 
 ### Changed
+- Tightened the pre-beta public API contract: Node coordinates, model membership, load component counts, finite numeric inputs, and active displacement constraints now fail explicitly instead of being ignored or partially accepted.
+- Clarified `BeamModel` as a transverse Euler-Bernoulli formulation with active nodal DOFs `uy` and `ur`; the previously accepted but unsolved `ux` constraint was removed.
 - Added constructor-time validation for element connectivity and physical properties.
 - Completed the symmetric model-level results API with explicit global vectors and noun-style per-node accessors.
 - Moved `meshio` into the default installation and hardened Gmsh discovery, Windows launcher handling, and cross-platform setup documentation.

@@ -36,8 +36,8 @@ def test1():
 
     m1.add_force(n2,(-P,))
     m1.add_force(n4,(-P,))
-    m1.add_constraint(n1, ux=0,uy=0,ur=0) # fixed 
-    m1.add_constraint(n5, ux=0,uy=0,ur=0) # fixed
+    m1.add_constraint(n1, uy=0,ur=0) # fixed 
+    m1.add_constraint(n5, uy=0,ur=0) # fixed
     m1.add_constraint(n3, uy=0, ur=0) # roller support
     # ~ m1.add_constraint(n2, ur=0)
     # ~ m1.add_constraint(n4, ur=0)
