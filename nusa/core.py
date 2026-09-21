@@ -307,13 +307,13 @@ class Model:
             for component, name in enumerate(names)
         }
 
-    def get_applied_load(self, node):
+    def applied_load(self, node):
         """Return explicitly applied load components for one node."""
         self._get_node_index(node)
         values = self._applied_forces.get(node, {})
         return {name: values.get(name, 0.0) for name in self.force_dofs}
 
-    def get_prescribed_displacement(self, node):
+    def prescribed_displacement(self, node):
         """Return prescribed displacement components for one node.
 
         Unprescribed degrees of freedom are returned as ``numpy.nan``.
@@ -325,19 +325,19 @@ class Model:
             for name in self.displacement_dofs
         }
 
-    def get_displacement(self, node):
+    def displacement(self, node):
         """Return solved displacement components for one node."""
         return self._get_node_vector_components(
             node, self.displacements, self.displacement_dofs
         )
 
-    def get_nodal_force(self, node):
+    def nodal_force(self, node):
         """Return solved generalized nodal-force components ``K @ u``."""
         return self._get_node_vector_components(
             node, self.nodal_forces, self.force_dofs
         )
 
-    def get_reaction(self, node):
+    def reaction(self, node):
         """Return solved support-reaction components for one node."""
         return self._get_node_vector_components(
             node, self.reactions, self.force_dofs
@@ -543,12 +543,12 @@ class Model:
 
     def _get_applied_loads(self, options):
         """Generate a table of explicitly applied nodal loads."""
-        return self._get_force_table(options, self.get_applied_load)
+        return self._get_force_table(options, self.applied_load)
 
     def _get_nforces(self, options):
         """Generate a table of solved generalized nodal forces (K @ u)."""
         if hasattr(self, "force_dofs") and hasattr(self, "_nodal_forces"):
-            return self._get_force_table(options, self.get_nodal_force)
+            return self._get_force_table(options, self.nodal_force)
 
         from tabulate import tabulate
 
@@ -559,7 +559,7 @@ class Model:
 
     def _get_reactions(self, options):
         """Generate a table of support reactions."""
-        return self._get_force_table(options, self.get_reaction)
+        return self._get_force_table(options, self.reaction)
 
     def _get_element_results(self, options):
         """Generate the model-specific element-results table."""
