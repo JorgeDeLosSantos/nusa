@@ -23,6 +23,7 @@ This file contains information related to the development of the project, such a
 - Added common pre-assembly topology validation, including explicit errors for empty models and orphan nodes.
 - Modernized executable FEM examples around explicit public imports and test-friendly model builders.
 - Hardened the optional mesh subsystem around explicit Gmsh execution, temporary-file cleanup, meshio-based triangle loading, and clearer errors.
+- Fixed Gmsh invocation on Windows/Conda installations where `gmsh` resolves to a `.bat` or `.cmd` launcher.
 - Corrected full-circle geometry generation to use four valid Gmsh quarter-circle arcs.
 - Renamed the public surface-hole helper to `subtract_surfaces()` and removed the invalid unused arc-surface helper.
 
