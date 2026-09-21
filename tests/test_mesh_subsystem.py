@@ -165,18 +165,57 @@ def test_simple_gmsh_reports_missing_executable(monkeypatch):
     geometry = _mesh.SimpleGMSH()
     geometry.add_point((0.0, 0.0, 0.0))
 
-    def missing_executable(*args, **kwargs):
-        raise FileNotFoundError
-
-    monkeypatch.setattr(subprocess, "run", missing_executable)
+    monkeypatch.setattr(_mesh.shutil, "which", lambda executable: None)
 
     with pytest.raises(RuntimeError, match="was not found"):
         geometry.generate_mesh(gmsh_executable="missing-gmsh")
 
 
+def test_resolve_gmsh_command_uses_direct_executable(monkeypatch):
+    monkeypatch.setattr(
+        _mesh.shutil,
+        "which",
+        lambda executable: "/usr/bin/gmsh",
+    )
+
+    command = _mesh._resolve_gmsh_command(
+        "gmsh",
+        ["-2", "model.geo"],
+        windows=False,
+    )
+
+    assert command == ["/usr/bin/gmsh", "-2", "model.geo"]
+
+
+def test_resolve_gmsh_command_wraps_windows_batch_launcher(monkeypatch):
+    monkeypatch.setattr(
+        _mesh.shutil,
+        "which",
+        lambda executable: r"C:\Users\test\anaconda3\Scripts\gmsh.bat",
+    )
+    monkeypatch.setenv("COMSPEC", r"C:\Windows\System32\cmd.exe")
+
+    command = _mesh._resolve_gmsh_command(
+        "gmsh",
+        ["-2", "model.geo"],
+        windows=True,
+    )
+
+    assert command == [
+        r"C:\Windows\System32\cmd.exe",
+        "/d",
+        "/c",
+        r"C:\Users\test\anaconda3\Scripts\gmsh.bat",
+        "-2",
+        "model.geo",
+    ]
+
+
 def test_simple_gmsh_reports_gmsh_failure(monkeypatch):
     geometry = _mesh.SimpleGMSH()
     geometry.add_point((0.0, 0.0, 0.0))
+
+    monkeypatch.setattr(_mesh.shutil, "which", lambda executable: "/usr/bin/gmsh")
 
     def failed_run(command, **kwargs):
         raise subprocess.CalledProcessError(
@@ -194,6 +233,7 @@ def test_simple_gmsh_reports_gmsh_failure(monkeypatch):
 def test_simple_gmsh_uses_temporary_msh2_output(monkeypatch):
     geometry = _mesh.SimpleGMSH()
     geometry.add_point((0.0, 0.0, 0.0))
+    monkeypatch.setattr(_mesh.shutil, "which", lambda executable: "/usr/bin/gmsh")
     nodes = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
     elements = np.array([[0, 1, 2]], dtype=int)
     seen = {}
