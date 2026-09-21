@@ -6,6 +6,16 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
+## [0.3.0a1] - 2026-09-20
+
+### Changed
+- Promoted the stabilized 0.3 development line to its first alpha release.
+- Established the current package-root API, solver lifecycle, result semantics, topology validation, reporting behavior, executable examples, and optional mesh subsystem as the alpha baseline.
+
+### Notes
+- This is a pre-release intended for broader real-world testing before 0.3.0.
+- Backward-incompatible API changes may still occur before the final 0.3.0 release.
+
 ## [0.3.0.dev1] - 2026-09-20
 
 ### Changed
