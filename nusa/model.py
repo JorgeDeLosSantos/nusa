@@ -163,7 +163,8 @@ class BarModel(Model):
         _assemble_global_stiffness(self)
         
     def add_force(self,node,force):
-        self._record_applied_forces(node, fx=force[0])
+        values = self._validated_component_vector(force, self.force_dofs, "force")
+        self._record_applied_forces(node, **values)
         
     def add_constraint(self,node,**constraint):
         values = self._validated_named_components(
