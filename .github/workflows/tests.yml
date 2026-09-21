@@ -83,7 +83,28 @@ jobs:
       - name: Smoke-test built wheel
         run: |
           python -m pip install --force-reinstall dist/*.whl
-          python -c "import nusa; print(nusa.__version__)"
+          python -m pip check
+          cd /tmp
+          python - <<'PY'
+          import numpy as np
+          import nusa
+          from nusa import Node, Spring, SpringModel
+
+          assert nusa.__version__ == "0.3.0b1"
+
+          model = SpringModel("wheel smoke")
+          n1 = Node((0.0, 0.0))
+          n2 = Node((0.0, 0.0))
+          model.add_nodes([n1, n2])
+          model.add_element(Spring((n1, n2), 100.0))
+          model.add_constraint(n1, ux=0.0)
+          model.add_force(n2, (50.0,))
+          model.solve()
+
+          assert np.isclose(n2.ux, 0.5)
+          assert np.isclose(model.reaction(n1)["fx"], -50.0)
+          print(nusa.__version__)
+          PY
 
   docs:
     name: Build documentation
