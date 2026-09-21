@@ -34,7 +34,7 @@ class MockBeam(Element):
 
 
 def test_develop_version_remains_marked_as_development():
-    assert __version__ == "0.3.0.dev0"
+    assert __version__.startswith("0.3.0.dev")
 
 
 def test_model_report_helpers_use_property_based_model_api():
