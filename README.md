@@ -105,7 +105,7 @@ miny, maxy = min(y), max(y)
 
 for node in nodes:
     if node.x == minx:
-        model.add_constraint(node, uy=0)
+        model.add_constraint(node, ux=0, uy=0)
     if node.x == maxx:
         model.add_force(node, (10e3,0))
 
