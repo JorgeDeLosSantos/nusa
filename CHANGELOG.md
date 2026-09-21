@@ -6,7 +6,12 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
+## [0.3.0.dev1] - 2026-09-20
+
 ### Changed
+- Enforced model membership invariants when adding elements and unified `simple_report()` across all five public model types.
+- Added common pre-assembly topology validation, including explicit errors for empty models and orphan nodes.
+- Modernized executable FEM examples around explicit public imports and test-friendly model builders.
 - Hardened the optional mesh subsystem around explicit Gmsh execution, temporary-file cleanup, meshio-based triangle loading, and clearer errors.
 - Corrected full-circle geometry generation to use four valid Gmsh quarter-circle arcs.
 - Renamed the public surface-hole helper to `subtract_surfaces()` and removed the invalid unused arc-surface helper.
@@ -15,6 +20,10 @@ This file contains information related to the development of the project, such a
 - Removed unsupported legacy modules for ad-hoc I/O, JSON model loading, frozen plotting helpers, incomplete 3D experiments, obsolete report templates, and unintegrated material/section helpers.
 - Removed the legacy `.nusa` sample data and materials example that depended on those modules.
 - Kept `nusa.mesh` as the supported optional peripheral subsystem.
+
+### Tests
+- Added API-integrity, topology, example-smoke, and mesh regression coverage.
+- Expanded the suite to 139 passing tests, with GitHub Actions also validating package builds and Sphinx documentation.
 
 ## [0.3.0.dev0] - 2026-09-19
 
@@ -78,7 +87,3 @@ This file contains information related to the development of the project, such a
 ### Changed
 - Updated containers from list to dictionary for Spring-type models.
 - Tested with existing examples. Force implementation for elements still pending.
-
-
-
-
