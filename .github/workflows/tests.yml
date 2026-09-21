@@ -86,11 +86,13 @@ jobs:
           python -m pip check
           cd /tmp
           python - <<'PY'
+          from importlib.metadata import version
+
           import numpy as np
           import nusa
           from nusa import Node, Spring, SpringModel
 
-          assert nusa.__version__ == "0.3.0b1"
+          assert nusa.__version__ == version("nusa")
 
           model = SpringModel("wheel smoke")
           n1 = Node((0.0, 0.0))
