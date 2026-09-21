@@ -162,7 +162,7 @@ class TestBeamModel:
         model.add_nodes([n1, n2, n3])
         model.add_elements([e1, e2])
         model.add_constraint(n1, uy=0.0, ur=0.0)
-        model.add_constraint(n3, ux=0.0, uy=0.1, ur=0.0)
+        model.add_constraint(n3, uy=0.1, ur=0.0)
         model.solve()
 
         # With no external load and equal EI spans, the exact middle-node
