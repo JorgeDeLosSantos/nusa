@@ -78,7 +78,7 @@ def test_beam_solve_indexes_property_based_node_collection_with_integers():
 
     model.add_nodes([n1, n2])
     model.add_element(element)
-    model.add_constraint(n1, ux=0.0, uy=0.0, ur=0.0)
+    model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-1.0,))
 
     model.solve()
