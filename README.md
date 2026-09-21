@@ -16,14 +16,12 @@ A Python library for structural analysis using the finite element method, design
 
 ## Requirements
 
-NuSA requires Python 3.10 or newer. The core FEM package depends on:
+NuSA requires Python 3.10 or newer and installs NumPy, Matplotlib, tabulate, and
+meshio as Python dependencies.
 
-- NumPy
-- Matplotlib
-- tabulate
-
-Mesh utilities are optional and use `meshio`. Mesh generation also requires the external
-[Gmsh](https://gmsh.info/) executable to be available on your system.
+The `nusa.mesh` helpers can read triangular meshes immediately after installing NuSA.
+Generating new meshes from geometry additionally requires the external
+[Gmsh](https://gmsh.info/) executable to be installed and available on `PATH`.
 
 ## Installation
 
@@ -33,16 +31,20 @@ Install the current PyPI release:
 pip install nusa
 ```
 
-Install NuSA with mesh utilities:
+Mesh-file support through `meshio` is included in the default installation.
+The historical `nusa[mesh]` extra remains accepted during the 0.3.0 transition,
+but is no longer required.
+
+To generate meshes, install Gmsh separately and verify that NuSA can discover it:
 
 ```bash
-pip install "nusa[mesh]"
+gmsh --version
 ```
 
 Install the current development branch directly from GitHub:
 
 ```bash
-pip install "nusa[mesh] @ git+https://github.com/JorgeDeLosSantos/nusa.git@develop"
+pip install "nusa @ git+https://github.com/JorgeDeLosSantos/nusa.git@develop"
 ```
 
 For local development:
