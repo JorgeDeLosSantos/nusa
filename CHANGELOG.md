@@ -6,6 +6,9 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
+### Release preparation
+- Development version advanced to `0.3.0rc1.dev0` after the `0.3.0b1` beta release.
+
 ## [0.3.0b1] - 2026-09-21
 
 ### Changed
