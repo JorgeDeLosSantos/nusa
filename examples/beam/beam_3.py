@@ -31,8 +31,8 @@ def test3():
     for el in (e1,e2): m1.add_element(el)
         
     m1.add_force(n2, (-P,))
-    m1.add_constraint(n1, ux=0, uy=0, ur=0) # fixed 
-    m1.add_constraint(n3, ux=0, uy=0) # fixed
+    m1.add_constraint(n1, uy=0, ur=0) # fixed 
+    m1.add_constraint(n3, uy=0) # fixed
     m1.solve() # Solve model
     print(m1.stiffness_matrix)
     print([node.uy for node in m1.nodes])
