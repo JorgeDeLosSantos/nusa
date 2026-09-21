@@ -37,7 +37,7 @@ class MockBeam(Element):
 
 def test_develop_version_remains_marked_as_development():
     assert re.fullmatch(
-        r"0\\.3\\.0(?:\\.dev\\d+|(?:a|b|rc)\\d+(?:\\.dev\\d+)?)",
+        r"0\.3\.0(?:\.dev\d+|(?:a|b|rc)\d+(?:\.dev\d+)?)",
         __version__,
     )
 
