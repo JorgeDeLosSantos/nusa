@@ -234,14 +234,14 @@ class TrussModel(Model):
             ax.plot([ni.x,nj.x],[ni.y,nj.y],"b-")
 
         for nd in self.nodes:
-            applied = self.get_applied_load(nd)
+            applied = self.applied_load(nd)
             if applied["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1)
             if applied["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1)
             if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
             if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
 
             if show_reactions:
-                reaction = self.get_reaction(nd)
+                reaction = self.reaction(nd)
                 if reaction["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1,reaction=True)
                 if reaction["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1,reaction=True)
                 if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
@@ -419,12 +419,12 @@ class BeamModel(Model):
             ax.plot(xx, yy, "r.-")
 
         for nd in self.nodes:
-            applied = self.get_applied_load(nd)
+            applied = self.applied_load(nd)
             if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
             if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
 
             if show_reactions:
-                reaction = self.get_reaction(nd)
+                reaction = self.reaction(nd)
                 if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
                 if reaction["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1,reaction=True)
 
@@ -623,14 +623,14 @@ class LinearTriangleModel(Model):
             patches.append(polygon)
 
         for nd in self.nodes:
-            applied = self.get_applied_load(nd)
+            applied = self.applied_load(nd)
             if applied["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1)
             if applied["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1)
             if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
             if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
 
             if show_reactions:
-                reaction = self.get_reaction(nd)
+                reaction = self.reaction(nd)
                 if reaction["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1,reaction=True)
                 if reaction["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1,reaction=True)
                 if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
