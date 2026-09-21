@@ -99,6 +99,9 @@ class Model:
         >>> m1.add_element(e1)
         """
 
+        if not isinstance(element, Element):
+            raise TypeError("Model elements must be Element instances")
+
         if element.etype != self.mtype:
             raise ValueError(
                 f"Element type '{element.etype}' incompatible with model '{self.mtype}'"
