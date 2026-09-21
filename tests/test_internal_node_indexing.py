@@ -63,7 +63,7 @@ def test_truss_solver_accepts_string_labels():
 
     model.add_nodes([n1, n2])
     model.add_element(element)
-    model.add_constraint(n1, uy=0.0)
+    model.add_constraint(n1, ux=0.0, uy=0.0)
     model.add_constraint(n2, uy=0.0)
     model.add_force(n2, (10.0, 0.0))
     model.solve()
@@ -103,8 +103,8 @@ def test_linear_triangle_solver_accepts_string_labels():
 
     model.add_nodes([n1, n2, n3])
     model.add_element(element)
-    model.add_constraint(n1, uy=0.0)
-    model.add_constraint(n3, uy=0.0)
+    model.add_constraint(n1, ux=0.0, uy=0.0)
+    model.add_constraint(n3, ux=0.0, uy=0.0)
     model.add_force(n2, (1000.0, 0.0))
     model.solve()
 
