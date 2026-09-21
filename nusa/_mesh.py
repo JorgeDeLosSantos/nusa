@@ -5,9 +5,34 @@
 #  License: MIT License
 # ***********************************
 
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
+
+
+def _resolve_gmsh_command(gmsh_executable, arguments, *, windows=None):
+    """Resolve Gmsh and wrap Windows batch launchers when needed."""
+    resolved = shutil.which(gmsh_executable)
+    if resolved is None:
+        raise RuntimeError(
+            f"Gmsh executable {gmsh_executable!r} was not found on PATH"
+        )
+
+    if windows is None:
+        windows = os.name == "nt"
+
+    if windows and resolved.lower().endswith((".bat", ".cmd")):
+        return [
+            os.environ.get("COMSPEC", "cmd.exe"),
+            "/d",
+            "/c",
+            resolved,
+            *arguments,
+        ]
+
+    return [resolved, *arguments]
 
 
 def _load_meshio():
@@ -102,8 +127,7 @@ class SimpleGMSH:
             msh_path = tmpdir / "model.msh"
             geo_path.write_text(self.get_code(), encoding="utf-8")
 
-            command = [
-                gmsh_executable,
+            arguments = [
                 "-2",
                 str(geo_path),
                 "-format",
@@ -111,6 +135,7 @@ class SimpleGMSH:
                 "-o",
                 str(msh_path),
             ]
+            command = _resolve_gmsh_command(gmsh_executable, arguments)
 
             try:
                 result = subprocess.run(
@@ -121,7 +146,7 @@ class SimpleGMSH:
                 )
             except FileNotFoundError as exc:
                 raise RuntimeError(
-                    f"Gmsh executable {gmsh_executable!r} was not found on PATH"
+                    f"Gmsh command {command[0]!r} could not be started"
                 ) from exc
             except subprocess.CalledProcessError as exc:
                 details = (exc.stderr or exc.stdout or "").strip()
