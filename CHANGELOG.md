@@ -6,16 +6,19 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
+## [0.3.0b1] - 2026-09-21
+
 ### Changed
-- Tightened the pre-beta public API contract: Node coordinates, model membership, load component counts, finite numeric inputs, and active displacement constraints now fail explicitly instead of being ignored or partially accepted.
+- Tightened the public API contract before beta: Node coordinates, model membership, load component counts, finite numeric inputs, and active displacement constraints now fail explicitly instead of being ignored or partially accepted.
 - Clarified `BeamModel` as a transverse Euler-Bernoulli formulation with active nodal DOFs `uy` and `ur`; the previously accepted but unsolved `ux` constraint was removed.
 - Added constructor-time validation for element connectivity and physical properties.
 - Completed the symmetric model-level results API with explicit global vectors and noun-style per-node accessors.
 - Moved `meshio` into the default installation and hardened Gmsh discovery, Windows launcher handling, and cross-platform setup documentation.
 - Added a real Gmsh integration smoke test to CI.
 
-### Release preparation
-- Development version advanced to `0.3.0b1.dev0` after the `0.3.0a1` alpha baseline.
+### Notes
+- This beta freezes the intended 0.3.0 public input contracts while broader element-result normalization remains deferred to 0.4.0.
+- The release remains pre-1.0 and may still receive targeted compatibility fixes before 0.3.0 final.
 
 ## [0.3.0a1] - 2026-09-20
 
