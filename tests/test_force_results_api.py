@@ -157,3 +157,17 @@ def test_result_vectors_are_invalidated_after_input_change():
     np.testing.assert_allclose(model.applied_loads, [0.0, 80.0])
     np.testing.assert_allclose(model.prescribed_displacements[:1], [0.0])
     assert np.isnan(model.prescribed_displacements[1])
+
+
+
+def test_legacy_get_prefix_result_accessors_are_absent():
+    model = SpringModel("Public API naming")
+
+    for name in (
+        "get_applied_load",
+        "get_prescribed_displacement",
+        "get_displacement",
+        "get_nodal_force",
+        "get_reaction",
+    ):
+        assert not hasattr(model, name)
