@@ -89,3 +89,71 @@ def test_force_result_arrays_are_returned_as_copies():
     np.testing.assert_allclose(model.applied_loads, [0.0, 5.0])
     np.testing.assert_allclose(model.nodal_forces, [-5.0, 5.0])
     np.testing.assert_allclose(model.reactions, [-5.0, 0.0])
+
+
+
+def test_model_displacement_api_is_symmetric_with_force_results():
+    model = BeamModel("Displacement semantics")
+    n1 = Node((0.0, 0.0))
+    n2 = Node((2.0, 0.0))
+    model.add_nodes([n1, n2])
+    model.add_element(Beam((n1, n2), E=1.0, I=1.0))
+
+    model.add_constraint(n1, uy=0.0, ur=0.0)
+    model.add_force(n2, (-3.0,))
+
+    prescribed = model.prescribed_displacements
+    assert prescribed.shape == (4,)
+    np.testing.assert_allclose(prescribed[:2], [0.0, 0.0])
+    assert np.isnan(prescribed[2])
+    assert np.isnan(prescribed[3])
+    assert model.get_prescribed_displacement(n1) == {"uy": 0.0, "ur": 0.0}
+    assert np.isnan(model.get_prescribed_displacement(n2)["uy"])
+    assert np.isnan(model.get_prescribed_displacement(n2)["ur"])
+
+    with pytest.raises(RuntimeError, match="after solve"):
+        _ = model.displacements
+    with pytest.raises(RuntimeError, match="after solve"):
+        model.get_displacement(n2)
+
+    model.solve()
+
+    np.testing.assert_allclose(
+        model.displacements,
+        [n1.uy, n1.ur, n2.uy, n2.ur],
+    )
+    assert model.get_displacement(n1) == {"uy": n1.uy, "ur": n1.ur}
+    assert model.get_displacement(n2) == {"uy": n2.uy, "ur": n2.ur}
+
+    copied = model.displacements
+    copied[:] = 999.0
+    np.testing.assert_allclose(
+        model.displacements,
+        [n1.uy, n1.ur, n2.uy, n2.ur],
+    )
+
+
+def test_result_vectors_are_invalidated_after_input_change():
+    model = SpringModel("Result invalidation")
+    n1 = Node((0.0, 0.0))
+    n2 = Node((0.0, 0.0))
+    model.add_nodes([n1, n2])
+    model.add_element(Spring((n1, n2), 100.0))
+    model.add_constraint(n1, ux=0.0)
+    model.add_force(n2, (50.0,))
+    model.solve()
+
+    np.testing.assert_allclose(model.displacements, [0.0, 0.5])
+
+    model.add_force(n2, (80.0,))
+
+    with pytest.raises(RuntimeError, match="after solve"):
+        _ = model.displacements
+    with pytest.raises(RuntimeError, match="after solve"):
+        _ = model.nodal_forces
+    with pytest.raises(RuntimeError, match="after solve"):
+        _ = model.reactions
+
+    np.testing.assert_allclose(model.applied_loads, [0.0, 80.0])
+    np.testing.assert_allclose(model.prescribed_displacements[:1], [0.0])
+    assert np.isnan(model.prescribed_displacements[1])
