@@ -23,6 +23,7 @@ dependencies = [
   "numpy",
   "matplotlib",
   "tabulate",
+  "meshio",
 ]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -41,13 +42,14 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+# Backward-compatible alias for pre-0.3.0 development install commands.
+# meshio is part of the default installation.
 mesh = [
   "meshio",
 ]
 test = [
   "pytest>=8",
   "pytest-cov>=5",
-  "meshio",
 ]
 docs = [
   "sphinx>=7",
