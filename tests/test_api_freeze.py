@@ -74,9 +74,9 @@ def test_force_components_must_be_finite(model):
     node = Node((0.0, 0.0))
     model.add_node(node)
 
-    count = len(model.force_dofs)
-    values = [0.0] * count
-    values[-1] = np.nan
+    values = (np.nan,) if isinstance(model, BeamModel) else [0.0] * len(model.force_dofs)
+    if not isinstance(model, BeamModel):
+        values[-1] = np.nan
 
     with pytest.raises(ValueError, match="finite"):
         model.add_force(node, values)
