@@ -98,7 +98,8 @@ def test_element_connectivity_requires_node_objects():
 
 def test_element_connectivity_requires_finite_coordinates():
     n1 = Node((0.0, 0.0))
-    n2 = Node((np.nan, 1.0))
+    n2 = Node((1.0, 1.0))
+    n2.coordinates[0] = np.nan
 
     with pytest.raises(ValueError, match="coordinates must be finite"):
         Truss((n1, n2), E=1.0, A=1.0)
