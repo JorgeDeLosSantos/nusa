@@ -378,22 +378,12 @@ class BeamModel(Model):
         _assemble_global_stiffness(self)
     
     def add_force(self,node,force):
-        values = self._validated_component_vector(
-            (force[0], 0.0) if len(force) == 1 else force,
-            self.force_dofs,
-            "force",
-        )
+        values = self._validated_component_vector(force, ("fy",), "force")
         self._record_applied_forces(node, **values)
         
     def add_moment(self,node,moment):
-        values = self._validated_component_vector(
-            (0.0, moment[0]) if len(moment) == 1 else moment,
-            self.force_dofs,
-            "moment",
-        )
-        if values["fy"] != 0.0:
-            raise ValueError("moment must not contain a transverse force component")
-        self._record_applied_forces(node, m=values["m"])
+        values = self._validated_component_vector(moment, ("m",), "moment")
+        self._record_applied_forces(node, **values)
         
     def add_constraint(self,node,**constraint):
         values = self._validated_named_components(
