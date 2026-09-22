@@ -139,6 +139,33 @@ def test_generate_mesh_from_file_reads_triangle_cells_with_meshio(tmp_path):
     np.testing.assert_array_equal(loaded_elements, elements)
 
 
+def test_generate_mesh_from_file_compacts_unused_points(tmp_path):
+    import meshio
+
+    nodes = np.array([
+        [0.0, 0.0, 0.0],
+        [9.0, 9.0, 0.0],
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+    ])
+    elements = np.array([[0, 2, 3]], dtype=int)
+    mesh_path = tmp_path / "triangle-with-unused-point.vtu"
+    meshio.write_points_cells(mesh_path, nodes, [("triangle", elements)])
+
+    modeler = Modeler()
+    loaded_nodes, loaded_elements = modeler.generate_mesh_from_file(mesh_path)
+
+    np.testing.assert_allclose(
+        loaded_nodes,
+        [
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+        ],
+    )
+    np.testing.assert_array_equal(loaded_elements, [[0, 1, 2]])
+
+
 def test_generate_mesh_from_file_rejects_mesh_without_triangles(tmp_path):
     import meshio
 
@@ -160,6 +187,22 @@ def test_plot_mesh_requires_generated_or_loaded_mesh():
 
     with pytest.raises(RuntimeError, match="Generate or load"):
         modeler.plot_mesh()
+
+
+@pytest.mark.skipif(shutil.which("gmsh") is None, reason="Gmsh is not installed")
+def test_real_gmsh_rectangle_with_hole_has_no_unused_points():
+    modeler = Modeler()
+    outer = modeler.add_rectangle((0.0, 0.0), (1.0, 1.0), esize=0.25)
+    inner = modeler.add_circle((0.5, 0.5), 0.15, esize=0.08)
+    modeler.subtract_surfaces(outer, inner)
+
+    nodes, elements = modeler.generate_mesh()
+
+    used_nodes = np.unique(elements)
+    np.testing.assert_array_equal(used_nodes, np.arange(len(nodes)))
+    assert not np.any(
+        np.all(np.isclose(nodes[:, :2], [0.5, 0.5]), axis=1)
+    )
 
 
 @pytest.mark.skipif(shutil.which("gmsh") is None, reason="Gmsh is not installed")
