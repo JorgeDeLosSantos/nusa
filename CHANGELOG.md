@@ -6,7 +6,7 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
-## [0.3.0rc1] - 2026-09-21
+## [0.3.0rc1] - 2026-09-22
 
 ### Tests
 - Added release-candidate checks for global stiffness symmetry and force/moment equilibrium using the public results API.
