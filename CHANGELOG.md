@@ -9,6 +9,10 @@ This file contains information related to the development of the project, such a
 ### Release preparation
 - Development version advanced to `0.3.0rc1.dev0` after the `0.3.0b1` beta release.
 
+### Tests
+- Added release-candidate checks for global stiffness symmetry and force/moment equilibrium using the public results API.
+- Expanded package installation validation to Ubuntu, Windows, and macOS and added a source-distribution installation smoke test.
+
 ## [0.3.0b1] - 2026-09-21
 
 ### Changed

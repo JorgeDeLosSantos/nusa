@@ -148,7 +148,7 @@ class TestBeamModel:
         assert np.isclose(n1.fy + n3.fy, P)
 
     def test_nonzero_support_settlement(self):
-        """Known solver limitation: support settlements are not assembled correctly."""
+        """Support settlements are handled through prescribed displacements."""
         E = 1.0
         I = 1.0
 
