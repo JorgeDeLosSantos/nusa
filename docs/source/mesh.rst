@@ -27,8 +27,9 @@ Basic workflow
 
    nodes, triangles = modeler.generate_mesh()
 
-``nodes`` contains the point coordinates returned by ``meshio`` and
-``triangles`` contains zero-based linear-triangle connectivity.
+``nodes`` contains only points referenced by linear-triangle cells. Any
+unused points present in the source mesh are removed, and ``triangles`` is
+remapped to zero-based connectivity for the compacted point array.
 
 Before using ``generate_mesh()``, the following command should succeed in the
 same environment:
