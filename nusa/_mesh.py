@@ -11,6 +11,8 @@ import shutil
 import subprocess
 import tempfile
 
+import numpy as np
+
 
 def _resolve_gmsh_command(gmsh_executable, arguments, *, windows=None):
     """Resolve Gmsh and wrap Windows batch launchers when needed."""
@@ -54,13 +56,19 @@ def read_triangle_mesh(filename):
     mesh = meshio.read(filename)
 
     try:
-        triangles = mesh.cells_dict["triangle"]
+        triangles = np.asarray(mesh.cells_dict["triangle"], dtype=int)
     except KeyError as exc:
         raise ValueError(
             f"Mesh file {str(filename)!r} does not contain triangle cells"
         ) from exc
 
-    return mesh.points, triangles
+    used_points = np.unique(triangles)
+    remap = np.full(len(mesh.points), -1, dtype=int)
+    remap[used_points] = np.arange(len(used_points), dtype=int)
+
+    points = np.asarray(mesh.points)[used_points]
+    triangles = remap[triangles]
+    return points, triangles
 
 
 class SimpleGMSH:
