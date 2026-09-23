@@ -35,8 +35,11 @@ class MockBeam(Element):
         )
 
 
-def test_03_version_remains_marked_as_prerelease():
-    assert re.fullmatch(r"0\.3\.0(?:\.dev\d+|a\d+|b\d+|rc\d+)", __version__)
+def test_version_belongs_to_0_3_0_release_line():
+    assert re.fullmatch(
+        r"0\.3\.0(?:\.dev\d+|(?:a|b|rc)\d+(?:\.dev\d+)?)?",
+        __version__,
+    )
 
 
 def test_model_report_helpers_use_property_based_model_api():
@@ -75,7 +78,7 @@ def test_beam_solve_indexes_property_based_node_collection_with_integers():
 
     model.add_nodes([n1, n2])
     model.add_element(element)
-    model.add_constraint(n1, ux=0.0, uy=0.0, ur=0.0)
+    model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-1.0,))
 
     model.solve()

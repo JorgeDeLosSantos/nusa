@@ -1,16 +1,17 @@
 Mesh utilities
 ==============
 
-NuSA provides a small optional 2D geometry and triangular-mesh layer in
-``nusa.mesh``. Install it with:
+NuSA provides a small 2D geometry and triangular-mesh layer in ``nusa.mesh``.
+``meshio`` is part of the standard NuSA installation, so loading existing
+triangular meshes requires no extra installation:
 
 .. code-block:: bash
 
-   pip install "nusa[mesh]"
+   pip install nusa
 
-``meshio`` is used to read mesh files. Generating a mesh from geometry also
-requires the external Gmsh executable to be installed and available on
-``PATH``.
+Generating a new mesh from geometry additionally requires the external Gmsh
+command-line application. See :doc:`installation` for platform-specific
+installation notes.
 
 Basic workflow
 --------------
@@ -26,8 +27,16 @@ Basic workflow
 
    nodes, triangles = modeler.generate_mesh()
 
-``nodes`` contains the point coordinates returned by ``meshio`` and
-``triangles`` contains zero-based linear-triangle connectivity.
+``nodes`` contains only points referenced by linear-triangle cells. Any
+unused points present in the source mesh are removed, and ``triangles`` is
+remapped to zero-based connectivity for the compacted point array.
+
+Before using ``generate_mesh()``, the following command should succeed in the
+same environment:
+
+.. code-block:: bash
+
+   gmsh --version
 
 Geometry helpers
 ----------------
@@ -69,5 +78,20 @@ when needed:
        verbose=True,
    )
 
-NuSA reports a clear ``RuntimeError`` if the executable cannot be found or if
-Gmsh fails while generating the mesh.
+On Windows, conda installations can expose Gmsh through a ``.bat`` or ``.cmd``
+launcher. NuSA resolves these launchers through ``cmd.exe`` automatically.
+
+Troubleshooting
+---------------
+
+If NuSA reports that Gmsh was not found:
+
+#. run ``gmsh --version`` in the same terminal or notebook environment;
+#. if the command is missing, install Gmsh or add its directory to ``PATH``;
+#. if Gmsh exists outside ``PATH``, pass ``gmsh_executable`` explicitly.
+
+If Gmsh starts but rejects the generated geometry, call
+``generate_mesh(verbose=True)`` to expose Gmsh's command-line diagnostics.
+
+NuSA writes temporary ``.geo`` and ``.msh`` files for each generation call and
+removes them automatically when the operation finishes.

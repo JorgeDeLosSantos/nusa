@@ -3,8 +3,8 @@ Installation
 
 NuSA requires Python 3.10 or newer.
 
-Core installation
------------------
+Standard installation
+---------------------
 
 Install the current release from PyPI:
 
@@ -12,20 +12,107 @@ Install the current release from PyPI:
 
    pip install nusa
 
-The core package includes the finite-element models, elements, plotting, and reporting
-functionality.
+The default package includes the finite-element models, elements, plotting,
+reporting, and ``meshio`` for reading triangular mesh files.
 
-Mesh utilities
---------------
+The historical ``nusa[mesh]`` extra remains accepted during the 0.3.0
+transition, but ``meshio`` is now installed by default and the extra is no
+longer necessary.
 
-Mesh helpers are provided as an optional dependency:
+Gmsh for mesh generation
+------------------------
+
+Generating meshes from geometry with ``nusa.mesh.Modeler`` requires the
+external `Gmsh <https://gmsh.info/>`_ executable. Gmsh is not a Python
+dependency of NuSA and is not installed by ``pip install nusa``.
+
+After installing Gmsh, verify that the executable is visible to NuSA:
 
 .. code-block:: bash
 
-   pip install "nusa[mesh]"
+   gmsh --version
 
-The mesh extra installs ``meshio``. Generating meshes also requires the external
-`Gmsh <https://gmsh.info/>`_ executable to be installed and available on ``PATH``.
+If that command works, ``Modeler.generate_mesh()`` should be able to find the
+same executable on ``PATH``.
+
+Windows
+~~~~~~~
+
+Two practical options are:
+
+* install a precompiled Gmsh application from the official Gmsh downloads and
+  add its executable directory to ``PATH``;
+* install the conda-forge package:
+
+  .. code-block:: powershell
+
+     conda install -c conda-forge gmsh
+     gmsh --version
+
+Some conda installations expose Gmsh through ``gmsh.bat`` or ``gmsh.cmd``.
+NuSA detects these Windows launchers and runs them through ``cmd.exe``.
+
+If Gmsh is installed inside a Conda environment, its launcher may depend on
+that environment's Python installation. Activating an unrelated ``venv`` can
+therefore make ``gmsh --version`` fail even though Gmsh is installed. In that
+case, use Gmsh from the same Conda environment as NuSA, install a standalone
+Gmsh executable, or invoke the Conda environment explicitly (for example,
+``conda run -n <env> gmsh --version``).
+
+macOS
+~~~~~
+
+The official Gmsh binaries can be used directly. Homebrew users can install the
+command-line application with:
+
+.. code-block:: bash
+
+   brew install gmsh
+   gmsh --version
+
+Linux
+~~~~~
+
+Use the package supplied by your distribution or an official Gmsh binary. On
+Debian/Ubuntu systems, for example:
+
+.. code-block:: bash
+
+   sudo apt-get update
+   sudo apt-get install gmsh
+   gmsh --version
+
+Google Colab
+~~~~~~~~~~~~
+
+Colab runs on an Ubuntu-based environment, so install Gmsh in the notebook
+session before generating meshes:
+
+.. code-block:: bash
+
+   !apt-get update -qq
+   !apt-get install -y gmsh
+   !gmsh --version
+
+Then install NuSA normally:
+
+.. code-block:: bash
+
+   !pip install git+https://github.com/JorgeDeLosSantos/nusa.git@develop
+
+The Gmsh installation is specific to the current Colab runtime and must be
+repeated when a new runtime is created.
+
+Custom executable location
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If Gmsh is installed but is not on ``PATH``, pass its executable explicitly:
+
+.. code-block:: python
+
+   nodes, elements = modeler.generate_mesh(
+       gmsh_executable="/path/to/gmsh"
+   )
 
 Development version
 -------------------
@@ -34,7 +121,7 @@ Install the current ``develop`` branch directly from GitHub:
 
 .. code-block:: bash
 
-   pip install "nusa[mesh] @ git+https://github.com/JorgeDeLosSantos/nusa.git@develop"
+   pip install "nusa @ git+https://github.com/JorgeDeLosSantos/nusa.git@develop"
 
 For contributor/development work:
 

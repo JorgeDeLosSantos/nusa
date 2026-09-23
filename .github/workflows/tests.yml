@@ -35,6 +35,33 @@ jobs:
       - name: Run tests
         run: python -m pytest
 
+  mesh-integration:
+    name: Gmsh integration
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install Gmsh
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gmsh
+          gmsh --version
+
+      - name: Install NuSA and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[test]"
+
+      - name: Run real Gmsh smoke tests
+        run: python -m pytest tests/test_mesh_subsystem.py -k real_gmsh
+
   build:
     name: Build distributions
     runs-on: ubuntu-latest
@@ -56,7 +83,81 @@ jobs:
       - name: Smoke-test built wheel
         run: |
           python -m pip install --force-reinstall dist/*.whl
-          python -c "import nusa; print(nusa.__version__)"
+          python -m pip check
+          cd /tmp
+          python - <<'PY'
+          from importlib.metadata import version
+
+          import numpy as np
+          import nusa
+          from nusa import Node, Spring, SpringModel
+
+          assert nusa.__version__ == version("nusa")
+
+          model = SpringModel("wheel smoke")
+          n1 = Node((0.0, 0.0))
+          n2 = Node((0.0, 0.0))
+          model.add_nodes([n1, n2])
+          model.add_element(Spring((n1, n2), 100.0))
+          model.add_constraint(n1, ux=0.0)
+          model.add_force(n2, (50.0,))
+          model.solve()
+
+          assert np.isclose(n2.ux, 0.5)
+          assert np.isclose(model.reaction(n1)["fx"], -50.0)
+          print(nusa.__version__)
+          PY
+
+      - name: Smoke-test built source distribution
+        run: |
+          python -m pip install --force-reinstall dist/*.tar.gz
+          python -m pip check
+          cd /tmp
+          python -c "import nusa; from importlib.metadata import version; assert nusa.__version__ == version('nusa')"
+
+  platform-install:
+    name: Install on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      - name: Import and solve smoke test
+        shell: bash
+        run: |
+          cd "${RUNNER_TEMP}"
+          python - <<'PY'
+          import numpy as np
+          import nusa
+          from nusa import Node, Spring, SpringModel
+
+          model = SpringModel("platform smoke")
+          n1 = Node((0.0, 0.0))
+          n2 = Node((0.0, 0.0))
+          model.add_nodes([n1, n2])
+          model.add_element(Spring((n1, n2), 20.0))
+          model.add_constraint(n1, ux=0.0)
+          model.add_force(n2, (10.0,))
+          model.solve()
+
+          assert np.isclose(n2.ux, 0.5)
+          print(nusa.__version__)
+          PY
 
   docs:
     name: Build documentation

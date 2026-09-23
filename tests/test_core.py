@@ -80,7 +80,7 @@ class TestNode:
         assert "(1.0,2.0)" in repr_str
     
     def test_node_elements(self):
-        """Test node element association"""
+        """Test internal node-element association bookkeeping."""
         node = Node((0, 0))
         assert len(node._elements) == 0
         
@@ -92,7 +92,7 @@ class TestNode:
                 self.sxy = 25.0
         
         mock_element = MockElement()
-        node.add_element(mock_element)
+        node._add_element(mock_element)
         
         assert len(node._elements) == 1
         assert node._elements[0] == mock_element
