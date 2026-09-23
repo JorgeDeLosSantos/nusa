@@ -74,6 +74,8 @@ python -m pytest
 ### Linear Triangle Element
 
 ```python
+import numpy as np
+
 from nusa import LinearTriangle, LinearTriangleModel, Node
 import nusa.mesh as nmsh
 
@@ -106,9 +108,9 @@ minx, maxx = min(x), max(x)
 miny, maxy = min(y), max(y)
 
 for node in nodes:
-    if node.x == minx:
+    if np.isclose(node.x, minx):
         model.add_constraint(node, ux=0, uy=0)
-    if node.x == maxx:
+    if np.isclose(node.x, maxx):
         model.add_force(node, (10e3,0))
 
 model.plot_model()
@@ -223,14 +225,10 @@ print(n2.uy)
 
 You can view the online documentation at the following link: [https://jorgedelossantos.github.io/nusa/](https://jorgedelossantos.github.io/nusa/).
 
-You can also explore more examples in the following Jupyter Notebooks:
-
-* [Introduction to NuSA](docs/nusa-info/en/intro-nusa.ipynb)
-* [Spring element](docs/nusa-info/en/spring-element.ipynb)
-* [Bar element](docs/nusa-info/en/bar-element.ipynb)
-* [Beam element](docs/nusa-info/en/beam-element.ipynb)
-* [Truss element](docs/nusa-info/en/truss-element.ipynb)
-* [LinearTriangle element](docs/nusa-info/en/linear-triangle-element.ipynb)
+The repository also contains historical Jupyter notebooks under `docs/nusa-info/`.
+Some of those notebooks predate the 0.3.0 API and are retained as archival material;
+the executable scripts under `examples/` and the current Sphinx documentation are
+the recommended references for 0.3.0.
 
 ## About...
 

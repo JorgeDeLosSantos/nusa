@@ -5,6 +5,8 @@
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
+import numpy as np
+
 from nusa import LinearTriangle, LinearTriangleModel, Node
 from nusa.mesh import Modeler
 
@@ -35,13 +37,13 @@ for elm in elementos: model.add_element(elm)
 minx = min(x)
 maxx = max(x)
 
-nnf = len([node for node in nodos if node.x==maxx])
+nnf = len([node for node in nodos if np.isclose(node.x, maxx)])
 F = (6000./nnf)
 
 for node in nodos:
-    if node.x == minx:
+    if np.isclose(node.x, minx):
         model.add_constraint(node, ux=0, uy=0)
-    if node.x == maxx:
+    if np.isclose(node.x, maxx):
         model.add_force(node, (F,0))
 
 model.plot_model()

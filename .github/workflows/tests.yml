@@ -59,8 +59,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[test]"
 
-      - name: Run real Gmsh smoke test
-        run: python -m pytest tests/test_mesh_subsystem.py::test_real_gmsh_rectangle_mesh_smoke
+      - name: Run real Gmsh smoke tests
+        run: python -m pytest tests/test_mesh_subsystem.py -k real_gmsh
 
   build:
     name: Build distributions
