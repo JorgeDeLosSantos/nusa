@@ -6,6 +6,20 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
+## [0.3.0rc2] - 2026-09-22
+
+### Fixed
+- Removed mesh points that are not referenced by triangular cells and remapped triangle connectivity to the compacted point array.
+- Fixed `Modeler.generate_mesh()` for geometries such as plates with circular holes, where Gmsh may include construction points that do not belong to any finite element.
+
+### Tests
+- Added regression coverage for imported triangle meshes containing unused points.
+- Added a real Gmsh plate-with-hole smoke test that verifies every returned point is referenced by at least one triangle.
+
+### Notes
+- This release candidate contains a targeted mesh-consistency fix discovered during real-world RC testing.
+- No intentional public API changes are included relative to `0.3.0rc1`.
+
 ## [0.3.0rc1] - 2026-09-22
 
 ### Tests
