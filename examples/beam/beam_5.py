@@ -44,7 +44,7 @@ def test5():
     m1.add_force(n3, (P3,))
     m1.add_moment(n2, (M2,))
     m1.add_moment(n3, (M3,))
-    m1.add_constraint(n3, ux=0, uy=0, ur=0) # fixed
+    m1.add_constraint(n3, uy=0, ur=0) # fixed
     m1.solve() # Solve model
     
     # Slope and deflection in n1

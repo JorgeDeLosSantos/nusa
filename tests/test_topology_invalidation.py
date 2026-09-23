@@ -61,7 +61,7 @@ def test_beam_rebuild_preserves_explicit_load_moment_and_constraints():
 
     model.add_nodes([n1, n2])
     model.add_element(e1)
-    model.add_constraint(n1, ux=0.0, uy=0.0, ur=0.0)
+    model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-1.0,))
     model.add_moment(n2, (0.5,))
     model.solve()

@@ -117,14 +117,18 @@ class SpringModel(Model):
         _assemble_global_stiffness(self)
         
     def add_force(self,node,force):
-        self._record_applied_forces(node, fx=force[0])
+        values = self._validated_component_vector(force, self.force_dofs, "force")
+        self._record_applied_forces(node, **values)
         
     def add_constraint(self,node,**constraint):
-        """Prescribe the spring displacement in the x direction."""
-        if "ux" in constraint:
-            ux = constraint["ux"]
-            node.ux = ux
-            self._record_prescribed_displacements(node, ux=ux)
+        """Prescribe spring-model displacement components."""
+        values = self._validated_named_components(
+            constraint, self.displacement_dofs, "constraint"
+        )
+        for variable, value in values.items():
+            setattr(node, variable, value)
+        if values:
+            self._record_prescribed_displacements(node, **values)
         
     def solve(self):
         _solve_model_system(self)
@@ -159,13 +163,17 @@ class BarModel(Model):
         _assemble_global_stiffness(self)
         
     def add_force(self,node,force):
-        self._record_applied_forces(node, fx=force[0])
+        values = self._validated_component_vector(force, self.force_dofs, "force")
+        self._record_applied_forces(node, **values)
         
     def add_constraint(self,node,**constraint):
-        if "ux" in constraint:
-            ux = constraint["ux"]
-            node.ux = ux
-            self._record_prescribed_displacements(node, ux=ux)
+        values = self._validated_named_components(
+            constraint, self.displacement_dofs, "constraint"
+        )
+        for variable, value in values.items():
+            setattr(node, variable, value)
+        if values:
+            self._record_prescribed_displacements(node, **values)
         
     def solve(self):
         _solve_model_system(self)
@@ -205,15 +213,15 @@ class TrussModel(Model):
         _assemble_global_stiffness(self)
         
     def add_force(self,node,force):
-        self._record_applied_forces(node, fx=force[0], fy=force[1])
+        values = self._validated_component_vector(force, self.force_dofs, "force")
+        self._record_applied_forces(node, **values)
         
     def add_constraint(self,node,**constraint):
-        values = {}
-        for variable in self.displacement_dofs:
-            if variable in constraint:
-                value = constraint[variable]
-                setattr(node, variable, value)
-                values[variable] = value
+        values = self._validated_named_components(
+            constraint, self.displacement_dofs, "constraint"
+        )
+        for variable, value in values.items():
+            setattr(node, variable, value)
         if values:
             self._record_prescribed_displacements(node, **values)
         
@@ -234,14 +242,14 @@ class TrussModel(Model):
             ax.plot([ni.x,nj.x],[ni.y,nj.y],"b-")
 
         for nd in self.nodes:
-            applied = self.get_applied_load(nd)
+            applied = self.applied_load(nd)
             if applied["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1)
             if applied["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1)
             if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
             if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
 
             if show_reactions:
-                reaction = self.get_reaction(nd)
+                reaction = self.reaction(nd)
                 if reaction["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1,reaction=True)
                 if reaction["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1,reaction=True)
                 if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
@@ -371,18 +379,19 @@ class BeamModel(Model):
         _assemble_global_stiffness(self)
     
     def add_force(self,node,force):
-        self._record_applied_forces(node, fy=force[0])
+        values = self._validated_component_vector(force, ("fy",), "force")
+        self._record_applied_forces(node, **values)
         
     def add_moment(self,node,moment):
-        self._record_applied_forces(node, m=moment[0])
+        values = self._validated_component_vector(moment, ("m",), "moment")
+        self._record_applied_forces(node, **values)
         
     def add_constraint(self,node,**constraint):
-        values = {}
-        for variable in ("ux",) + self.displacement_dofs:
-            if variable in constraint:
-                value = constraint[variable]
-                setattr(node, variable, value)
-                values[variable] = value
+        values = self._validated_named_components(
+            constraint, self.displacement_dofs, "constraint"
+        )
+        for variable, value in values.items():
+            setattr(node, variable, value)
         if values:
             self._record_prescribed_displacements(node, **values)
         
@@ -419,12 +428,12 @@ class BeamModel(Model):
             ax.plot(xx, yy, "r.-")
 
         for nd in self.nodes:
-            applied = self.get_applied_load(nd)
+            applied = self.applied_load(nd)
             if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
             if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
 
             if show_reactions:
-                reaction = self.get_reaction(nd)
+                reaction = self.reaction(nd)
                 if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
                 if reaction["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1,reaction=True)
 
@@ -569,15 +578,15 @@ class LinearTriangleModel(Model):
         _assemble_global_stiffness(self)
 
     def add_force(self,node,force):
-        self._record_applied_forces(node, fx=force[0], fy=force[1])
+        values = self._validated_component_vector(force, self.force_dofs, "force")
+        self._record_applied_forces(node, **values)
         
     def add_constraint(self,node,**constraint):
-        values = {}
-        for variable in self.displacement_dofs:
-            if variable in constraint:
-                value = constraint[variable]
-                setattr(node, variable, value)
-                values[variable] = value
+        values = self._validated_named_components(
+            constraint, self.displacement_dofs, "constraint"
+        )
+        for variable, value in values.items():
+            setattr(node, variable, value)
         if values:
             self._record_prescribed_displacements(node, **values)
         
@@ -623,14 +632,14 @@ class LinearTriangleModel(Model):
             patches.append(polygon)
 
         for nd in self.nodes:
-            applied = self.get_applied_load(nd)
+            applied = self.applied_load(nd)
             if applied["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1)
             if applied["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1)
             if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
             if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
 
             if show_reactions:
-                reaction = self.get_reaction(nd)
+                reaction = self.reaction(nd)
                 if reaction["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1,reaction=True)
                 if reaction["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1,reaction=True)
                 if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)

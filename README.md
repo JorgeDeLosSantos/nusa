@@ -13,17 +13,19 @@ A Python library for structural analysis using the finite element method, design
 * **0.1.0** (16/11/2016)
 * **0.2.0** (14/07/2019)
 * **0.3.0a1** First alpha release (20/09/2026)
+* **0.3.0b1** Beta release (21/09/2026)
+* **0.3.0rc1** Release candidate (22/09/2026)
+* **0.3.0rc2** Release candidate (22/09/2026)
+* **0.3.0** Stable release (23/09/2026)
 
 ## Requirements
 
-NuSA requires Python 3.10 or newer. The core FEM package depends on:
+NuSA requires Python 3.10 or newer and installs NumPy, Matplotlib, tabulate, and
+meshio as Python dependencies.
 
-- NumPy
-- Matplotlib
-- tabulate
-
-Mesh utilities are optional and use `meshio`. Mesh generation also requires the external
-[Gmsh](https://gmsh.info/) executable to be available on your system.
+The `nusa.mesh` helpers can read triangular meshes immediately after installing NuSA.
+Generating new meshes from geometry additionally requires the external
+[Gmsh](https://gmsh.info/) executable to be installed and available on `PATH`.
 
 ## Installation
 
@@ -33,16 +35,20 @@ Install the current PyPI release:
 pip install nusa
 ```
 
-Install NuSA with mesh utilities:
+Mesh-file support through `meshio` is included in the default installation.
+The historical `nusa[mesh]` extra remains accepted during the 0.3.0 transition,
+but is no longer required.
+
+To generate meshes, install Gmsh separately and verify that NuSA can discover it:
 
 ```bash
-pip install "nusa[mesh]"
+gmsh --version
 ```
 
 Install the current development branch directly from GitHub:
 
 ```bash
-pip install "nusa[mesh] @ git+https://github.com/JorgeDeLosSantos/nusa.git@develop"
+pip install "nusa @ git+https://github.com/JorgeDeLosSantos/nusa.git@develop"
 ```
 
 For local development:
@@ -69,6 +75,8 @@ python -m pytest
 ### Linear Triangle Element
 
 ```python
+import numpy as np
+
 from nusa import LinearTriangle, LinearTriangleModel, Node
 import nusa.mesh as nmsh
 
@@ -101,9 +109,9 @@ minx, maxx = min(x), max(x)
 miny, maxy = min(y), max(y)
 
 for node in nodes:
-    if node.x == minx:
+    if np.isclose(node.x, minx):
         model.add_constraint(node, ux=0, uy=0)
-    if node.x == maxx:
+    if np.isclose(node.x, maxx):
         model.add_force(node, (10e3,0))
 
 model.plot_model()
@@ -201,7 +209,7 @@ for nd in (n1,n2,n3): m1.add_node(nd)
 for el in (e1,e2): m1.add_element(el)
     
 m1.add_force(n2, (-P,))
-m1.add_constraint(n1, ux=0, uy=0) # pin
+m1.add_constraint(n1, uy=0) # pin
 m1.add_constraint(n3, uy=0) # roller
 m1.solve() # Solve model
 
@@ -218,14 +226,10 @@ print(n2.uy)
 
 You can view the online documentation at the following link: [https://jorgedelossantos.github.io/nusa/](https://jorgedelossantos.github.io/nusa/).
 
-You can also explore more examples in the following Jupyter Notebooks:
-
-* [Introduction to NuSA](docs/nusa-info/en/intro-nusa.ipynb)
-* [Spring element](docs/nusa-info/en/spring-element.ipynb)
-* [Bar element](docs/nusa-info/en/bar-element.ipynb)
-* [Beam element](docs/nusa-info/en/beam-element.ipynb)
-* [Truss element](docs/nusa-info/en/truss-element.ipynb)
-* [LinearTriangle element](docs/nusa-info/en/linear-triangle-element.ipynb)
+The repository also contains historical Jupyter notebooks under `docs/nusa-info/`.
+Some of those notebooks predate the 0.3.0 API and are retained as archival material;
+the executable scripts under `examples/` and the current Sphinx documentation are
+the recommended references for 0.3.0.
 
 ## About...
 

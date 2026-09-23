@@ -138,11 +138,9 @@ class TestLinearTriangleElement:
         n1 = Node((0.0, 0.0))
         n2 = Node((1.0, 0.0))
         n3 = Node((2.0, 0.0))
-        element = LinearTriangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5)
 
-        assert np.isclose(element.A, 0.0)
-        with np.testing.assert_raises_regex(ValueError, "Degenerate triangle"):
-            element.get_element_stiffness()
+        with np.testing.assert_raises_regex(ValueError, "non-collinear"):
+            LinearTriangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5)
 
 
 class TestLinearTriangleModel:

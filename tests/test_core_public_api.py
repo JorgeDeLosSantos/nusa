@@ -60,25 +60,25 @@ def test_linear_triangle_accepts_independent_displacement_constraints():
     assert model._prescribed_displacements[node] == {"ux": 0.1, "uy": -0.2}
 
 
-def test_beam_constraint_metadata_survives_topology_invalidation():
-    model = BeamModel("Beam constraint persistence")
+def test_beam_constraints_use_only_active_displacement_dofs():
+    model = BeamModel("Beam constraint contract")
     n1 = Node((0.0, 0.0))
     n2 = Node((1.0, 0.0))
     model.add_nodes([n1, n2])
     model.add_element(Beam((n1, n2), E=1.0, I=1.0))
 
-    model.add_constraint(n1, ux=0.0)
+    with np.testing.assert_raises_regex(ValueError, "Unsupported constraint"):
+        model.add_constraint(n1, ux=0.0)
+
     model.add_constraint(n1, uy=0.0)
     model.add_constraint(n1, ur=0.0)
 
     n3 = Node((2.0, 0.0))
     model.add_node(n3)
 
-    assert np.isclose(n1.ux, 0.0)
     assert np.isclose(n1.uy, 0.0)
     assert np.isclose(n1.ur, 0.0)
     assert model._prescribed_displacements[n1] == {
-        "ux": 0.0,
         "uy": 0.0,
         "ur": 0.0,
     }

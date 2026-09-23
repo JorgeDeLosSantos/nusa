@@ -85,7 +85,7 @@ def test_beam_solver_accepts_string_labels():
 
     model.add_nodes([n1, n2])
     model.add_element(element)
-    model.add_constraint(n1, ux=0.0, uy=0.0, ur=0.0)
+    model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-1.0,))
     model.solve()
 

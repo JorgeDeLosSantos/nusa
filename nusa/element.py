@@ -5,7 +5,69 @@
 #  License: MIT License
 # ***********************************
 import numpy as np
-from .core import Element
+from .core import Element, Node
+
+
+def _validate_nodes(nodes, expected_count, element_name):
+    """Return validated element connectivity as a tuple of finite 2D nodes."""
+    try:
+        nodes = tuple(nodes)
+    except TypeError as exc:
+        raise ValueError(
+            f"{element_name} nodes must be an iterable of Node objects"
+        ) from exc
+
+    if len(nodes) != expected_count:
+        raise ValueError(
+            f"{element_name} requires exactly {expected_count} nodes; "
+            f"got {len(nodes)}"
+        )
+    if not all(isinstance(node, Node) for node in nodes):
+        raise ValueError(f"{element_name} connectivity must contain only Node objects")
+    if not all(np.isfinite([node.x, node.y]).all() for node in nodes):
+        raise ValueError(f"{element_name} node coordinates must be finite")
+    return nodes
+
+
+def _positive_finite(value, name):
+    """Return a finite positive scalar material or section property."""
+    try:
+        value = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{name} must be a finite positive scalar") from exc
+    if not np.isfinite(value) or value <= 0.0:
+        raise ValueError(f"{name} must be a finite positive scalar")
+    return value
+
+
+def _poisson_ratio(value):
+    """Return a physically admissible isotropic Poisson ratio."""
+    try:
+        value = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("nu must be a finite scalar in the range -1 < nu < 0.5") from exc
+    if not np.isfinite(value) or not (-1.0 < value < 0.5):
+        raise ValueError("nu must be a finite scalar in the range -1 < nu < 0.5")
+    return value
+
+
+def _validate_nonzero_length(nodes, element_name):
+    """Reject coincident-node connectivity for length-dependent elements."""
+    n1, n2 = nodes
+    if np.hypot(n2.x - n1.x, n2.y - n1.y) == 0.0:
+        raise ValueError(f"{element_name} requires two distinct node coordinates")
+
+
+def _validate_triangle_geometry(nodes):
+    """Reject collinear connectivity for the constant-strain triangle."""
+    n1, n2, n3 = nodes
+    twice_area = (
+        n1.x * (n2.y - n3.y)
+        + n2.x * (n3.y - n1.y)
+        + n3.x * (n1.y - n2.y)
+    )
+    if twice_area == 0.0:
+        raise ValueError("LinearTriangle requires three non-collinear nodes")
 
 class Spring(Element):
     """
@@ -27,8 +89,8 @@ class Spring(Element):
     """
     def __init__(self,nodes,ke):
         Element.__init__(self, etype="spring")
-        self.nodes = nodes
-        self.k = ke
+        self.nodes = _validate_nodes(nodes, 2, "Spring")
+        self.k = _positive_finite(ke, "Spring stiffness k")
     
     @property
     def fx(self):
@@ -77,9 +139,10 @@ class Bar(Element):
     """
     def __init__(self,nodes,E,A):
         Element.__init__(self,etype="bar")
-        self.nodes = nodes
-        self.E = E # Elastic modulus
-        self.A = A # Cross-section
+        self.nodes = _validate_nodes(nodes, 2, "Bar")
+        _validate_nonzero_length(self.nodes, "Bar")
+        self.E = _positive_finite(E, "Young's modulus E")
+        self.A = _positive_finite(A, "Cross-sectional area A")
         
     @property
     def fx(self):
@@ -171,9 +234,10 @@ class Truss(Element):
     """
     def __init__(self,nodes,E,A):
         Element.__init__(self,etype="truss")
-        self.nodes = nodes
-        self.E = E
-        self.A = A
+        self.nodes = _validate_nodes(nodes, 2, "Truss")
+        _validate_nonzero_length(self.nodes, "Truss")
+        self.E = _positive_finite(E, "Young's modulus E")
+        self.A = _positive_finite(A, "Cross-sectional area A")
         
     @property
     def L(self):
@@ -271,9 +335,10 @@ class Beam(Element):
     """
     def __init__(self,nodes,E,I):
         Element.__init__(self,etype="beam")
-        self.nodes = nodes
-        self.E = E
-        self.I = I
+        self.nodes = _validate_nodes(nodes, 2, "Beam")
+        _validate_nonzero_length(self.nodes, "Beam")
+        self.E = _positive_finite(E, "Young's modulus E")
+        self.I = _positive_finite(I, "Second moment of area I")
         
     def get_element_stiffness(self):
         """
@@ -364,10 +429,11 @@ class LinearTriangle(Element):
     """
     def __init__(self,nodes,E,nu,t):
         Element.__init__(self,etype="triangle")
-        self.nodes = nodes
-        self.E = E
-        self.nu = nu
-        self.t = t
+        self.nodes = _validate_nodes(nodes, 3, "LinearTriangle")
+        _validate_triangle_geometry(self.nodes)
+        self.E = _positive_finite(E, "Young's modulus E")
+        self.nu = _poisson_ratio(nu)
+        self.t = _positive_finite(t, "Thickness t")
         self._sx = 0
         self._sy = 0
         self._sxy = 0
