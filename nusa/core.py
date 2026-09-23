@@ -403,6 +403,24 @@ class Model:
             node, self.reactions, self.force_dofs
         )
 
+    def element_result(self, element):
+        """Return normalized solved results for one model element."""
+        if not hasattr(self, "_nodal_forces"):
+            raise RuntimeError("Element results are available only after solve()")
+        if element not in self._elements.values():
+            raise ValueError("Element does not belong to this model")
+        return {
+            name: float(value)
+            for name, value in element._result_values().items()
+        }
+
+    @property
+    def element_results(self):
+        """Return normalized solved results in element insertion order."""
+        if not hasattr(self, "_nodal_forces"):
+            raise RuntimeError("Element results are available only after solve()")
+        return tuple(self.element_result(element) for element in self.elements)
+
     @property
     def stiffness_matrix(self):
         """Return a copy of the assembled global stiffness matrix."""
