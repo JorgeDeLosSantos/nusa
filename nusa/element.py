@@ -103,6 +103,13 @@ class Spring(Element):
     def fx(self,val):
         self._fx = val
         
+    def _result_values(self):
+        values = np.asarray(self.fx, dtype=float).reshape(-1)
+        return {
+            "force_i": values[0],
+            "force_j": values[-1],
+        }
+
     def get_element_stiffness(self):
         r"""
         Get stiffness matrix for this element.
@@ -185,6 +192,18 @@ class Bar(Element):
     def sx(self,val):
         self._sx = val
     
+    def _result_values(self):
+        forces = np.asarray(self.fx, dtype=float).reshape(-1)
+        ni, nj = self.nodes
+        axial_strain = (nj.ux - ni.ux) / self.L
+        axial_force = self.E * self.A * axial_strain
+        return {
+            "force_i": forces[0],
+            "force_j": forces[-1],
+            "axial_force": axial_force,
+            "axial_stress": axial_force / self.A,
+        }
+
     @property
     def L(self):
         """
@@ -302,6 +321,12 @@ class Truss(Element):
         F = (E*A/L)*np.dot(np.array([-C, -S, C, S]), u)
         return F
         
+    def _result_values(self):
+        return {
+            "axial_force": self.f,
+            "axial_stress": self.s,
+        }
+
     def get_element_stiffness(self):
         """
         Get stiffness matrix for this element
@@ -391,6 +416,16 @@ class Beam(Element):
     @m.setter
     def m(self,val):
         self._m = val
+
+    def _result_values(self):
+        shear = np.asarray(self.fy, dtype=float).reshape(-1)
+        moment = np.asarray(self.m, dtype=float).reshape(-1)
+        return {
+            "shear_force_i": shear[0],
+            "shear_force_j": shear[-1],
+            "bending_moment_i": moment[0],
+            "bending_moment_j": moment[-1],
+        }
 
     @property
     def L(self):
@@ -563,6 +598,18 @@ class LinearTriangle(Element):
         u = np.array([ni.ux,ni.uy,nj.ux,nj.uy,nm.ux,nm.uy])
         B = self.B
         return np.dot(B,u)
+
+    def _result_values(self):
+        stress = np.asarray(self.get_element_stresses(), dtype=float).reshape(-1)
+        strain = np.asarray(self.get_element_strains(), dtype=float).reshape(-1)
+        return {
+            "stress_xx": stress[0],
+            "stress_yy": stress[1],
+            "stress_xy": stress[2],
+            "strain_xx": strain[0],
+            "strain_yy": strain[1],
+            "strain_xy": strain[2],
+        }
         
 
 
