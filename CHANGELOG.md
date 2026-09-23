@@ -6,6 +6,8 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-23
+
 ### Changed
 - Added a GitHub Pages deployment workflow for the Sphinx documentation, publishing only from `master`.
 - Removed generated Sphinx HTML/assets from version control; Pages now publishes build artifacts from `docs/_build/html`.
@@ -14,6 +16,10 @@ This file contains information related to the development of the project, such a
 - Clarified triangle-mesh point compaction semantics in the mesh documentation.
 - Updated meshed examples and the README mini-demo to use tolerant boundary-coordinate comparisons.
 - Marked the legacy Jupyter notebooks as archival material because some predate the 0.3.0 API.
+
+### Notes
+- Promotes the validated 0.3.0 release-candidate line to the stable 0.3.0 release.
+- No intentional public API changes are included relative to `0.3.0rc2`.
 
 
 ## [0.3.0rc2] - 2026-09-22
