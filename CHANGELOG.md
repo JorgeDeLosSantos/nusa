@@ -7,6 +7,9 @@ This file contains information related to the development of the project, such a
 ## [Unreleased]
 
 ### Changed
+- Added a GitHub Pages deployment workflow for the Sphinx documentation, publishing only from `master`.
+- Removed generated Sphinx HTML/assets from version control; Pages now publishes build artifacts from `docs/_build/html`.
+- Documented the Windows Conda/venv interaction that can affect Gmsh launchers.
 - Final release-acceptance hardening now runs all real Gmsh smoke tests in CI.
 - Clarified triangle-mesh point compaction semantics in the mesh documentation.
 - Updated meshed examples and the README mini-demo to use tolerant boundary-coordinate comparisons.

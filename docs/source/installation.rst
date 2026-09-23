@@ -52,6 +52,13 @@ Two practical options are:
 Some conda installations expose Gmsh through ``gmsh.bat`` or ``gmsh.cmd``.
 NuSA detects these Windows launchers and runs them through ``cmd.exe``.
 
+If Gmsh is installed inside a Conda environment, its launcher may depend on
+that environment's Python installation. Activating an unrelated ``venv`` can
+therefore make ``gmsh --version`` fail even though Gmsh is installed. In that
+case, use Gmsh from the same Conda environment as NuSA, install a standalone
+Gmsh executable, or invoke the Conda environment explicitly (for example,
+``conda run -n <env> gmsh --version``).
+
 macOS
 ~~~~~
 
