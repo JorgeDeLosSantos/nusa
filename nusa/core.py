@@ -640,10 +640,24 @@ class Model:
         return self._get_force_table(options, self.reaction)
 
     def _get_element_results(self, options):
-        """Generate the model-specific element-results table."""
-        raise NotImplementedError(
-            f"{self.__class__.__name__} must implement _get_element_results()"
-        )
+        """Generate an element-results table from normalized public results."""
+        from tabulate import tabulate
+
+        columns = getattr(self, "element_result_columns", ())
+        if not columns:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} must define element_result_columns"
+            )
+
+        headers = ["Element"] + [header for _, header in columns]
+        rows = [headers]
+        for element in self.elements:
+            values = self.element_result(element)
+            rows.append(
+                [element.label]
+                + [values[key] for key, _ in columns]
+            )
+        return tabulate(rows, **options)
 
     def _get_nodes_info(self, options):
         """Generate a table of node coordinates."""
