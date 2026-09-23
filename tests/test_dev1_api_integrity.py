@@ -147,11 +147,32 @@ def _solved_triangle():
 @pytest.mark.parametrize(
     ("builder", "expected_columns"),
     [
-        (_solved_spring, ("Fi", "Fj")),
-        (_solved_bar, ("Fi", "Fj", "Si", "Sj")),
-        (_solved_truss, ("F", "S")),
-        (_solved_beam, ("Vi", "Vj", "Mi", "Mj")),
-        (_solved_triangle, ("SXX", "SYY", "SXY", "EXX", "EYY", "EXY")),
+        (_solved_spring, ("FORCE I", "FORCE J")),
+        (
+            _solved_bar,
+            ("FORCE I", "FORCE J", "AXIAL FORCE", "AXIAL STRESS"),
+        ),
+        (_solved_truss, ("AXIAL FORCE", "AXIAL STRESS")),
+        (
+            _solved_beam,
+            (
+                "SHEAR FORCE I",
+                "SHEAR FORCE J",
+                "BENDING MOMENT I",
+                "BENDING MOMENT J",
+            ),
+        ),
+        (
+            _solved_triangle,
+            (
+                "STRESS XX",
+                "STRESS YY",
+                "STRESS XY",
+                "STRAIN XX",
+                "STRAIN YY",
+                "STRAIN XY",
+            ),
+        ),
     ],
 )
 def test_simple_report_is_available_for_all_public_models(builder, expected_columns):

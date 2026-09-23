@@ -102,6 +102,10 @@ def _solve_model_system(model):
 #~ *********************************************************************
 
 class SpringModel(Model):
+    element_result_columns = (
+        ("force_i", "FORCE I"),
+        ("force_j", "FORCE J"),
+    )
     """
     Spring Model for finite element analysis
     """
@@ -133,21 +137,17 @@ class SpringModel(Model):
     def solve(self):
         _solve_model_system(self)
             
-    def _get_element_results(self, options):
-        from tabulate import tabulate
-
-        rows = [["Element", "Fi", "Fj"]]
-        for element in self.elements:
-            values = np.asarray(element.fx, dtype=float).reshape(-1)
-            rows.append([element.label, values[0], values[-1]])
-        return tabulate(rows, **options)
-
-
 
 #~ *********************************************************************
 #~ ****************************  BarModel ******************************
 #~ *********************************************************************
 class BarModel(Model):
+    element_result_columns = (
+        ("force_i", "FORCE I"),
+        ("force_j", "FORCE J"),
+        ("axial_force", "AXIAL FORCE"),
+        ("axial_stress", "AXIAL STRESS"),
+    )
     """
     Bar model for finite element analysis
     """
@@ -178,26 +178,14 @@ class BarModel(Model):
     def solve(self):
         _solve_model_system(self)
 
-    def _get_element_results(self, options):
-        from tabulate import tabulate
-
-        rows = [["Element", "Fi", "Fj", "Si", "Sj"]]
-        for element in self.elements:
-            forces = np.asarray(element.fx, dtype=float).reshape(-1)
-            stresses = np.asarray(element.sx, dtype=float).reshape(-1)
-            rows.append([
-                element.label,
-                forces[0],
-                forces[-1],
-                stresses[0],
-                stresses[-1],
-            ])
-        return tabulate(rows, **options)
-
 #~ *********************************************************************
 #~ ****************************  TrussModel ****************************
 #~ *********************************************************************
 class TrussModel(Model):
+    element_result_columns = (
+        ("axial_force", "AXIAL FORCE"),
+        ("axial_stress", "AXIAL STRESS"),
+    )
     """
     Truss model for finite element analysis
     """
@@ -350,20 +338,17 @@ class TrussModel(Model):
             ky = 1.0/factor
         return xmn-kx, xmx+kx, ymn-ky, ymx+ky
         
-    def _get_element_results(self, options):
-        from tabulate import tabulate
-
-        rows = [["Element", "F", "S"]]
-        for element in self.elements:
-            rows.append([element.label, element.f, element.s])
-        return tabulate(rows, **options)
-
-
 
 #~ *********************************************************************
 #~ ****************************  BeamModel *****************************
 #~ *********************************************************************    
 class BeamModel(Model):
+    element_result_columns = (
+        ("shear_force_i", "SHEAR FORCE I"),
+        ("shear_force_j", "SHEAR FORCE J"),
+        ("bending_moment_i", "BENDING MOMENT I"),
+        ("bending_moment_j", "BENDING MOMENT J"),
+    )
     """
     Model for finite element analysis
     """
@@ -398,22 +383,6 @@ class BeamModel(Model):
     def solve(self):
         _solve_model_system(self)
 
-    def _get_element_results(self, options):
-        from tabulate import tabulate
-
-        rows = [["Element", "Vi", "Vj", "Mi", "Mj"]]
-        for element in self.elements:
-            shear = np.asarray(element.fy, dtype=float).reshape(-1)
-            moment = np.asarray(element.m, dtype=float).reshape(-1)
-            rows.append([
-                element.label,
-                shear[0],
-                shear[-1],
-                moment[0],
-                moment[-1],
-            ])
-        return tabulate(rows, **options)
-            
     def plot_model(self, show_reactions=False):
         """Plot beam geometry, applied transverse loads, and optional reactions."""
         import matplotlib.pyplot as plt
@@ -563,6 +532,14 @@ class BeamModel(Model):
 #~ ****************************  LinearTriangleModel *******************
 #~ *********************************************************************    
 class LinearTriangleModel(Model):
+    element_result_columns = (
+        ("stress_xx", "STRESS XX"),
+        ("stress_yy", "STRESS YY"),
+        ("stress_xy", "STRESS XY"),
+        ("strain_xx", "STRAIN XX"),
+        ("strain_yy", "STRAIN YY"),
+        ("strain_xy", "STRAIN XY"),
+    )
     """
     Model for finite element analysis
     """
@@ -593,24 +570,6 @@ class LinearTriangleModel(Model):
     def solve(self):
         _solve_model_system(self)
 
-    def _get_element_results(self, options):
-        from tabulate import tabulate
-
-        rows = [["Element", "SXX", "SYY", "SXY", "EXX", "EYY", "EXY"]]
-        for element in self.elements:
-            stress = np.asarray(element.get_element_stresses(), dtype=float).reshape(-1)
-            strain = np.asarray(element.get_element_strains(), dtype=float).reshape(-1)
-            rows.append([
-                element.label,
-                stress[0],
-                stress[1],
-                stress[2],
-                strain[0],
-                strain[1],
-                strain[2],
-            ])
-        return tabulate(rows, **options)
-                
     def plot_model(self, show_reactions=False):
         """
         Plot mesh geometry, applied loads, constraints, and optional reactions.
