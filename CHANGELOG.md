@@ -6,6 +6,13 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
+### Changed
+- Final release-acceptance hardening now runs all real Gmsh smoke tests in CI.
+- Clarified triangle-mesh point compaction semantics in the mesh documentation.
+- Updated meshed examples and the README mini-demo to use tolerant boundary-coordinate comparisons.
+- Marked the legacy Jupyter notebooks as archival material because some predate the 0.3.0 API.
+
+
 ## [0.3.0rc2] - 2026-09-22
 
 ### Fixed
