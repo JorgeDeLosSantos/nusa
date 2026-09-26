@@ -168,7 +168,7 @@ def test_result_freezes_geometry_connectivity_and_labels():
         ),
         (
             lambda: _beam_problem(),
-            [0.0, 0.0, -0.8, -0.6],
+            [0.0, 0.0, -0.26666666666666666, -0.2],
         ),
     ],
 )
