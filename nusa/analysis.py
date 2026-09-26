@@ -94,6 +94,16 @@ class LinearStaticAnalysis:
             for element in elements
         )
 
+        element_results = []
+        for element in elements:
+            indices = _element_dof_indices(model, element)
+            u_e = displacements[indices]
+            values = {
+                name: float(value)
+                for name, value in element.compute_results(u_e).items()
+            }
+            element_results.append(values)
+
         return StaticResult(
             model_name=model.name,
             node_objects=nodes,
@@ -112,6 +122,7 @@ class LinearStaticAnalysis:
             displacements=displacements,
             nodal_forces=nodal_forces,
             reactions=reactions,
+            element_results=tuple(element_results),
         )
 
 
