@@ -8,6 +8,9 @@ import nusa
 
 EXPECTED_PUBLIC_API = {
     "__version__",
+    "solve",
+    "LinearStaticAnalysis",
+    "StaticResult",
     "Model",
     "Element",
     "Node",
