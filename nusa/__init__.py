@@ -1,6 +1,8 @@
 """NuSA: Numerical Structural Analysis in Python."""
 
 from .version import __version__
+from .analysis import LinearStaticAnalysis, solve
+from .result import StaticResult
 from .core import Element, Model, Node
 from .element import Bar, Beam, LinearTriangle, Spring, Truss
 from .model import (
@@ -16,6 +18,9 @@ __email__ = "delossantosmfq@gmail.com"
 
 __all__ = [
     "__version__",
+    "solve",
+    "LinearStaticAnalysis",
+    "StaticResult",
     "Model",
     "Element",
     "Node",
