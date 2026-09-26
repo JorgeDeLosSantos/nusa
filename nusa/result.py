@@ -31,6 +31,7 @@ class StaticResult:
         displacements,
         nodal_forces,
         reactions,
+        element_results,
     ):
         self._model_name = str(model_name)
         self._node_labels = tuple(node_labels)
@@ -48,6 +49,10 @@ class StaticResult:
         self._displacements = np.asarray(displacements, dtype=float).copy()
         self._nodal_forces = np.asarray(nodal_forces, dtype=float).copy()
         self._reactions = np.asarray(reactions, dtype=float).copy()
+        self._element_results = tuple(
+            {name: float(value) for name, value in values.items()}
+            for values in element_results
+        )
 
         self._node_index = {
             node: index for index, node in enumerate(tuple(node_objects))
@@ -121,6 +126,11 @@ class StaticResult:
         """Support-reaction vector for prescribed degrees of freedom."""
         return self._reactions.copy()
 
+    @property
+    def element_results(self):
+        """Canonical element results in frozen result order."""
+        return tuple(dict(values) for values in self._element_results)
+
     def _node_position(self, node):
         try:
             return self._node_index[node]
@@ -135,6 +145,16 @@ class StaticResult:
             name: float(vector[start + component])
             for component, name in enumerate(names)
         }
+
+    def _element_position(self, element):
+        try:
+            return self._element_index[element]
+        except KeyError as exc:
+            raise ValueError("Element does not belong to this result") from exc
+
+    def element_result(self, element):
+        """Return canonical primary results for one element."""
+        return dict(self._element_results[self._element_position(element)])
 
     def applied_load(self, node):
         """Return applied load components for one result node."""
