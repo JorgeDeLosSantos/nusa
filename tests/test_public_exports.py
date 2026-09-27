@@ -11,6 +11,7 @@ EXPECTED_PUBLIC_API = {
     "solve",
     "LinearStaticAnalysis",
     "StaticResult",
+    "simple_report",
     "Model",
     "Element",
     "Node",
