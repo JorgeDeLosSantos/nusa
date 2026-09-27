@@ -435,10 +435,6 @@ class LinearTriangleModel(Model):
         Model.__init__(self,name=name,mtype="triangle")
         self.dof = 2 # 2 DOF for triangle element (per node)
         
-    def assemble(self):
-        """Assemble the current global finite-element system."""
-        _assemble_global_stiffness(self)
-
     def add_force(self,node,force):
         values = self._validated_component_vector(force, self.force_dofs, "force")
         self._record_applied_forces(node, **values)
