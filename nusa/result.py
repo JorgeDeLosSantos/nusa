@@ -184,6 +184,12 @@ class StaticResult:
         """Return support-reaction components for one node."""
         return self._node_components(node, self._reactions, self._force_dofs)
 
+    def simple_report(self, report_type="print", fname="nusa_rpt.txt"):
+        """Generate a compact text report from this result snapshot."""
+        from .reporting import simple_report
+
+        return simple_report(self, report_type=report_type, fname=fname)
+
     def __repr__(self):
         return (
             f"StaticResult(model_name={self.model_name!r}, "
