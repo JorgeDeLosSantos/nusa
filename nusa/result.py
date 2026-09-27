@@ -8,8 +8,8 @@ import numpy as np
 class StaticResult:
     """Stable snapshot of one completed linear-static analysis.
 
-    Instances are produced by :func:\`nusa.solve\` or
-    :class:\`nusa.LinearStaticAnalysis\`. Public array properties return
+    Instances are produced by :func:`nusa.solve\` or
+    :class:`nusa.LinearStaticAnalysis\`. Public array properties return
     copies so callers cannot mutate the stored result.
     """
 
