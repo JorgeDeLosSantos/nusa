@@ -34,6 +34,15 @@ class MockBeam(Element):
             ]
         )
 
+    def compute_results(self, u_e):
+        actions = self.get_element_stiffness() @ np.asarray(u_e, dtype=float)
+        return {
+            "shear_force_i": float(actions[0]),
+            "shear_force_j": float(actions[2]),
+            "bending_moment_i": float(actions[1]),
+            "bending_moment_j": float(actions[3]),
+        }
+
 
 def test_version_belongs_to_0_3_0_release_line():
     assert re.fullmatch(

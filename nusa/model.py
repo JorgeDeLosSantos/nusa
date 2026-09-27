@@ -6,96 +6,9 @@
 # ***********************************
 import re
 import numpy as np
-import numpy.linalg as la
 import matplotlib.pyplot as plt
 from .core import Model
 
-
-def _partition_system(K, F, U):
-    """Build the reduced system for prescribed and free displacement DOFs."""
-    U = np.asarray(U, dtype=float)
-    F = np.asarray(F, dtype=float)
-
-    prescribed_dofs = np.flatnonzero(~np.isnan(U))
-    free_dofs = np.flatnonzero(np.isnan(U))
-
-    K_reduced = K[np.ix_(free_dofs, free_dofs)]
-    rhs_reduced = F[free_dofs].copy()
-    if prescribed_dofs.size:
-        K_free_prescribed = K[np.ix_(free_dofs, prescribed_dofs)]
-        rhs_reduced -= np.dot(K_free_prescribed, U[prescribed_dofs])
-
-    return (
-        prescribed_dofs.tolist(),
-        free_dofs.tolist(),
-        K_reduced,
-        rhs_reduced,
-    )
-
-
-def _element_dof_indices(model, element):
-    """Return global DOF indices using model-owned contiguous node indices."""
-    indices = []
-    for node in element.nodes:
-        node_index = model._get_node_index(node)
-        base = model.dof * node_index
-        indices.extend(base + component for component in range(model.dof))
-    return indices
-
-
-def _assemble_global_stiffness(model):
-    """Assemble the dense global stiffness matrix from element matrices."""
-    model._validate_topology()
-    matrix_size = model.dof * model.n_nodes
-    model._K = np.zeros((matrix_size, matrix_size))
-
-    for element in model.elements:
-        element_stiffness = element.get_element_stiffness()
-        global_dofs = _element_dof_indices(model, element)
-        model._K[np.ix_(global_dofs, global_dofs)] += element_stiffness
-
-    model._is_assembled = True
-    model._invalidate_solution()
-
-
-def _solve_model_system(model):
-    """Solve a model using vector-based global force and displacement state."""
-    if not model._is_assembled:
-        model.assemble()
-
-    (
-        model._prescribed_dofs,
-        model._free_dofs,
-        model._K_reduced,
-        model._rhs_reduced,
-    ) = _partition_system(model._K, model._f, model._u)
-
-    if (
-        model._K_reduced.size
-        and np.linalg.matrix_rank(model._K_reduced) < model._K_reduced.shape[0]
-    ):
-        raise np.linalg.LinAlgError(
-            "Singular stiffness matrix: the model may be underconstrained "
-            "or contain a mechanism."
-        )
-
-    free_displacements = la.solve(model._K_reduced, model._rhs_reduced)
-    model._u[model._free_dofs] = free_displacements
-
-    for dof_index, value in enumerate(model._u):
-        node_index, component = divmod(dof_index, model.dof)
-        setattr(model.nodes[node_index], model.displacement_dofs[component], value)
-
-    model._nodal_forces = np.dot(model._K, model._u)
-    model._reactions = np.zeros_like(model._nodal_forces)
-    model._reactions[model._prescribed_dofs] = (
-        model._nodal_forces[model._prescribed_dofs]
-        - model._f[model._prescribed_dofs]
-    )
-
-    for dof_index, value in enumerate(model._nodal_forces):
-        node_index, component = divmod(dof_index, model.dof)
-        setattr(model.nodes[node_index], model.force_dofs[component], value)
 
 #~ *********************************************************************
 #~ ****************************  SpringModel ***************************
@@ -116,10 +29,6 @@ class SpringModel(Model):
         Model.__init__(self,name=name,mtype="spring")
         self.dof = 1 # 1 DOF per Node
 
-    def assemble(self):
-        """Assemble the current global finite-element system."""
-        _assemble_global_stiffness(self)
-        
     def add_force(self,node,force):
         values = self._validated_component_vector(force, self.force_dofs, "force")
         self._record_applied_forces(node, **values)
@@ -134,9 +43,6 @@ class SpringModel(Model):
         if values:
             self._record_prescribed_displacements(node, **values)
         
-    def solve(self):
-        _solve_model_system(self)
-            
 
 #~ *********************************************************************
 #~ ****************************  BarModel ******************************
@@ -158,10 +64,6 @@ class BarModel(Model):
         Model.__init__(self,name=name,mtype="bar")
         self.dof = 1 # 1 DOF for bar element (per node)
         
-    def assemble(self):
-        """Assemble the current global finite-element system."""
-        _assemble_global_stiffness(self)
-        
     def add_force(self,node,force):
         values = self._validated_component_vector(force, self.force_dofs, "force")
         self._record_applied_forces(node, **values)
@@ -175,9 +77,6 @@ class BarModel(Model):
         if values:
             self._record_prescribed_displacements(node, **values)
         
-    def solve(self):
-        _solve_model_system(self)
-
 #~ *********************************************************************
 #~ ****************************  TrussModel ****************************
 #~ *********************************************************************
@@ -196,10 +95,6 @@ class TrussModel(Model):
         Model.__init__(self,name=name,mtype="truss")
         self.dof = 2 # 2 DOF for truss element
         
-    def assemble(self):
-        """Assemble the current global finite-element system."""
-        _assemble_global_stiffness(self)
-        
     def add_force(self,node,force):
         values = self._validated_component_vector(force, self.force_dofs, "force")
         self._record_applied_forces(node, **values)
@@ -213,9 +108,6 @@ class TrussModel(Model):
         if values:
             self._record_prescribed_displacements(node, **values)
         
-    def solve(self):
-        _solve_model_system(self)
-                
     def plot_model(self, show_reactions=False):
         """
         Plot model geometry, applied loads, constraints, and optional reactions.
@@ -359,10 +251,6 @@ class BeamModel(Model):
         Model.__init__(self,name=name,mtype="beam")
         self.dof = 2 # 2 DOF for beam element
         
-    def assemble(self):
-        """Assemble the current global finite-element system."""
-        _assemble_global_stiffness(self)
-    
     def add_force(self,node,force):
         values = self._validated_component_vector(force, ("fy",), "force")
         self._record_applied_forces(node, **values)
@@ -380,9 +268,6 @@ class BeamModel(Model):
         if values:
             self._record_prescribed_displacements(node, **values)
         
-    def solve(self):
-        _solve_model_system(self)
-
     def plot_model(self, show_reactions=False):
         """Plot beam geometry, applied transverse loads, and optional reactions."""
         import matplotlib.pyplot as plt
@@ -550,10 +435,6 @@ class LinearTriangleModel(Model):
         Model.__init__(self,name=name,mtype="triangle")
         self.dof = 2 # 2 DOF for triangle element (per node)
         
-    def assemble(self):
-        """Assemble the current global finite-element system."""
-        _assemble_global_stiffness(self)
-
     def add_force(self,node,force):
         values = self._validated_component_vector(force, self.force_dofs, "force")
         self._record_applied_forces(node, **values)
@@ -567,9 +448,6 @@ class LinearTriangleModel(Model):
         if values:
             self._record_prescribed_displacements(node, **values)
         
-    def solve(self):
-        _solve_model_system(self)
-
     def plot_model(self, show_reactions=False):
         """
         Plot mesh geometry, applied loads, constraints, and optional reactions.

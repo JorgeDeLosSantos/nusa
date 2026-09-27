@@ -330,6 +330,76 @@ class Model:
                     vector[index] = value
         return vector
 
+    def assemble(self):
+        """Assemble the global stiffness matrix for legacy compatibility.
+
+        The finite-element assembly implementation lives in nusa.analysis.
+        This model-owned cache is transitional and exists only for the 0.3-style
+        assemble() / stiffness_matrix API.
+        """
+        from .analysis import _assemble_stiffness
+
+        self._K = _assemble_stiffness(self)
+        self._is_assembled = True
+        self._invalidate_solution()
+
+    def solve(self):
+        """Solve through LinearStaticAnalysis and return StaticResult.
+
+        The returned StaticResult is the numerical source of truth. Solved
+        values are copied back to the model and nodes only as a temporary
+        compatibility layer for the pre-0.4 API.
+        """
+        from .analysis import LinearStaticAnalysis, _partition_system
+
+        result = LinearStaticAnalysis().solve(self)
+
+        # Preserve the legacy assembled-matrix inspection surface without
+        # making it part of StaticResult.
+        if not self._is_assembled:
+            self.assemble()
+
+        (
+            prescribed_dofs,
+            free_dofs,
+            reduced,
+            rhs,
+        ) = _partition_system(
+            self._K,
+            result.applied_loads,
+            result.prescribed_displacements,
+        )
+
+        self._prescribed_dofs = prescribed_dofs.tolist()
+        self._free_dofs = free_dofs.tolist()
+        self._K_reduced = reduced.copy()
+        self._rhs_reduced = rhs.copy()
+
+        self._f = result.applied_loads
+        self._u = result.displacements
+        self._nodal_forces = result.nodal_forces
+        self._reactions = result.reactions
+        self._last_result = result
+
+        # Transitional writeback. Numerical analysis and element response no
+        # longer depend on these Node attributes.
+        for dof_index, value in enumerate(self._u):
+            node_index, component = divmod(dof_index, self.dof)
+            setattr(
+                self._nodes[node_index],
+                self.displacement_dofs[component],
+                value,
+            )
+
+        for dof_index, value in enumerate(self._nodal_forces):
+            node_index, component = divmod(dof_index, self.dof)
+            setattr(
+                self._nodes[node_index],
+                self.force_dofs[component],
+                value,
+            )
+
+        return result
     @property
     def displacements(self):
         """Return the solved global displacement vector.
@@ -405,21 +475,16 @@ class Model:
 
     def element_result(self, element):
         """Return normalized solved results for one model element."""
-        if not hasattr(self, "_nodal_forces"):
+        if not hasattr(self, "_last_result"):
             raise RuntimeError("Element results are available only after solve()")
-        if element not in self._elements.values():
-            raise ValueError("Element does not belong to this model")
-        return {
-            name: float(value)
-            for name, value in element._result_values().items()
-        }
+        return self._last_result.element_result(element)
 
     @property
     def element_results(self):
         """Return normalized solved results in element insertion order."""
-        if not hasattr(self, "_nodal_forces"):
+        if not hasattr(self, "_last_result"):
             raise RuntimeError("Element results are available only after solve()")
-        return tuple(self.element_result(element) for element in self.elements)
+        return self._last_result.element_results
 
     @property
     def stiffness_matrix(self):
@@ -459,6 +524,7 @@ class Model:
             "_prescribed_dofs",
             "_nodal_forces",
             "_reactions",
+            "_last_result",
         ):
             if hasattr(self, attribute):
                 delattr(self, attribute)
