@@ -9,7 +9,6 @@ from nusa import (
     BeamModel,
     LinearTriangle,
     LinearTriangleModel,
-    Model,
     Node,
     Spring,
     SpringModel,
@@ -130,27 +129,26 @@ def test_bar_report_exposes_physical_axial_force_and_stress():
     assert "5" in report
 
 
-@pytest.mark.parametrize(
-    "model_type",
-    [SpringModel, BarModel, TrussModel, BeamModel, LinearTriangleModel],
-)
-def test_public_models_share_base_element_report_implementation(model_type):
-    assert model_type._get_element_results is Model._get_element_results
-
-
-def test_element_report_reads_normalized_model_result_api(monkeypatch):
+def test_model_report_delegates_to_latest_static_result():
     model = _truss_model()
 
-    monkeypatch.setattr(
-        model,
-        "element_result",
-        lambda element: {
-            "axial_force": 1234.5,
-            "axial_stress": 6789.0,
-        },
-    )
+    expected = model._last_result.simple_report(report_type="string")
+    actual = model.simple_report(report_type="string")
 
-    report = model.simple_report(report_type="string")
+    assert actual == expected
 
-    assert "1234.5" in report
-    assert "6789" in report
+
+def test_report_uses_frozen_result_not_mutable_legacy_node_state():
+    model = _truss_model()
+    result = model._last_result
+    element = model.elements[0]
+
+    expected = result.element_result(element)
+    model.nodes[-1].ux = 999.0
+    model.nodes[-1].fx = 999.0
+
+    report = result.simple_report(report_type="string")
+
+    assert str(expected["axial_force"]) in report
+    assert str(expected["axial_stress"]) in report
+    assert "999" not in report
