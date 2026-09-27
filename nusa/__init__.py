@@ -3,6 +3,7 @@
 from .version import __version__
 from .analysis import LinearStaticAnalysis, solve
 from .result import StaticResult
+from .reporting import simple_report
 from .core import Element, Model, Node
 from .element import Bar, Beam, LinearTriangle, Spring, Truss
 from .model import (
@@ -21,6 +22,7 @@ __all__ = [
     "solve",
     "LinearStaticAnalysis",
     "StaticResult",
+    "simple_report",
     "Model",
     "Element",
     "Node",
