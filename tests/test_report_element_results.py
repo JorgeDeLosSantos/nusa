@@ -141,14 +141,12 @@ def test_model_report_delegates_to_latest_static_result():
 def test_report_uses_frozen_result_not_mutable_legacy_node_state():
     model = _truss_model()
     result = model._last_result
-    element = model.elements[0]
+    baseline = result.simple_report(report_type="string")
 
-    expected = result.element_result(element)
     model.nodes[-1].ux = 999.0
     model.nodes[-1].fx = 999.0
 
     report = result.simple_report(report_type="string")
 
-    assert str(expected["axial_force"]) in report
-    assert str(expected["axial_stress"]) in report
+    assert report == baseline
     assert "999" not in report
