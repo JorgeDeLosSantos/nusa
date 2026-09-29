@@ -164,26 +164,14 @@ class TrussModel(Model):
         kfy = sf*(y1-y0)
         return np.mean([kfx,kfy])
         
-    def plot_deformed_shape(self, scale=1.0):
-        import matplotlib.pyplot as plt
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        df = scale*self._calculate_deformed_factor()
-        
-        for elm in self.elements:
-            ni,nj = elm.nodes
-            x, y = [ni.x,nj.x], [ni.y,nj.y]
-            xx = [ni.x+ni.ux*df, nj.x+nj.ux*df]
-            yy = [ni.y+ni.uy*scale, nj.y+nj.uy*scale]
-            ax.plot(x,y,'bo-')
-            ax.plot(xx,yy,'ro--')
+    def plot_deformed_shape(self, scale=1.0, **kwargs):
+        """Compatibility wrapper around StaticResult.plot_deformed_shape()."""
+        if not hasattr(self, "_last_result"):
+            raise RuntimeError(
+                "plot_deformed_shape() is available only after solve()"
+            )
+        return self._last_result.plot_deformed_shape(scale=scale, **kwargs)
 
-        x0,x1,y0,y1 = self._rect_region()
-        plt.axis('equal')
-        ax.set_xlim(x0,x1)
-        ax.set_ylim(y0,y1)
-        
     def _calculate_deformed_factor(self):
         x0,x1,y0,y1 = self._rect_region()
         ux = np.abs(np.array([n.ux for n in self.nodes]))
@@ -328,66 +316,29 @@ class BeamModel(Model):
         return xmn-kx, xmx+kx, ymn-ky, ymx+ky
         
     def plot_deformed_shape(self, scale=1000, **kwargs):
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        xx = []
-        yy = []
-        for elm in self.elements:
-            ni,nj = elm.nodes
-            xx.append( ni.x )
-            xx.append( nj.x )
-            yy.append( ni.y+ni.uy*scale )
-            yy.append( nj.y+nj.uy*scale )
-        
-        ax.plot(xx, yy, "ro--", **kwargs)
-            
-        ax.axis("equal")
-        
-    def plot_moment_diagram(self):
-        import matplotlib.pyplot as plt
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        X,M = self._get_data_for_moment_diagram()
-        ax.plot(X, M, "r")
-        ax.fill_between(X, M, facecolor="#EE5B5B")
-        
-    def plot_shear_diagram(self):
-        import matplotlib.pyplot as plt
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        X,S = self._get_data_for_shear_diagram()
-        ax.plot(X, S, "b")
-        ax.fill_between(X, S, facecolor="#559EE5")
-        
-    def _get_data_for_moment_diagram(self):
-        cx = 0
-        X, M = [], []
-        for el in self.elements:
-            L = el.L
-            X = np.concatenate((X, np.array([cx, cx+L])))
-            mel = el.m.squeeze()
-            mel[0] = - mel[0]
-            M = np.concatenate((M, mel))
-            cx = cx + L
-        return X, M
-        
-    def _get_data_for_shear_diagram(self):
-        cx = 0
-        X, S = [], []
-        for el in self.elements:
-            L = el.L # element length
-            X = np.concatenate((X, np.array([cx, cx+L])))
-            fel = el.fy.squeeze()
-            fel[-1] = - fel[-1]
-            S = np.concatenate((S, fel))
-            cx = cx + L
-        return X, S
-    
+        """Compatibility wrapper around StaticResult.plot_deformed_shape()."""
+        if not hasattr(self, "_last_result"):
+            raise RuntimeError(
+                "plot_deformed_shape() is available only after solve()"
+            )
+        return self._last_result.plot_deformed_shape(scale=scale, **kwargs)
+
+    def plot_moment_diagram(self, **kwargs):
+        """Compatibility wrapper around StaticResult.plot_moment_diagram()."""
+        if not hasattr(self, "_last_result"):
+            raise RuntimeError(
+                "plot_moment_diagram() is available only after solve()"
+            )
+        return self._last_result.plot_moment_diagram(**kwargs)
+
+    def plot_shear_diagram(self, **kwargs):
+        """Compatibility wrapper around StaticResult.plot_shear_diagram()."""
+        if not hasattr(self, "_last_result"):
+            raise RuntimeError(
+                "plot_shear_diagram() is available only after solve()"
+            )
+        return self._last_result.plot_shear_diagram(**kwargs)
+
     def show(self):
         import matplotlib.pyplot as plt
         plt.show()
@@ -498,105 +449,22 @@ class LinearTriangleModel(Model):
         kfy = sf*(y1-y0)
         return np.mean([kfx,kfy])
         
-    def _get_tri(self):
-        import matplotlib.tri as tri
-        
-        _x,_y = [],[]
-        # ~ df = 1
-        for n in self.nodes:
-            _x.append(n.x)
-            # ~ _x.append(n.x + n.ux*df)
-            _y.append(n.y)
-            # ~ _y.append(n.y + n.uy*df)
-            
-        tg = []
-        for e in self.elements:
-            ni,nj,nm = e.nodes
-            tg.append([
-                self._get_node_index(ni),
-                self._get_node_index(nj),
-                self._get_node_index(nm),
-            ])
-            
-        tr = tri.Triangulation(_x,_y, triangles=tg)
-        return tr
-
-
     def plot_nodal_result(self, var="ux"):
-        import matplotlib.pyplot as plt
-        import numpy as np
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        solutions = {
-             "ux": (n.ux for n in self.nodes),
-             "uy": (n.uy for n in self.nodes),
-             "usum": (np.sqrt(n.ux**2 + n.uy**2) for n in self.nodes),
-             "sxx": (n.sx for n in self.nodes),
-             "syy": (n.sy for n in self.nodes),
-             "sxy": (n.sxy for n in self.nodes),
-             "seqv": (n.seqv for n in self.nodes),
-             "exx": (n.ex for n in self.nodes),
-             "eyy": (n.ey for n in self.nodes),
-             "exy": (n.exy for n in self.nodes)
-             }
-        
-        tr = self._get_tri()
-        try:
-            fsol = list(solutions.get(var))
-        except:
-            return None
-        if isinstance(fsol,list): fsol = np.array(fsol)
-        tp = ax.tricontourf(tr, fsol, cmap="jet")
-        fig.colorbar(tp)
-        x0,x1,y0,y1 = self._rect_region()
-        ax.set_xlim(x0,x1)
-        ax.set_ylim(y0,y1)
-        ax.set_aspect("equal")
-        ax_title = "{0} (Max:{1:0.3e}, Min:{2:0.3e})".format(var,fsol.max(),fsol.min())
-        ax.set_title(ax_title, fontsize=8)
-
+        """Compatibility wrapper for result-based nodal-field plotting."""
+        if not hasattr(self, "_last_result"):
+            raise RuntimeError(
+                "plot_nodal_result() is available only after solve()"
+            )
+        return self._last_result.plot_nodal_field(var)
 
     def plot_element_result(self, var="sxx"):
-        import matplotlib.pyplot as plt
-        import numpy as np
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        """Compatibility wrapper for result-based element-field plotting."""
+        if not hasattr(self, "_last_result"):
+            raise RuntimeError(
+                "plot_element_result() is available only after solve()"
+            )
+        return self._last_result.plot_element_field(var)
 
-        _x,_y = [],[]
-        patches = []
-        for k,elm in enumerate(self.elements):
-            _x,_y,_ux,_uy = [],[],[],[]
-            for nd in elm.nodes:
-                _x.append(nd.x)
-                _y.append(nd.y)
-            polygon = Polygon(list(zip(_x,_y)))
-            patches.append(polygon)
-            
-        pc = PatchCollection(patches, cmap="jet", alpha=1)
-        solutions = {
-             "sxx": (e.sx for e in self.elements),
-             "syy": (e.sy for e in self.elements),
-             "sxy": (e.sxy for e in self.elements),
-             "exx": (e.ex for e in self.elements),
-             "eyy": (e.ey for e in self.elements),
-             "exy": (e.exy for e in self.elements)
-             }
-        fsol = np.array(list(solutions.get(var.lower())))
-        pc.set_array(fsol)
-        ax.add_collection(pc)
-        fig.colorbar(pc)
-        x0,x1,y0,y1 = self._rect_region()
-        ax.set_xlim(x0,x1)
-        ax.set_ylim(y0,y1)
-        ax.set_aspect("equal")
-        ax_title = "{0} (Max:{1:0.3e}, Min:{2:0.3e})".format(var,fsol.max(),fsol.min())
-        ax.set_title(ax_title, fontsize=8)
-        
     def show(self):
         """
         Show matplotlib plots
@@ -604,15 +472,6 @@ class LinearTriangleModel(Model):
         import matplotlib.pyplot as plt
         plt.show()
     
-    def _calculate_deformed_factor(self):
-        x0,x1,y0,y1 = self._rect_region()
-        ux = np.array([n.ux for n in self.nodes])
-        uy = np.array([n.uy for n in self.nodes])
-        sf = 1.5e-2
-        kfx = sf*(x1-x0)/ux.max()
-        kfy = sf*(y1-y0)/uy.max()
-        return np.mean([kfx,kfy])
-                
     def _rect_region(self,factor=7.0):
         nx,ny = [],[]
         for n in self.nodes:
