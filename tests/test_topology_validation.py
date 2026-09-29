@@ -69,13 +69,12 @@ def _triangle_case():
     "builder",
     [_spring_case, _bar_case, _truss_case, _beam_case, _triangle_case],
 )
-def test_assemble_rejects_orphan_nodes_for_all_public_models(builder):
+def test_solve_rejects_orphan_nodes_for_all_public_models(builder):
     model, orphan = builder()
 
     with pytest.raises(ValueError, match=str(orphan.label)):
-        model.assemble()
+        model.solve()
 
-    assert model._is_assembled is False
     assert not hasattr(model, "_K")
 
 
@@ -89,11 +88,10 @@ def test_assemble_rejects_orphan_nodes_for_all_public_models(builder):
         LinearTriangleModel("empty triangle"),
     ],
 )
-def test_assemble_rejects_models_without_elements(model):
+def test_solve_rejects_models_without_elements(model):
     with pytest.raises(ValueError, match="without elements"):
-        model.assemble()
+        model.solve()
 
-    assert model._is_assembled is False
     assert not hasattr(model, "_K")
 
 
@@ -103,19 +101,15 @@ def test_solve_reports_topology_error_before_solver_singularity():
     with pytest.raises(ValueError, match=str(orphan.label)):
         model.solve()
 
-    assert model._is_assembled is False
     assert not hasattr(model, "_K")
 
 
 def test_linear_triangle_does_not_auto_restrain_orphan_node():
     model, orphan = _triangle_case()
 
-    assert np.isnan(orphan.ux)
-    assert np.isnan(orphan.uy)
-
     with pytest.raises(ValueError, match=str(orphan.label)):
         model.solve()
 
-    assert np.isnan(orphan.ux)
-    assert np.isnan(orphan.uy)
     assert model._prescribed_displacements.get(orphan) is None
+    assert not hasattr(orphan, "ux")
+    assert not hasattr(orphan, "uy")

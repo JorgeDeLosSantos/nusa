@@ -1,8 +1,7 @@
-"""Regression tests for result-based visualization API."""
+"""Regression tests for result-owned visualization API."""
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pytest
 
 from nusa import (
     Beam,
@@ -15,61 +14,48 @@ from nusa import (
 )
 
 
-def test_legacy_model_visualization_names_remain_as_compatibility_wrappers():
+def test_solved_visualization_is_not_model_owned():
     truss = TrussModel()
     beam = BeamModel()
     triangle = LinearTriangleModel()
 
-    assert hasattr(truss, "plot_deformed_shape")
-    assert hasattr(beam, "plot_deformed_shape")
-    assert hasattr(beam, "plot_moment_diagram")
-    assert hasattr(beam, "plot_shear_diagram")
-    assert hasattr(triangle, "plot_nodal_result")
-    assert hasattr(triangle, "plot_element_result")
-
-    assert not hasattr(beam, "plot_disp")
-    assert not hasattr(triangle, "plot_nsol")
-    assert not hasattr(triangle, "plot_esol")
+    for model, names in (
+        (truss, ("plot_deformed_shape",)),
+        (beam, ("plot_deformed_shape", "plot_moment_diagram", "plot_shear_diagram")),
+        (triangle, ("plot_nodal_result", "plot_element_result")),
+    ):
+        for name in names:
+            assert not hasattr(model, name)
 
 
-def test_solution_visualization_requires_solved_model_for_legacy_wrapper():
-    model = BeamModel()
-    with pytest.raises(RuntimeError, match="after solve"):
-        model.plot_deformed_shape()
-
-
-def test_beam_model_deformed_shape_delegates_to_static_result():
-    model = BeamModel("Scaled deformation")
+def _beam_result():
+    model = BeamModel("deformation")
     n1 = Node((0.0, 0.0))
     n2 = Node((1.0, 0.0))
     model.add_nodes([n1, n2])
     model.add_element(Beam((n1, n2), E=1.0, I=1.0))
     model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-0.6,))
+    return model.solve()
 
-    result = model.solve()
+
+def test_static_result_exposes_visualization_convenience():
+    result = _beam_result()
+
     assert isinstance(result, StaticResult)
-
-    ax = model.plot_deformed_shape(scale=10.0)
+    ax = result.plot_deformed_shape(scale=10.0)
     assert ax is not None
     plt.close("all")
 
 
 def test_top_level_deformed_plot_consumes_static_result():
-    model = BeamModel("Top-level deformation")
-    n1 = Node((0.0, 0.0))
-    n2 = Node((1.0, 0.0))
-    model.add_nodes([n1, n2])
-    model.add_element(Beam((n1, n2), E=1.0, I=1.0))
-    model.add_constraint(n1, uy=0.0, ur=0.0)
-    model.add_force(n2, (-0.6,))
-
-    result = model.solve()
+    result = _beam_result()
     ax = plot_deformed_shape(result, scale=2.0)
 
     assert len(ax.lines) == 2
     undeformed_x, undeformed_y = ax.lines[0].get_data()
     deformed_x, deformed_y = ax.lines[1].get_data()
+
     np.testing.assert_allclose(undeformed_x, [0.0, 1.0])
     np.testing.assert_allclose(undeformed_y, [0.0, 0.0])
     np.testing.assert_allclose(deformed_x, [0.0, 1.0])

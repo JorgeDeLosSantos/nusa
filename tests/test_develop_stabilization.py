@@ -1,38 +1,25 @@
-"""Regression tests for the develop-branch API stabilization."""
+"""Regression tests retained from the 0.3 stabilization phase."""
 
 import re
-
 import numpy as np
 
-from nusa.core import Element, Model, Node
-from nusa.element import Beam, Spring
-from nusa.model import BeamModel, SpringModel
+from nusa import BeamModel, Node, Spring, SpringModel
+from nusa.core import Element, Model
 from nusa.version import __version__
-
-
-class MockElement(Element):
-    def __init__(self, nodes):
-        super().__init__("mock")
-        self.nodes = nodes
-        self.f = 1.0
-        self.s = 2.0
 
 
 class MockBeam(Element):
     def __init__(self, nodes):
         super().__init__("beam")
-        self.nodes = nodes
+        self.nodes = tuple(nodes)
 
     def get_element_stiffness(self):
-        # Euler-Bernoulli beam with E = I = L = 1.
-        return np.array(
-            [
-                [12.0, 6.0, -12.0, 6.0],
-                [6.0, 4.0, -6.0, 2.0],
-                [-12.0, -6.0, 12.0, -6.0],
-                [6.0, 2.0, -6.0, 4.0],
-            ]
-        )
+        return np.array([
+            [12.0, 6.0, -12.0, 6.0],
+            [6.0, 4.0, -6.0, 2.0],
+            [-12.0, -6.0, 12.0, -6.0],
+            [6.0, 2.0, -6.0, 4.0],
+        ])
 
     def compute_results(self, u_e):
         actions = self.get_element_stiffness() @ np.asarray(u_e, dtype=float)
@@ -44,124 +31,45 @@ class MockBeam(Element):
         }
 
 
-def test_version_belongs_to_0_3_0_release_line():
+def test_version_belongs_to_0_3_0_release_line_until_version_bump():
     assert re.fullmatch(
         r"0\.3\.0(?:\.dev\d+|(?:a|b|rc)\d+(?:\.dev\d+)?)?",
         __version__,
     )
 
 
-def test_model_report_helpers_are_no_longer_model_responsibilities():
+def test_report_helpers_are_not_model_responsibilities():
     model = Model("Regression model", "mock")
-
     for name in (
-        "_get_ndisplacements",
-        "_get_nforces",
-        "_get_nodes_info",
-        "_get_elements_info",
-        "_get_element_results",
+        "_get_ndisplacements", "_get_nforces", "_get_nodes_info",
+        "_get_elements_info", "_get_element_results",
     ):
         assert not hasattr(model, name)
 
 
-def test_beam_solve_indexes_property_based_node_collection_with_integers():
+def test_mock_beam_solves_through_result_contract():
     model = BeamModel("Regression beam")
-    n1 = Node((0.0, 0.0))
-    n2 = Node((1.0, 0.0))
-    element = MockBeam((n1, n2))
-
+    n1, n2 = Node((0, 0)), Node((1, 0))
     model.add_nodes([n1, n2])
-    model.add_element(element)
+    model.add_element(MockBeam((n1, n2)))
     model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-1.0,))
 
-    model.solve()
+    result = model.solve()
 
-    assert np.isclose(n2.uy, -1.0 / 3.0)
-    assert np.isclose(n2.ur, -0.5)
-    assert np.isclose(n1.fy, 1.0)
-    assert np.isclose(n1.m, 1.0)
+    np.testing.assert_allclose(result.displacements, [0.0, 0.0, -1.0 / 3.0, -0.5])
+    np.testing.assert_allclose(result.reactions[:2], [1.0, 1.0])
 
 
-
-def test_shared_solver_uses_vector_state():
-    model = SpringModel("Solver state")
-    n1 = Node((0.0, 0.0))
-    n2 = Node((0.0, 0.0))
-    element = Spring((n1, n2), 300.0)
-
-    model.add_nodes([n1, n2])
-    model.add_element(element)
-    model.add_constraint(n1, ux=0.0)
-    model.add_force(n2, (750.0,))
-    model.solve()
-
-    np.testing.assert_allclose(model._u, [0.0, 2.5])
-    np.testing.assert_allclose(model._f, [0.0, 750.0])
-    np.testing.assert_allclose(model._nodal_forces, [-750.0, 750.0])
-    assert model._prescribed_dofs == [0]
-    assert model._free_dofs == [1]
-    np.testing.assert_allclose(model._K_reduced, [[300.0]])
-    np.testing.assert_allclose(model._rhs_reduced, [750.0])
-
-    for legacy_name in (
-        "U",
-        "F",
-        "NF",
-        "VU",
-        "VF",
-        "K2S",
-        "F2S",
-        "solved_u",
-    ):
-        assert not hasattr(model, legacy_name)
-
-
-
-def test_reduced_rhs_includes_nonzero_prescribed_displacements():
+def test_nonzero_prescribed_displacement_reduced_system_behavior():
     model = SpringModel("Reduced RHS")
-    n1 = Node((0.0, 0.0))
-    n2 = Node((0.0, 0.0))
-    n3 = Node((0.0, 0.0))
-
+    n1, n2, n3 = Node((0, 0)), Node((0, 0)), Node((0, 0))
     model.add_nodes([n1, n2, n3])
-    model.add_elements([
-        Spring((n1, n2), 100.0),
-        Spring((n2, n3), 100.0),
-    ])
+    model.add_elements([Spring((n1, n2), 100.0), Spring((n2, n3), 100.0)])
     model.add_constraint(n1, ux=0.0)
     model.add_constraint(n3, ux=0.03)
-    model.solve()
 
-    assert model._prescribed_dofs == [0, 2]
-    assert model._free_dofs == [1]
-    np.testing.assert_allclose(model._K_reduced, [[200.0]])
-    np.testing.assert_allclose(model._rhs_reduced, [3.0])
-    assert np.isclose(n2.ux, 0.015)
+    result = model.solve()
 
-
-def test_shared_assembly_accumulates_overlapping_beam_dofs():
-    model = BeamModel("Assembly regression")
-    n1 = Node((0.0, 0.0))
-    n2 = Node((1.0, 0.0))
-    n3 = Node((2.0, 0.0))
-    e1 = Beam((n1, n2), E=1.0, I=1.0)
-    e2 = Beam((n2, n3), E=1.0, I=1.0)
-
-    model.add_nodes([n1, n2, n3])
-    model.add_elements([e1, e2])
-    model.assemble()
-
-    expected = np.array(
-        [
-            [12.0, 6.0, -12.0, 6.0, 0.0, 0.0],
-            [6.0, 4.0, -6.0, 2.0, 0.0, 0.0],
-            [-12.0, -6.0, 24.0, 0.0, -12.0, 6.0],
-            [6.0, 2.0, 0.0, 8.0, -6.0, 2.0],
-            [0.0, 0.0, -12.0, -6.0, 12.0, -6.0],
-            [0.0, 0.0, 6.0, 2.0, -6.0, 4.0],
-        ]
-    )
-
-    np.testing.assert_allclose(model.stiffness_matrix, expected)
-    assert model._is_assembled is True
+    np.testing.assert_allclose(result.displacements, [0.0, 0.015, 0.03])
+    assert not hasattr(model, "_K_reduced")

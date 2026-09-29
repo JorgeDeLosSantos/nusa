@@ -111,10 +111,9 @@ def test_beam_diagrams_use_frozen_element_actions():
 
     expected = result.element_result(element)
 
-    # Corrupt legacy node state after the result exists. The diagrams must
-    # continue to use the frozen element actions.
-    model.nodes[-1].uy = 999.0
-    model.nodes[-1].ur = 999.0
+    # Mutate the problem after the result exists. The diagrams must continue
+    # to use the frozen element actions from the original result.
+    model.add_force(model.nodes[-1], (-20.0,))
 
     ax_m = plot_moment_diagram(result)
     _, moment_values = ax_m.lines[0].get_data()

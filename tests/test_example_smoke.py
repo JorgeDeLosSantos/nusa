@@ -10,6 +10,7 @@ from nusa import (
     BeamModel,
     LinearTriangleModel,
     SpringModel,
+    StaticResult,
     TrussModel,
 )
 
@@ -26,51 +27,52 @@ def test_fem_examples_do_not_use_wildcard_imports():
     directories = ("spring", "bar", "truss", "beam", "linear_triangle")
 
     for directory in directories:
-        for path in (EXAMPLES / directory).rglob("*.py"):
-            text = path.read_text(encoding="utf-8")
-            assert "import *" not in text, f"Wildcard import found in {path}"
+        for file_path in (EXAMPLES / directory).rglob("*.py"):
+            text = file_path.read_text(encoding="utf-8")
+            assert "import *" not in text, f"Wildcard import found in {file_path}"
 
 
-def test_spring_example_executes_and_returns_solved_model():
+def test_spring_example_executes_and_returns_result():
     namespace = _load_example("spring/spring_01.py")
-    model = namespace["test1"]()
+    result = namespace["test1"]()
 
-    assert isinstance(model, SpringModel)
-    assert model._is_assembled is True
-    assert np.isfinite(model.nodes[2].ux)
+    assert isinstance(result, StaticResult)
+    assert np.all(np.isfinite(result.displacements))
 
 
-def test_bar_example_executes_and_returns_solved_model():
+def test_bar_example_executes_and_returns_result():
     namespace = _load_example("bar/bar_1.py")
-    model = namespace["test1"]()
+    result = namespace["test1"]()
 
-    assert isinstance(model, BarModel)
-    assert model._is_assembled is True
-    assert np.isfinite(model.nodes[1].ux)
+    assert isinstance(result, StaticResult)
+    assert np.all(np.isfinite(result.displacements))
 
 
-def test_truss_example_executes_and_returns_solved_model():
+def test_truss_example_builds_model_and_solves_to_result():
     namespace = _load_example("truss/truss_01.py")
     model = namespace["build_model"]()
 
     assert isinstance(model, TrussModel)
-    assert model._is_assembled is True
-    assert np.all(np.isfinite([model.nodes[0].ux, model.nodes[0].uy]))
+    result = model.solve()
+    assert isinstance(result, StaticResult)
+    assert np.all(np.isfinite(result.displacements))
 
 
-def test_beam_example_executes_and_returns_solved_model():
+def test_beam_example_executes_and_returns_result():
     namespace = _load_example("beam/beam_2.py")
-    model = namespace["test2"]()
+    result = namespace["test2"]()
 
-    assert isinstance(model, BeamModel)
-    assert model._is_assembled is True
-    assert np.isfinite(model.nodes[1].uy)
+    assert isinstance(result, StaticResult)
+    assert np.all(np.isfinite(result.displacements))
 
 
-def test_linear_triangle_example_executes_and_returns_solved_model():
-    namespace = _load_example("linear_triangle/simple_triangle/simple_triangle.py")
+def test_linear_triangle_example_builds_model_and_solves_to_result():
+    namespace = _load_example(
+        "linear_triangle/simple_triangle/simple_triangle.py"
+    )
     model = namespace["build_model"]()
 
     assert isinstance(model, LinearTriangleModel)
-    assert model._is_assembled is True
-    assert np.all(np.isfinite([model.nodes[1].ux, model.nodes[1].uy]))
+    result = model.solve()
+    assert isinstance(result, StaticResult)
+    assert np.all(np.isfinite(result.displacements))

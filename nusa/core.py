@@ -29,7 +29,6 @@ class Model:
         self._elements = {} # Dictionary for elements {number: ElementObject}
         self._applied_forces = {} # Node -> explicitly applied nodal loads
         self._prescribed_displacements = {} # Node -> explicitly prescribed DOFs
-        self._is_assembled = False
         
     def add_node(self,node):
         """
@@ -60,7 +59,6 @@ class Model:
 
         self._node_index[node] = len(self._nodes)
         self._nodes.append(node)
-        self._invalidate_assembly()
 
     def add_nodes(self, nodes):
         """
@@ -128,10 +126,6 @@ class Model:
             )
 
         self._elements[element.label] = element
-
-        for node in element.nodes:
-            node._add_element(element)
-        self._invalidate_assembly()
 
     def add_elements(self, elements):
         """
@@ -262,38 +256,14 @@ class Model:
         return validated
 
     def _record_applied_forces(self, node, **values):
-        """Persist explicitly applied nodal loads and invalidate solved state."""
+        """Persist explicitly applied nodal loads."""
         self._get_node_index(node)
         self._applied_forces.setdefault(node, {}).update(values)
-        self._invalidate_solution()
 
     def _record_prescribed_displacements(self, node, **values):
-        """Persist explicitly prescribed nodal DOFs and invalidate solved state."""
+        """Persist explicitly prescribed nodal degrees of freedom."""
         self._get_node_index(node)
         self._prescribed_displacements.setdefault(node, {}).update(values)
-        self._invalidate_solution()
-
-    def _restore_input_state(self):
-        """Restore explicit loads and prescribed DOFs into vectors and Node state."""
-        for node, values in self._applied_forces.items():
-            if node not in self._node_index:
-                continue
-            for variable, value in values.items():
-                setattr(node, variable, value)
-                if hasattr(self, "_f") and variable in self.force_dofs:
-                    index = self._global_dof_index(node, variable, self.force_dofs)
-                    self._f[index] = value
-
-        for node, values in self._prescribed_displacements.items():
-            if node not in self._node_index:
-                continue
-            for variable, value in values.items():
-                setattr(node, variable, value)
-                if hasattr(self, "_u") and variable in self.displacement_dofs:
-                    index = self._global_dof_index(
-                        node, variable, self.displacement_dofs
-                    )
-                    self._u[index] = value
 
     @property
     def applied_loads(self):
@@ -330,112 +300,16 @@ class Model:
                     vector[index] = value
         return vector
 
-    def assemble(self):
-        """Assemble the global stiffness matrix for legacy compatibility.
-
-        The finite-element assembly implementation lives in nusa.analysis.
-        This model-owned cache is transitional and exists only for the 0.3-style
-        assemble() / stiffness_matrix API.
-        """
-        from .analysis import _assemble_stiffness
-
-        self._K = _assemble_stiffness(self)
-        self._is_assembled = True
-        self._invalidate_solution()
-
     def solve(self):
-        """Solve through LinearStaticAnalysis and return StaticResult.
+        """Run a linear-static analysis and return a new StaticResult.
 
-        The returned StaticResult is the numerical source of truth. Solved
-        values are copied back to the model and nodes only as a temporary
-        compatibility layer for the pre-0.4 API.
+        The model remains a problem definition: solving does not write
+        displacements, forces, reactions, matrices, or result caches back to
+        the model or its nodes.
         """
-        from .analysis import LinearStaticAnalysis, _partition_system
+        from .analysis import LinearStaticAnalysis
 
-        result = LinearStaticAnalysis().solve(self)
-
-        # Preserve the legacy assembled-matrix inspection surface without
-        # making it part of StaticResult.
-        if not self._is_assembled:
-            self.assemble()
-
-        (
-            prescribed_dofs,
-            free_dofs,
-            reduced,
-            rhs,
-        ) = _partition_system(
-            self._K,
-            result.applied_loads,
-            result.prescribed_displacements,
-        )
-
-        self._prescribed_dofs = prescribed_dofs.tolist()
-        self._free_dofs = free_dofs.tolist()
-        self._K_reduced = reduced.copy()
-        self._rhs_reduced = rhs.copy()
-
-        self._f = result.applied_loads
-        self._u = result.displacements
-        self._nodal_forces = result.nodal_forces
-        self._reactions = result.reactions
-        self._last_result = result
-
-        # Transitional writeback. Numerical analysis and element response no
-        # longer depend on these Node attributes.
-        for dof_index, value in enumerate(self._u):
-            node_index, component = divmod(dof_index, self.dof)
-            setattr(
-                self._nodes[node_index],
-                self.displacement_dofs[component],
-                value,
-            )
-
-        for dof_index, value in enumerate(self._nodal_forces):
-            node_index, component = divmod(dof_index, self.dof)
-            setattr(
-                self._nodes[node_index],
-                self.force_dofs[component],
-                value,
-            )
-
-        return result
-    @property
-    def displacements(self):
-        """Return the solved global displacement vector.
-
-        Results are available only after ``solve()``.
-        """
-        if not hasattr(self, "_nodal_forces"):
-            raise RuntimeError("Displacements are available only after solve()")
-        return self._u.copy()
-
-    @property
-    def nodal_forces(self):
-        """Return the solved generalized nodal-force vector ``K @ u``."""
-        if not hasattr(self, "_nodal_forces"):
-            raise RuntimeError("Nodal forces are available only after solve()")
-        return self._nodal_forces.copy()
-
-    @property
-    def reactions(self):
-        """Return the solved global support-reaction vector.
-
-        Entries are nonzero only at prescribed solver degrees of freedom and
-        are computed as ``K @ u - applied_loads`` at those DOFs.
-        """
-        if not hasattr(self, "_reactions"):
-            raise RuntimeError("Reactions are available only after solve()")
-        return self._reactions.copy()
-
-    def _get_node_vector_components(self, node, vector, names):
-        """Return named components from a model-ordered global vector."""
-        node_index = self._get_node_index(node)
-        start = self.dof * node_index
-        return {
-            name: vector[start + component]
-            for component, name in enumerate(names)
-        }
+        return LinearStaticAnalysis().solve(self)
 
     def applied_load(self, node):
         """Return explicitly applied load components for one node."""
@@ -446,7 +320,7 @@ class Model:
     def prescribed_displacement(self, node):
         """Return prescribed displacement components for one node.
 
-        Unprescribed degrees of freedom are returned as ``numpy.nan``.
+        Unprescribed degrees of freedom are returned as numpy.nan.
         """
         self._get_node_index(node)
         values = self._prescribed_displacements.get(node, {})
@@ -455,97 +329,6 @@ class Model:
             for name in self.displacement_dofs
         }
 
-    def displacement(self, node):
-        """Return solved displacement components for one node."""
-        return self._get_node_vector_components(
-            node, self.displacements, self.displacement_dofs
-        )
-
-    def nodal_force(self, node):
-        """Return solved generalized nodal-force components ``K @ u``."""
-        return self._get_node_vector_components(
-            node, self.nodal_forces, self.force_dofs
-        )
-
-    def reaction(self, node):
-        """Return solved support-reaction components for one node."""
-        return self._get_node_vector_components(
-            node, self.reactions, self.force_dofs
-        )
-
-    def element_result(self, element):
-        """Return normalized solved results for one model element."""
-        if not hasattr(self, "_last_result"):
-            raise RuntimeError("Element results are available only after solve()")
-        return self._last_result.element_result(element)
-
-    @property
-    def element_results(self):
-        """Return normalized solved results in element insertion order."""
-        if not hasattr(self, "_last_result"):
-            raise RuntimeError("Element results are available only after solve()")
-        return self._last_result.element_results
-
-    @property
-    def stiffness_matrix(self):
-        """Return a copy of the assembled global stiffness matrix."""
-        if not self._is_assembled or not hasattr(self, "_K"):
-            raise RuntimeError(
-                "Stiffness matrix is available only after assemble() or solve()"
-            )
-        return self._K.copy()
-
-    def _reset_input_vectors(self):
-        """Rebuild numeric input vectors from persistent loads and constraints."""
-        if not self._is_assembled:
-            return
-        matrix_size = self.dof * self.n_nodes
-        self._f = np.zeros(matrix_size, dtype=float)
-        self._u = np.full(matrix_size, np.nan, dtype=float)
-
-    def _reset_node_state(self):
-        """Clear solved nodal state and restore explicit model inputs."""
-        for node in self._nodes:
-            node.ux = np.nan
-            node.uy = np.nan
-            node.ur = np.nan
-            node.fx = 0.0
-            node.fy = 0.0
-            node.m = 0.0
-
-        self._restore_input_state()
-
-    def _invalidate_solution(self):
-        """Invalidate solved state while preserving a valid assembly."""
-        for attribute in (
-            "_K_reduced",
-            "_rhs_reduced",
-            "_free_dofs",
-            "_prescribed_dofs",
-            "_nodal_forces",
-            "_reactions",
-            "_last_result",
-        ):
-            if hasattr(self, attribute):
-                delattr(self, attribute)
-
-        if self._is_assembled:
-            self._reset_input_vectors()
-        else:
-            for attribute in ("_u", "_f"):
-                if hasattr(self, attribute):
-                    delattr(self, attribute)
-
-        self._reset_node_state()
-
-    def _invalidate_assembly(self):
-        """Invalidate global assembly and every dependent solved result."""
-        self._is_assembled = False
-        if hasattr(self, "_K"):
-            del self._K
-        self._invalidate_solution()
-
-    
     @property
     def elements(self):
         """
@@ -601,99 +384,48 @@ class Model:
             f"Elements: {self.n_elements}"
         )
 
-    def simple_report(self, report_type="print", fname="nusa_rpt.txt"):
-        """Generate a compact report from the latest result snapshot."""
-        if not hasattr(self, "_last_result"):
-            raise RuntimeError("simple_report() is available only after solve()")
-        return self._last_result.simple_report(
-            report_type=report_type,
-            fname=fname,
-        )
 
 
 
 #~ =========================== ELEMENT ===========================
 
 class Element:
+    """Base class for finite elements.
+
+    Elements own formulation, connectivity, and physical properties. Solved
+    response belongs to analysis results, not to the element instance.
     """
-    Superclass for all Elements
-    """
-    def __init__(self,etype):
-        self.etype = etype # element type
+
+    def __init__(self, etype):
+        self.etype = etype
         self.label = None
-        self._fx = 0.0
-        self._fy = 0.0
-        self._sx = 0.0
-        self._sy = 0.0
-        self._sxy = 0.0
-        
-    @property
-    def fx(self):
-        return self._fx
-        
-    @fx.setter
-    def fx(self,val):
-        self._fx = val
-        
-    @property
-    def fy(self):
-        return self._fy
-        
-    @fy.setter
-    def fy(self,val):
-        self._fy = val
-        
+
     def __str__(self):
-        _str = str(self.__class__)
-        return _str
+        return str(self.__class__)
 
 
 #~ =========================== NODE ===========================
 
 class Node:
-    """
-    Class for node object.
-    """
-    def __init__(self,coordinates):
-        """
-        Initialize a node with given coordinates.
+    """Geometry/topology point used by finite-element models."""
 
-        Parameters
-        ----------
-        coordinates : tuple
-            A tuple containing the (x, y) coordinates of the node.
-        """
+    __slots__ = ("coordinates", "_label")
+
+    def __init__(self, coordinates):
         try:
             coordinates = np.asarray(coordinates, dtype=float)
         except (TypeError, ValueError) as exc:
-            raise ValueError("Node coordinates must contain two finite numbers") from exc
+            raise ValueError(
+                "Node coordinates must contain two finite numbers"
+            ) from exc
         if coordinates.shape != (2,):
             raise ValueError("Node coordinates must contain exactly two values")
         if not np.isfinite(coordinates).all():
             raise ValueError("Node coordinates must be finite")
+
         self.coordinates = coordinates.copy()
         self._label = None
 
-        # DOF
-        self._ux = np.nan
-        self._uy = np.nan
-        self._ur = np.nan
-        # Nodal forces
-        self._fx = 0.0
-        self._fy = 0.0
-        self._m = 0.0
-        # Nodal stresses
-        self._sx = 0.0
-        self._sy = 0.0
-        self._sxy = 0.0
-        self._seqv = 0.0 
-        # strain
-        self._ex = 0.0
-        self._ey = 0.0
-        self._exy = 0.0
-        # Elements ¿what?
-        self._elements = []
-        
     @property
     def x(self):
         return self.coordinates[0]
@@ -707,166 +439,15 @@ class Node:
         return self._label
 
     @label.setter
-    def label(self,val):
-        self._label = val
-
-    def _add_element(self, element):
-        """Register an attached element for internal nodal post-processing."""
-        self._elements.append(element)
-        
-    @property
-    def ux(self):
-        """
-        Return the x-displacement of the node.
-        """
-        return self._ux
-    
-    @ux.setter
-    def ux(self,val):
-        self._ux = val
-    
-    @property
-    def uy(self):
-        """
-        Return the y-displacement of the node.
-        """
-        return self._uy
-    
-    @uy.setter
-    def uy(self,val):
-        self._uy = val
-    
-    @property
-    def ur(self):
-        """
-        Return the rotational displacement of the node.
-        """
-        return self._ur
-    
-    @ur.setter
-    def ur(self,val):
-        self._ur = val
-        
-    @property
-    def fx(self):
-        """Solved generalized nodal x-force (``K @ u``), not a reaction."""
-        return self._fx
-    
-    @fx.setter
-    def fx(self,val):
-        self._fx = val
-    
-    @property
-    def fy(self):
-        """Solved generalized nodal y-force (``K @ u``), not a reaction."""
-        return self._fy
-    
-    @fy.setter
-    def fy(self,val):
-        self._fy = val
-        
-    @property
-    def m(self):
-        """Solved generalized nodal moment (``K @ u``), not a reaction."""
-        return self._m
-    
-    @m.setter
-    def m(self,val):
-        self._m = val
-        
-    @property
-    def sx(self):
-        elements = self._elements
-        if elements == []:
-            self._sx = 0.0
-        else:
-            self._sx = sum([el.sx for el in elements])/len(elements)
-        return self._sx
-    
-    @sx.setter
-    def sx(self,val):
-        self._sx = val
-        
-    @property
-    def sy(self):
-        elements = self._elements
-        if elements == []:
-            self._sy = 0
-        else:
-            self._sy = sum([el.sy for el in elements])/len(elements)
-        return self._sy
-    
-    @sy.setter
-    def sy(self,val):
-        self._sy = val
-        
-    @property
-    def sxy(self):
-        elements = self._elements
-        if elements == []:
-            self._sxy = 0
-        else:
-            self._sxy = sum([el.sxy for el in elements])/len(elements)
-        return self._sxy
-    
-    @sxy.setter
-    def sxy(self,val):
-        self._sxy = val
-        
-    @property
-    def seqv(self):
-        sxx, syy, sxy = self.sx, self.sy, self.sxy
-        seqv = np.sqrt(sxx**2 - sxx*syy + syy**2 + 3*sxy**2)
-        return seqv
-
-    @property
-    def ex(self):
-        elements = self._elements
-        if elements == []:
-            self._ex = 0
-        else:
-            self._ex = sum([el.ex for el in elements])/len(elements)
-        return self._ex
-    
-    @ex.setter
-    def ex(self,val):
-        self._ex = val
-
-    @property
-    def ey(self):
-        elements = self._elements
-        if elements == []:
-            self._ey = 0
-        else:
-            self._ey = sum([el.ey for el in elements])/len(elements)
-        return self._ey
-    
-    @ey.setter
-    def ey(self,val):
-        self._ey = val
-
-    @property
-    def exy(self):
-        elements = self._elements
-        if elements == []:
-            self._exy = 0
-        else:
-            self._exy = sum([el.exy for el in elements])/len(elements)
-        return self._exy
-    
-    @exy.setter
-    def exy(self,val):
-        self._exy = val
+    def label(self, value):
+        self._label = value
 
     def __str__(self):
-        _str = self.__class__
-        _str = "%s\nU:(%g,%g)\n"%(_str,self.ux, self.uy)
-        _str = "%sF:(%g,%g)"%(_str,self.fx,self.fy)
-        return _str
-    
+        return f"Node {self.label}: ({self.x},{self.y})"
+
     def __repr__(self):
         return f"<Node {self.label}: ({self.x},{self.y})>"
-        
+
 
 if __name__=='__main__':
     pass
