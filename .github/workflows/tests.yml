@@ -101,10 +101,10 @@ jobs:
           model.add_element(Spring((n1, n2), 100.0))
           model.add_constraint(n1, ux=0.0)
           model.add_force(n2, (50.0,))
-          model.solve()
+          result = model.solve()
 
-          assert np.isclose(n2.ux, 0.5)
-          assert np.isclose(model.reaction(n1)["fx"], -50.0)
+          assert np.isclose(result.displacement(n2)["ux"], 0.5)
+          assert np.isclose(result.reaction(n1)["fx"], -50.0)
           print(nusa.__version__)
           PY
 
