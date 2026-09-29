@@ -77,7 +77,7 @@ python -m pytest
 ```python
 import numpy as np
 
-from nusa import LinearTriangle, LinearTriangleModel, Node
+from nusa import LinearTriangle, LinearTriangleModel, Node, plot_model
 import nusa.mesh as nmsh
 
 md = nmsh.Modeler()
@@ -114,7 +114,7 @@ for node in nodes:
     if np.isclose(node.x, maxx):
         model.add_force(node, (10e3,0))
 
-model.plot_model()
+plot_model(model)
 result = model.solve()
 result.plot_nodal_field("von_mises_stress")
 ```

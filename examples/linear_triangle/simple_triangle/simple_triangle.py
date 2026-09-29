@@ -7,7 +7,7 @@
 
 import matplotlib.pyplot as plt
 
-from nusa import LinearTriangle, LinearTriangleModel, Node
+from nusa import LinearTriangle, LinearTriangleModel, Node, plot_model
 
 
 def build_model():
@@ -29,7 +29,7 @@ def build_model():
 
 def main():
     model = build_model()
-    model.plot_model()
+    plot_model(model)
 
     result = model.solve()
     result.plot_nodal_field("ux")

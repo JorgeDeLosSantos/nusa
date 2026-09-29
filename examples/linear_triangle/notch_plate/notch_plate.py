@@ -5,9 +5,10 @@
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
+import matplotlib.pyplot as plt
 import numpy as np
 
-from nusa import LinearTriangle, LinearTriangleModel, Node
+from nusa import LinearTriangle, LinearTriangleModel, Node, plot_model
 from nusa.mesh import Modeler
 
 modeler = Modeler()
@@ -44,9 +45,8 @@ for node in nodos:
     if np.isclose(node.x, maxx):
         model.add_force(node, (F,0))
 
-model.plot_model()
-model.solve()
-# Plotting
-model.plot_nodal_result("sxx")
-model.show()
+plot_model(model)
+result = model.solve()
+result.plot_nodal_field("sxx")
+plt.show()
 

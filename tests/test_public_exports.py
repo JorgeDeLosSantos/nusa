@@ -16,6 +16,7 @@ EXPECTED_PUBLIC_API = {
     "plot_moment_diagram",
     "plot_element_field",
     "plot_nodal_field",
+    "plot_model",
     "plot_deformed_shape",
     "nodal_field",
     "element_field",
