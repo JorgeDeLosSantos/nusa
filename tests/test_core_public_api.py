@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from nusa.core import Element, Node
+from nusa import Element, Node
 from nusa.element import Beam
 from nusa.model import BeamModel, LinearTriangleModel, TrussModel
 
