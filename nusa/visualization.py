@@ -8,6 +8,7 @@ import matplotlib.tri as mtri
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon
 
+from .core import Model
 from .post import element_field, nodal_field
 from .result import StaticResult
 
@@ -49,6 +50,94 @@ def _set_equal_limits(ax, coordinates):
     ax.set_xlim(xmin - margin_x, xmax + margin_x)
     ax.set_ylim(ymin - margin_y, ymax + margin_y)
     ax.set_aspect("equal")
+
+
+
+
+def _require_model(model):
+    if not isinstance(model, Model):
+        raise TypeError("plot_model() requires a Model")
+
+
+def _problem_coordinates(model):
+    return np.asarray([[node.x, node.y] for node in model.nodes], dtype=float)
+
+
+def _arrow_size(coordinates):
+    if coordinates.size == 0:
+        return 1.0
+    xmin, ymin = coordinates.min(axis=0)
+    xmax, ymax = coordinates.max(axis=0)
+    span = max(xmax - xmin, ymax - ymin)
+    return 0.08 * span if span else 0.08
+
+
+def _draw_force_arrow(ax, x, y, axis, direction, size):
+    if axis == "x":
+        ax.arrow(
+            x, y, direction * size, 0.0,
+            head_width=size / 4.0,
+            head_length=size / 3.0,
+            length_includes_head=True,
+        )
+    elif axis == "y":
+        ax.arrow(
+            x, y, 0.0, direction * size,
+            head_width=size / 4.0,
+            head_length=size / 3.0,
+            length_includes_head=True,
+        )
+
+
+def _draw_constraint_marker(ax, x, y, dof):
+    marker = {"ux": "<", "uy": "v", "ur": "s"}.get(dof, "x")
+    ax.plot(x, y, marker=marker, linestyle="None", markersize=9, alpha=0.7)
+
+
+def plot_model(model, ax=None):
+    """Plot model geometry, applied translational loads, and constraints."""
+    _require_model(model)
+    ax = _axes(ax)
+    coordinates = _problem_coordinates(model)
+
+    if model.mtype == "triangle":
+        patches = [
+            Polygon(
+                [[node.x, node.y] for node in element.nodes],
+                closed=True,
+            )
+            for element in model.elements
+        ]
+        collection = PatchCollection(patches, alpha=0.35, edgecolor="k")
+        ax.add_collection(collection)
+    else:
+        for element in model.elements:
+            xy = np.asarray([[node.x, node.y] for node in element.nodes], dtype=float)
+            ax.plot(xy[:, 0], xy[:, 1], marker="o")
+
+    size = _arrow_size(coordinates)
+    for node in model.nodes:
+        loads = model.applied_load(node)
+        for component, axis in (("fx", "x"), ("fy", "y")):
+            value = loads.get(component, 0.0)
+            if value != 0.0:
+                _draw_force_arrow(
+                    ax,
+                    node.x,
+                    node.y,
+                    axis,
+                    1 if value > 0.0 else -1,
+                    size,
+                )
+
+        prescribed = model.prescribed_displacement(node)
+        for dof, value in prescribed.items():
+            if np.isfinite(value):
+                _draw_constraint_marker(ax, node.x, node.y, dof)
+
+    _set_equal_limits(ax, coordinates)
+    ax.set_title(model.name)
+    return ax
 
 
 def plot_deformed_shape(result, scale=1.0, ax=None, **kwargs):
