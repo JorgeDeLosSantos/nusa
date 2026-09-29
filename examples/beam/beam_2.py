@@ -1,48 +1,45 @@
 # -*- coding: utf-8 -*-
 # ***********************************
-#  Author: Pedro Jorge De Los Santos     
-#  E-mail: delossantosmfq@gmail.com 
+#  Author: Pedro Jorge De Los Santos
+#  E-mail: delossantosmfq@gmail.com
 #  License: MIT License
 # ***********************************
+
 from nusa import Beam, BeamModel, Node
 
+
 def test2():
-    """
-    Logan, D. (2007). A first course in the finite element analysis.
-    Example 4.4, pp. 171.
-    """
-    # Input data 
+    """Logan (2007), Example 4.4."""
     E = 210e9
     I = 4e-4
     P = 10e3
     M = 20e3
-    L = 3
-    # Model
-    m1 = BeamModel("Beam Model")
-    # Nodes
-    n1 = Node((0,0))
-    n2 = Node((3,0))
-    n3 = Node((6,0))
-    # Elements
-    e1 = Beam((n1,n2),E,I)
-    e2 = Beam((n2,n3),E,I)
+    L = 3.0
 
-    # Add elements 
-    for nd in (n1,n2,n3):
-        m1.add_node(nd)
-    for el in (e1,e2):
-        m1.add_element(el)
-        
-    m1.add_force(n2, (-P,))
-    m1.add_moment(n2, (M,))
-    m1.add_constraint(n1, uy=0, ur=0) # fixed 
-    m1.add_constraint(n3, uy=0, ur=0) # fixed
-    m1.solve() # Solve model
-    print(m1.stiffness_matrix)
-    print([node.uy for node in m1.nodes])
-    print(m1.nodal_forces)
-    return m1
+    model = BeamModel("Beam Model")
+    n1 = Node((0.0, 0.0))
+    n2 = Node((L, 0.0))
+    n3 = Node((2.0 * L, 0.0))
+
+    e1 = Beam((n1, n2), E, I)
+    e2 = Beam((n2, n3), E, I)
+
+    model.add_nodes([n1, n2, n3])
+    model.add_elements([e1, e2])
+    model.add_force(n2, (-P,))
+    model.add_moment(n2, (M,))
+    model.add_constraint(n1, uy=0.0, ur=0.0)
+    model.add_constraint(n3, uy=0.0, ur=0.0)
+
+    result = model.solve()
+
+    print("Node 2 displacement:", result.displacement(n2))
+    print("Nodal forces:", result.nodal_forces)
+    print("Element 1 actions:", result.element_result(e1))
+    print("Element 2 actions:", result.element_result(e2))
+
+    return result
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test2()
