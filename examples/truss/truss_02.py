@@ -5,7 +5,9 @@
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
-from nusa import Node, Truss, TrussModel
+import matplotlib.pyplot as plt
+
+from nusa import Node, Truss, TrussModel, plot_model
 
 
 def build_model():
@@ -41,15 +43,15 @@ def build_model():
     model.add_constraint(n1, ux=0, uy=0)
     model.add_constraint(n6, ux=0, uy=0)
     model.add_force(n2, (20e3, 0))
-    model.solve()
     return model
 
 
 def main():
     model = build_model()
-    model.plot_model()
-    model.plot_deformed_shape()
-    model.show()
+    plot_model(model)
+    result = model.solve()
+    result.plot_deformed_shape()
+    plt.show()
 
 
 if __name__ == "__main__":
