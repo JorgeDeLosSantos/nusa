@@ -34,8 +34,6 @@ class SpringModel(Model):
         values = self._validated_named_components(
             constraint, self.displacement_dofs, "constraint"
         )
-        for variable, value in values.items():
-            setattr(node, variable, value)
         if values:
             self._record_prescribed_displacements(node, **values)
         
@@ -62,8 +60,6 @@ class BarModel(Model):
         values = self._validated_named_components(
             constraint, self.displacement_dofs, "constraint"
         )
-        for variable, value in values.items():
-            setattr(node, variable, value)
         if values:
             self._record_prescribed_displacements(node, **values)
         
@@ -89,14 +85,12 @@ class TrussModel(Model):
         values = self._validated_named_components(
             constraint, self.displacement_dofs, "constraint"
         )
-        for variable, value in values.items():
-            setattr(node, variable, value)
         if values:
             self._record_prescribed_displacements(node, **values)
         
-    def plot_model(self, show_reactions=False):
+    def plot_model(self):
         """
-        Plot model geometry, applied loads, constraints, and optional reactions.
+        Plot model geometry, applied loads, and constraints.
         """
         import matplotlib.pyplot as plt
         
@@ -114,15 +108,12 @@ class TrussModel(Model):
             if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
             if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
 
-            if show_reactions:
-                reaction = self.reaction(nd)
-                if reaction["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1,reaction=True)
-                if reaction["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1,reaction=True)
-                if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
-                if reaction["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1,reaction=True)
 
-            if nd.ux == 0: self._draw_xconstraint(ax,nd.x,nd.y)
-            if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
+            prescribed = self.prescribed_displacement(nd)
+            if prescribed.get("ux", np.nan) == 0:
+                self._draw_xconstraint(ax, nd.x, nd.y)
+            if prescribed.get("uy", np.nan) == 0:
+                self._draw_yconstraint(ax, nd.x, nd.y)
         
         x0,x1,y0,y1 = self._rect_region()
         plt.axis('equal')
@@ -164,30 +155,6 @@ class TrussModel(Model):
         kfy = sf*(y1-y0)
         return np.mean([kfx,kfy])
         
-    def plot_deformed_shape(self, scale=1.0, **kwargs):
-        """Compatibility wrapper around StaticResult.plot_deformed_shape()."""
-        if not hasattr(self, "_last_result"):
-            raise RuntimeError(
-                "plot_deformed_shape() is available only after solve()"
-            )
-        return self._last_result.plot_deformed_shape(scale=scale, **kwargs)
-
-    def _calculate_deformed_factor(self):
-        x0,x1,y0,y1 = self._rect_region()
-        ux = np.abs(np.array([n.ux for n in self.nodes]))
-        uy = np.abs(np.array([n.uy for n in self.nodes]))
-        sf = 1.5e-2
-        if ux.max()==0 and uy.max()!=0:
-            kfx = sf*(y1-y0)/uy.max()
-            kfy = sf*(y1-y0)/uy.max()
-        if uy.max()==0 and ux.max()!=0:
-            kfx = sf*(x1-x0)/ux.max()
-            kfy = sf*(x1-x0)/ux.max()
-        if ux.max()!=0 and uy.max()!=0:
-            kfx = sf*(x1-x0)/ux.max()
-            kfy = sf*(y1-y0)/uy.max()
-        return np.mean([kfx,kfy])
-
     def show(self):
         import matplotlib.pyplot as plt
         plt.show()
@@ -231,13 +198,11 @@ class BeamModel(Model):
         values = self._validated_named_components(
             constraint, self.displacement_dofs, "constraint"
         )
-        for variable, value in values.items():
-            setattr(node, variable, value)
         if values:
             self._record_prescribed_displacements(node, **values)
         
-    def plot_model(self, show_reactions=False):
-        """Plot beam geometry, applied transverse loads, and optional reactions."""
+    def plot_model(self):
+        """Plot beam geometry, applied transverse loads, and constraints."""
         import matplotlib.pyplot as plt
         
         fig = plt.figure()
@@ -254,13 +219,12 @@ class BeamModel(Model):
             if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
             if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
 
-            if show_reactions:
-                reaction = self.reaction(nd)
-                if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
-                if reaction["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1,reaction=True)
 
-            if nd.ux == 0: self._draw_xconstraint(ax,nd.x,nd.y)
-            if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
+            prescribed = self.prescribed_displacement(nd)
+            if prescribed.get("ux", np.nan) == 0:
+                self._draw_xconstraint(ax, nd.x, nd.y)
+            if prescribed.get("uy", np.nan) == 0:
+                self._draw_yconstraint(ax, nd.x, nd.y)
             
         ax.axis("equal")
         x0,x1,y0,y1 = self._rect_region()
@@ -315,30 +279,6 @@ class BeamModel(Model):
             ky = (ymx-ymn)/factor
         return xmn-kx, xmx+kx, ymn-ky, ymx+ky
         
-    def plot_deformed_shape(self, scale=1000, **kwargs):
-        """Compatibility wrapper around StaticResult.plot_deformed_shape()."""
-        if not hasattr(self, "_last_result"):
-            raise RuntimeError(
-                "plot_deformed_shape() is available only after solve()"
-            )
-        return self._last_result.plot_deformed_shape(scale=scale, **kwargs)
-
-    def plot_moment_diagram(self, **kwargs):
-        """Compatibility wrapper around StaticResult.plot_moment_diagram()."""
-        if not hasattr(self, "_last_result"):
-            raise RuntimeError(
-                "plot_moment_diagram() is available only after solve()"
-            )
-        return self._last_result.plot_moment_diagram(**kwargs)
-
-    def plot_shear_diagram(self, **kwargs):
-        """Compatibility wrapper around StaticResult.plot_shear_diagram()."""
-        if not hasattr(self, "_last_result"):
-            raise RuntimeError(
-                "plot_shear_diagram() is available only after solve()"
-            )
-        return self._last_result.plot_shear_diagram(**kwargs)
-
     def show(self):
         import matplotlib.pyplot as plt
         plt.show()
@@ -366,14 +306,12 @@ class LinearTriangleModel(Model):
         values = self._validated_named_components(
             constraint, self.displacement_dofs, "constraint"
         )
-        for variable, value in values.items():
-            setattr(node, variable, value)
         if values:
             self._record_prescribed_displacements(node, **values)
         
-    def plot_model(self, show_reactions=False):
+    def plot_model(self):
         """
-        Plot mesh geometry, applied loads, constraints, and optional reactions.
+        Plot mesh geometry, applied loads, and constraints.
         """
         import matplotlib.pyplot as plt
         from matplotlib.patches import Polygon
@@ -398,15 +336,13 @@ class LinearTriangleModel(Model):
             if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
             if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
 
-            if show_reactions:
-                reaction = self.reaction(nd)
-                if reaction["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1,reaction=True)
-                if reaction["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1,reaction=True)
-                if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
-                if reaction["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1,reaction=True)
 
-            if nd.ux == 0 and nd.uy == 0:
-                self._draw_xyconstraint(ax,nd.x,nd.y)
+            prescribed = self.prescribed_displacement(nd)
+            if (
+                prescribed.get("ux", np.nan) == 0
+                and prescribed.get("uy", np.nan) == 0
+            ):
+                self._draw_xyconstraint(ax, nd.x, nd.y)
 
         pc = PatchCollection(patches, color="#7CE7FF", edgecolor="k", alpha=0.4)
         ax.add_collection(pc)
@@ -449,22 +385,6 @@ class LinearTriangleModel(Model):
         kfy = sf*(y1-y0)
         return np.mean([kfx,kfy])
         
-    def plot_nodal_result(self, var="ux"):
-        """Compatibility wrapper for result-based nodal-field plotting."""
-        if not hasattr(self, "_last_result"):
-            raise RuntimeError(
-                "plot_nodal_result() is available only after solve()"
-            )
-        return self._last_result.plot_nodal_field(var)
-
-    def plot_element_result(self, var="sxx"):
-        """Compatibility wrapper for result-based element-field plotting."""
-        if not hasattr(self, "_last_result"):
-            raise RuntimeError(
-                "plot_element_result() is available only after solve()"
-            )
-        return self._last_result.plot_element_field(var)
-
     def show(self):
         """
         Show matplotlib plots
