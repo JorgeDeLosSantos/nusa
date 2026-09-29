@@ -8,7 +8,7 @@ import matplotlib.tri as mtri
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon
 
-from .core import Model
+from .model import Model
 from .post import element_field, nodal_field
 from .result import StaticResult
 
