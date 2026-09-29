@@ -103,10 +103,6 @@ class Spring(Element):
             "force_j": float(values[1]),
         }
 
-    def _result_values(self):
-        n1, n2 = self.nodes
-        return self.compute_results([n1.ux, n2.ux])
-
     def get_element_stiffness(self):
         r"""
         Get stiffness matrix for this element.
@@ -162,10 +158,6 @@ class Bar(Element):
             "axial_force": float(axial_force),
             "axial_stress": float(axial_force / self.A),
         }
-
-    def _result_values(self):
-        ni, nj = self.nodes
-        return self.compute_results([ni.ux, nj.ux])
 
     @property
     def L(self):
@@ -260,10 +252,6 @@ class Truss(Element):
             "axial_stress": float(axial_force / self.A),
         }
 
-    def _result_values(self):
-        ni, nj = self.nodes
-        return self.compute_results([ni.ux, ni.uy, nj.ux, nj.uy])
-
     def get_element_stiffness(self):
         """
         Get stiffness matrix for this element
@@ -329,10 +317,6 @@ class Beam(Element):
             "bending_moment_i": float(actions[1]),
             "bending_moment_j": float(actions[3]),
         }
-
-    def _result_values(self):
-        n1, n2 = self.nodes
-        return self.compute_results([n1.uy, n1.ur, n2.uy, n2.ur])
 
     @property
     def L(self):
@@ -454,13 +438,6 @@ class LinearTriangle(Element):
             "strain_yy": float(strain[1]),
             "strain_xy": float(strain[2]),
         }
-
-    def _result_values(self):
-        ni, nj, nm = self.nodes
-        return self.compute_results(
-            [ni.ux, ni.uy, nj.ux, nj.uy, nm.ux, nm.uy]
-        )
-        
 
 
 
