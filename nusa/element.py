@@ -5,7 +5,24 @@
 #  License: MIT License
 # ***********************************
 import numpy as np
-from .core import Element, Node
+from .node import Node
+
+class Element:
+    """Base class for finite elements.
+
+    Elements own formulation, connectivity, and physical properties. Solved
+    response belongs to analysis results, not to the element instance.
+    """
+
+    def __init__(self, etype):
+        self.etype = etype
+        self.label = None
+
+    def __str__(self):
+        return str(self.__class__)
+
+
+#~ =========================== NODE ===========================
 
 
 def _validate_nodes(nodes, expected_count, element_name):
@@ -75,7 +92,7 @@ class Spring(Element):
     
     *nodes* : tuple
         Connectivity for element given as tuple of 
-        :class:`~core.base.Node` objects
+        :class:`~nusa.node.Node` objects
     
     *ke* : float
         Spring stiffness
@@ -128,7 +145,7 @@ class Bar(Element):
     """
     Bar element for finite element analysis
     
-    *nodes* : :class:`~core.base.Node`
+    *nodes* : :class:`~nusa.node.Node`
         Connectivity for element
     
     *E* : float
@@ -197,7 +214,7 @@ class Truss(Element):
     """
     Truss element for finite element analysis
     
-    *nodes* : Tuple of :class:`~nusa.core.Node`
+    *nodes* : Tuple of :class:`~nusa.node.Node`
         Connectivity for element
     
     *E* : float
@@ -273,7 +290,7 @@ class Beam(Element):
     """
     Beam element for finite element analysis
     
-    *nodes* : :class:`~core.base.Node`
+    *nodes* : :class:`~nusa.node.Node`
         Connectivity for element
     
     *E* : float
@@ -335,7 +352,7 @@ class LinearTriangle(Element):
     """
     Linear triangle element for finite element analysis
     
-    *nodes* : :class:`~nusa.core.Node`
+    *nodes* : :class:`~nusa.node.Node`
         Connectivity for element
     
     *E* : float
