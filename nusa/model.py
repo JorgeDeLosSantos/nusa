@@ -36,7 +36,7 @@ class Model:
 
         Parameters
         ----------
-        node : :class:`~nusa.core.Node`
+        node : :class:`~nusa.node.Node`
             Instance of a Node to be added.
 
         Returns
@@ -79,7 +79,7 @@ class Model:
 
         Parameters
         ----------
-        element : :class:`~nusa.core.Element`
+        element : :class:`~nusa.element.Element`
             Instance of an Element to be added.
 
         Raises
@@ -383,11 +383,6 @@ class Model:
             f"Nodes: {self.n_nodes}\n"
             f"Elements: {self.n_elements}"
         )
-
-
-
-
-#~ =========================== ELEMENT ===========================
 
 
 
