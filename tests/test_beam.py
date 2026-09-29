@@ -49,7 +49,7 @@ class TestBeamModel:
             result.displacement(n2)["ur"],
             -P * L**2 / (2.0 * E * I),
         )
-        assert result.reaction(n1)["fy"] == np.testing.assert_approx_equal(P, P)
+        assert np.isclose(result.reaction(n1)["fy"], P)
 
     def test_logan_example_4_4(self):
         E, I, P, M, L = 210e9, 4e-4, 10e3, 20e3, 3.0
@@ -77,7 +77,7 @@ class TestBeamModel:
             [1.0e4, 1.25e4, 0.0, -2.5e3],
             atol=1e-8,
         )
-        assert result.element_result(e1)["shear_force_i"] == np.testing.assert_approx_equal(1e4, 1e4)
+        assert np.isclose(result.element_result(e1)["shear_force_i"], 1.0e4)
 
     def test_simply_supported_eccentric_load(self):
         E, I, P = 29e6, 291.0, 35e3
