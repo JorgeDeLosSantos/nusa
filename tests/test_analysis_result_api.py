@@ -44,9 +44,7 @@ def test_solve_returns_static_result_without_using_legacy_model_solve():
     assert result.displacement(n2) == {"ux": pytest.approx(0.5)}
     assert result.reaction(n1) == {"fx": pytest.approx(-50.0)}
 
-    # The new analysis path does not create legacy solved state on Model.
-    with pytest.raises(RuntimeError, match="after solve"):
-        _ = model.displacements
+    assert not hasattr(model, "displacements")
 
 
 def test_explicit_analysis_matches_top_level_solve():
@@ -60,29 +58,14 @@ def test_explicit_analysis_matches_top_level_solve():
     np.testing.assert_allclose(direct.reactions, explicit.reactions)
 
 
-def test_new_analysis_does_not_write_solved_values_to_nodes():
+def test_new_analysis_does_not_add_solved_state_to_nodes():
     model, n1, n2 = _spring_problem()
-
-    before = (
-        n1.ux,
-        n2.ux,
-        n1.fx,
-        n2.fx,
-    )
 
     result = solve(model)
 
-    after = (
-        n1.ux,
-        n2.ux,
-        n1.fx,
-        n2.fx,
-    )
-
-    assert np.isclose(before[0], after[0])
-    assert np.isnan(before[1]) and np.isnan(after[1])
-    assert np.isclose(before[2], after[2])
-    assert np.isclose(before[3], after[3])
+    for node in (n1, n2):
+        for name in ("ux", "uy", "ur", "fx", "fy", "m"):
+            assert not hasattr(node, name)
     assert result.displacement(n2)["ux"] == pytest.approx(0.5)
 
 
@@ -252,8 +235,8 @@ def test_new_analysis_solves_linear_triangle_without_node_writeback():
         [0.0, 0.0, 9.1e-8, 0.0, 0.0, 0.0],
         atol=1e-15,
     )
-    assert np.isnan(n2.ux)
-    assert np.isnan(n2.uy)
+    assert not hasattr(n2, "ux")
+    assert not hasattr(n2, "uy")
 
 
 def test_singular_system_policy_matches_legacy_behavior():
