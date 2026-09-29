@@ -6,6 +6,7 @@ from .result import StaticResult
 from .reporting import simple_report
 from .post import element_field, nodal_field
 from .visualization import (
+    plot_model,
     plot_deformed_shape,
     plot_element_field,
     plot_moment_diagram,
@@ -33,6 +34,7 @@ __all__ = [
     "simple_report",
     "element_field",
     "nodal_field",
+    "plot_model",
     "plot_deformed_shape",
     "plot_nodal_field",
     "plot_element_field",
