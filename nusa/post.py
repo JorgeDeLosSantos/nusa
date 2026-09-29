@@ -12,9 +12,26 @@ def _require_result(result):
         raise TypeError("post-processing requires a StaticResult")
 
 
+_ELEMENT_ALIASES = {
+    "sxx": "stress_xx",
+    "syy": "stress_yy",
+    "sxy": "stress_xy",
+    "exx": "strain_xx",
+    "eyy": "strain_yy",
+    "exy": "strain_xy",
+}
+
+_NODAL_ALIASES = {
+    **_ELEMENT_ALIASES,
+    "usum": "displacement_magnitude",
+    "seqv": "von_mises_stress",
+}
+
+
 def element_field(result, name):
     """Return one canonical scalar element field in result order."""
     _require_result(result)
+    name = _ELEMENT_ALIASES.get(name, name)
     records = result.element_results
     if not records:
         return np.empty(0, dtype=float)
@@ -41,6 +58,7 @@ def nodal_field(result, name, recovery="average"):
     explicit recovery policy; richer recovery methods can be added later.
     """
     _require_result(result)
+    name = _NODAL_ALIASES.get(name, name)
 
     direct = _displacement_component(result, name)
     if direct is not None:
