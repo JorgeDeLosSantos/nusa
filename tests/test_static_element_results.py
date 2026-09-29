@@ -192,26 +192,14 @@ def test_old_element_results_survive_model_changes_and_resolve():
 
 
 @pytest.mark.parametrize("builder", [_spring, _bar, _truss, _beam, _triangle])
-def test_new_element_result_path_does_not_write_solved_node_state(builder):
+def test_element_result_path_keeps_nodes_solution_state_free(builder):
     model, _ = builder()
-    before = [
-        (node.ux, node.uy, node.ur, node.fx, node.fy, node.m)
-        for node in model.nodes
-    ]
 
     solve(model)
 
-    after = [
-        (node.ux, node.uy, node.ur, node.fx, node.fy, node.m)
-        for node in model.nodes
-    ]
-
-    for old, new in zip(before, after):
-        for old_value, new_value in zip(old, new):
-            if np.isnan(old_value):
-                assert np.isnan(new_value)
-            else:
-                assert new_value == pytest.approx(old_value)
+    for node in model.nodes:
+        for name in ("ux", "uy", "ur", "fx", "fy", "m"):
+            assert not hasattr(node, name)
 
 
 @pytest.mark.parametrize(
