@@ -115,8 +115,8 @@ for node in nodes:
         model.add_force(node, (10e3,0))
 
 model.plot_model()
-model.solve()
-model.plot_nodal_result("seqv")
+result = model.solve()
+result.plot_nodal_field("von_mises_stress")
 ```
 
 ![](docs/nusa-info/es/src/linear-triangle-element/model_plot.png)
@@ -167,7 +167,8 @@ def test1():
     m1.add_force(n4, (P,))
     m1.add_constraint(n1, ux=0)
     m1.add_constraint(n2, ux=0)
-    m1.solve()
+    result = m1.solve()
+    return result
 
 if __name__ == '__main__':
     test1()
@@ -211,10 +212,10 @@ for el in (e1,e2): m1.add_element(el)
 m1.add_force(n2, (-P,))
 m1.add_constraint(n1, uy=0) # pin
 m1.add_constraint(n3, uy=0) # roller
-m1.solve() # Solve model
+result = m1.solve()
 
 # Displacement at C point
-print(n2.uy)
+print(result.displacement(n2)["uy"])
 ```
 
 ## GUIs based on NuSA
