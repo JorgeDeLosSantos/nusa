@@ -106,7 +106,7 @@ def test_linear_triangle_solver_accepts_string_labels():
     model.add_constraint(n1, ux=0.0, uy=0.0)
     model.add_constraint(n3, ux=0.0, uy=0.0)
     model.add_force(n2, (1000.0, 0.0))
-    model.solve()
+    result = model.solve()
 
     np.testing.assert_allclose([n2.ux, n2.uy], [9.1e-8, 0.0], atol=1e-14)
     np.testing.assert_allclose(
@@ -115,5 +115,5 @@ def test_linear_triangle_solver_accepts_string_labels():
         atol=1e-8,
     )
 
-    triangulation = model._get_tri()
-    np.testing.assert_array_equal(triangulation.triangles, [[0, 1, 2]])
+    assert result.node_labels == ("left-bottom", "loaded", "left-top")
+    assert result.connectivity == ((0, 1, 2),)

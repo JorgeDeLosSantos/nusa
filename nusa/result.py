@@ -184,6 +184,48 @@ class StaticResult:
         """Return support-reaction components for one node."""
         return self._node_components(node, self._reactions, self._force_dofs)
 
+    def element_field(self, name):
+        """Return one scalar element field in result order."""
+        from .post import element_field
+
+        return element_field(self, name)
+
+    def nodal_field(self, name, recovery="average"):
+        """Return one scalar nodal field, recovering element values if needed."""
+        from .post import nodal_field
+
+        return nodal_field(self, name, recovery=recovery)
+
+    def plot_deformed_shape(self, scale=1.0, ax=None, **kwargs):
+        """Plot the frozen deformed geometry."""
+        from .visualization import plot_deformed_shape
+
+        return plot_deformed_shape(self, scale=scale, ax=ax, **kwargs)
+
+    def plot_nodal_field(self, field, ax=None, recovery="average"):
+        """Plot a scalar nodal field."""
+        from .visualization import plot_nodal_field
+
+        return plot_nodal_field(self, field, ax=ax, recovery=recovery)
+
+    def plot_element_field(self, field, ax=None):
+        """Plot a scalar element field."""
+        from .visualization import plot_element_field
+
+        return plot_element_field(self, field, ax=ax)
+
+    def plot_moment_diagram(self, ax=None):
+        """Plot beam bending moments from frozen element results."""
+        from .visualization import plot_moment_diagram
+
+        return plot_moment_diagram(self, ax=ax)
+
+    def plot_shear_diagram(self, ax=None):
+        """Plot beam shear forces from frozen element results."""
+        from .visualization import plot_shear_diagram
+
+        return plot_shear_diagram(self, ax=ax)
+
     def simple_report(self, report_type="print", fname="nusa_rpt.txt"):
         """Generate a compact text report from this result snapshot."""
         from .reporting import simple_report
