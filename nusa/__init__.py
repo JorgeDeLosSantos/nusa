@@ -13,9 +13,10 @@ from .visualization import (
     plot_nodal_field,
     plot_shear_diagram,
 )
-from .core import Element, Model, Node
-from .element import Bar, Beam, LinearTriangle, Spring, Truss
+from .node import Node
+from .element import Bar, Beam, Element, LinearTriangle, Spring, Truss
 from .model import (
+    Model,
     BarModel,
     BeamModel,
     LinearTriangleModel,
