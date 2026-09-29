@@ -51,32 +51,17 @@ def test_version_belongs_to_0_3_0_release_line():
     )
 
 
-def test_model_report_helpers_use_property_based_model_api():
+def test_model_report_helpers_are_no_longer_model_responsibilities():
     model = Model("Regression model", "mock")
-    n1 = Node((0.0, 0.0))
-    n2 = Node((1.0, 0.0))
-    element = MockElement((n1, n2))
 
-    model.add_nodes([n1, n2])
-    model.add_element(element)
-
-    options = {
-        "headers": "firstrow",
-        "tablefmt": "rst",
-        "numalign": "right",
-    }
-
-    tables = (
-        model._get_ndisplacements(options),
-        model._get_nforces(options),
-        model._get_nodes_info(options),
-        model._get_elements_info(options),
-    )
-
-    assert all(isinstance(table, str) for table in tables)
-    assert "Node" in tables[0]
-    assert "Node" in tables[2]
-    assert "Element" in tables[3]
+    for name in (
+        "_get_ndisplacements",
+        "_get_nforces",
+        "_get_nodes_info",
+        "_get_elements_info",
+        "_get_element_results",
+    ):
+        assert not hasattr(model, name)
 
 
 def test_beam_solve_indexes_property_based_node_collection_with_integers():

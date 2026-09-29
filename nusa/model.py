@@ -15,10 +15,6 @@ from .core import Model
 #~ *********************************************************************
 
 class SpringModel(Model):
-    element_result_columns = (
-        ("force_i", "FORCE I"),
-        ("force_j", "FORCE J"),
-    )
     """
     Spring Model for finite element analysis
     """
@@ -48,12 +44,6 @@ class SpringModel(Model):
 #~ ****************************  BarModel ******************************
 #~ *********************************************************************
 class BarModel(Model):
-    element_result_columns = (
-        ("force_i", "FORCE I"),
-        ("force_j", "FORCE J"),
-        ("axial_force", "AXIAL FORCE"),
-        ("axial_stress", "AXIAL STRESS"),
-    )
     """
     Bar model for finite element analysis
     """
@@ -81,10 +71,6 @@ class BarModel(Model):
 #~ ****************************  TrussModel ****************************
 #~ *********************************************************************
 class TrussModel(Model):
-    element_result_columns = (
-        ("axial_force", "AXIAL FORCE"),
-        ("axial_stress", "AXIAL STRESS"),
-    )
     """
     Truss model for finite element analysis
     """
@@ -235,12 +221,6 @@ class TrussModel(Model):
 #~ ****************************  BeamModel *****************************
 #~ *********************************************************************    
 class BeamModel(Model):
-    element_result_columns = (
-        ("shear_force_i", "SHEAR FORCE I"),
-        ("shear_force_j", "SHEAR FORCE J"),
-        ("bending_moment_i", "BENDING MOMENT I"),
-        ("bending_moment_j", "BENDING MOMENT J"),
-    )
     """
     Model for finite element analysis
     """
@@ -417,14 +397,6 @@ class BeamModel(Model):
 #~ ****************************  LinearTriangleModel *******************
 #~ *********************************************************************    
 class LinearTriangleModel(Model):
-    element_result_columns = (
-        ("stress_xx", "STRESS XX"),
-        ("stress_yy", "STRESS YY"),
-        ("stress_xy", "STRESS XY"),
-        ("strain_xx", "STRAIN XX"),
-        ("strain_yy", "STRAIN YY"),
-        ("strain_xy", "STRAIN XY"),
-    )
     """
     Model for finite element analysis
     """
