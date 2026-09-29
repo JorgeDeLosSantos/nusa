@@ -33,9 +33,7 @@ def test_top_level_simple_report_consumes_static_result():
     assert "FORCE I" in report
     assert "FORCE J" in report
 
-    # The top-level solve path never creates legacy model solved state.
-    with pytest.raises(RuntimeError, match="after solve"):
-        _ = model.displacements
+    assert not hasattr(model, "displacements")
 
 
 def test_static_result_report_matches_top_level_reporting_function():
@@ -54,7 +52,6 @@ def test_result_report_is_stable_after_model_and_node_mutation():
     model.add_force(n2, (80.0,))
     n1.coordinates[:] = [99.0, 88.0]
     n2.coordinates[:] = [77.0, 66.0]
-    n2.ux = 999.0
     element.label = "changed"
 
     assert result.simple_report(report_type="string") == baseline
