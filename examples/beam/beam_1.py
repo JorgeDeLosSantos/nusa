@@ -1,52 +1,44 @@
 # -*- coding: utf-8 -*-
 # ***********************************
-#  Author: Pedro Jorge De Los Santos     
-#  E-mail: delossantosmfq@gmail.com 
+#  Author: Pedro Jorge De Los Santos
+#  E-mail: delossantosmfq@gmail.com
 #  License: MIT License
 # ***********************************
+
+import matplotlib.pyplot as plt
+
 from nusa import Beam, BeamModel, Node
 
+
 def test1():
-    """
-    Logan, D. (2007). A first course in the finite element analysis.
-    Example 4.2 , pp. 166.
-    """
-    # Input data 
+    """Logan (2007), Example 4.2."""
     E = 30e6
     I = 500.0
     P = 10e3
-    L = 10*(12.0)  # ft -> in
-    # Model
-    m1 = BeamModel("Beam Model")
-    # Nodes
-    n1 = Node((0,0))
-    n2 = Node((10*12,0))
-    n3 = Node((20*12,0))
-    n4 = Node((30*12,0))
-    n5 = Node((40*12,0))
-    # Elements
-    e1 = Beam((n1,n2),E,I)
-    e2 = Beam((n2,n3),E,I)
-    e3 = Beam((n3,n4),E,I)
-    e4 = Beam((n4,n5),E,I)
+    L = 10 * 12.0
 
-    # Add elements 
-    for nd in (n1,n2,n3,n4,n5): m1.add_node(nd)
-    for el in (e1,e2,e3,e4): m1.add_element(el)
+    model = BeamModel("Beam Model")
+    nodes = [Node((k * L, 0.0)) for k in range(5)]
+    elements = [
+        Beam((nodes[k], nodes[k + 1]), E, I)
+        for k in range(4)
+    ]
 
-    m1.add_force(n2,(-P,))
-    m1.add_force(n4,(-P,))
-    m1.add_constraint(n1, uy=0,ur=0) # fixed 
-    m1.add_constraint(n5, uy=0,ur=0) # fixed
-    m1.add_constraint(n3, uy=0, ur=0) # roller support
-    # ~ m1.add_constraint(n2, ur=0)
-    # ~ m1.add_constraint(n4, ur=0)
-    m1.solve() # Solve model
-    print(n2.uy)
-    m1.plot_deformed_shape(scale=100) # scale = deformation factor
-    m1.show()
-    return m1
+    model.add_nodes(nodes)
+    model.add_elements(elements)
+    model.add_force(nodes[1], (-P,))
+    model.add_force(nodes[3], (-P,))
+    model.add_constraint(nodes[0], uy=0.0, ur=0.0)
+    model.add_constraint(nodes[4], uy=0.0, ur=0.0)
+    model.add_constraint(nodes[2], uy=0.0, ur=0.0)
+
+    result = model.solve()
+
+    print(result.displacement(nodes[1])["uy"])
+    result.plot_deformed_shape(scale=100.0)
+    plt.show()
+    return result
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test1()

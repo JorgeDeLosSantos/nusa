@@ -143,9 +143,9 @@ result.plot_nodal_field("von_mises_stress")
 
 ### Spring element
 
-**Example 01**. For the spring assemblage with arbitrarily numbered nodes shown in the figure 
-obtain (a) the global stiffness matrix, (b) the displacements of nodes 3 and 4, (c) the 
-reaction forces at nodes 1 and 2, and (d) the forces in each spring. A force of 5000 lb
+**Example 01**. For the spring assemblage with arbitrarily numbered nodes shown in the figure,
+obtain (a) the displacements of nodes 3 and 4, (b) the reaction forces at nodes 1 and 2,
+and (c) the forces in each spring. A force of 5000 lb
 is applied at node 4 in the `x` direction. The spring constants are given in the figure.
 Nodes 1 and 2 are fixed.
 

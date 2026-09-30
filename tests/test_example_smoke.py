@@ -3,7 +3,9 @@
 from pathlib import Path
 import runpy
 
+import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 
 from nusa import (
     BarModel,
@@ -74,5 +76,28 @@ def test_linear_triangle_example_builds_model_and_solves_to_result():
 
     assert isinstance(model, LinearTriangleModel)
     result = model.solve()
+    assert isinstance(result, StaticResult)
+    assert np.all(np.isfinite(result.displacements))
+
+
+@pytest.mark.parametrize(
+    ("relative_path", "function_name"),
+    [
+        ("spring/simple_case.py", "simple_case"),
+        ("spring/spring_02.py", "test2"),
+        ("spring/spring_03.py", "test3"),
+        ("bar/bar_2.py", "test2"),
+        ("beam/beam_1.py", "test1"),
+        ("beam/beam_3.py", "test3"),
+        ("beam/beam_4.py", "test4"),
+        ("beam/beam_5.py", "test5"),
+    ],
+)
+def test_additional_0_4_examples_execute(relative_path, function_name, monkeypatch):
+    monkeypatch.setattr(plt, "show", lambda: None)
+    namespace = _load_example(relative_path)
+
+    result = namespace[function_name]()
+
     assert isinstance(result, StaticResult)
     assert np.all(np.isfinite(result.displacements))
