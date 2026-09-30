@@ -7,11 +7,14 @@ from .node import Node
 
 
 class Model:
-    """
-    Base class for all Finite Element Analysis (FEA) models.
-    This class provides a base container for nodes and elements, enabling derived models to construct and manipulate FEA structures.
-    """
-    def __init__(self,name,mtype):
+    """Base class for finite-element problem definitions."""
+
+    element_type = None
+    displacement_dofs = ()
+    force_dofs = ()
+    load_dofs = None
+
+    def __init__(self, name="Model", mtype=None):
         """
         Initialize a new FEA model.
 
@@ -22,8 +25,12 @@ class Model:
         mtype : str
             Type of model (e.g., 'bar', 'truss', 'beam').
         """
-        self.mtype = mtype # Model type
-        self.name = name # Name 
+        resolved_type = mtype if mtype is not None else self.element_type
+        if resolved_type is None:
+            raise ValueError("Model requires an element type")
+        self.mtype = resolved_type
+        self.name = name
+        self.dof = len(self.displacement_dofs)
         self._nodes = [] # Nodes in model insertion order
         self._node_index = {} # Node object -> contiguous internal solver index
         self._elements = {} # Dictionary for elements {number: ElementObject}
@@ -265,6 +272,22 @@ class Model:
         self._get_node_index(node)
         self._prescribed_displacements.setdefault(node, {}).update(values)
 
+    def add_force(self, node, force):
+        """Add a nodal force vector using the model's declared load DOFs."""
+        names = self.force_dofs if self.load_dofs is None else self.load_dofs
+        values = self._validated_component_vector(force, names, "force")
+        self._record_applied_forces(node, **values)
+
+    def add_constraint(self, node, **constraint):
+        """Prescribe one or more active displacement degrees of freedom."""
+        values = self._validated_named_components(
+            constraint,
+            self.displacement_dofs,
+            "constraint",
+        )
+        if values:
+            self._record_prescribed_displacements(node, **values)
+
     @property
     def applied_loads(self):
         """Return the global vector of explicitly applied nodal loads.
@@ -390,120 +413,59 @@ class Model:
 class SpringModel(Model):
     """One-dimensional spring model."""
 
+    element_type = "spring"
     displacement_dofs = ("ux",)
     force_dofs = ("fx",)
 
     def __init__(self, name="Spring Model 01"):
-        super().__init__(name=name, mtype="spring")
-        self.dof = 1
-
-    def add_force(self, node, force):
-        values = self._validated_component_vector(
-            force, self.force_dofs, "force"
-        )
-        self._record_applied_forces(node, **values)
-
-    def add_constraint(self, node, **constraint):
-        values = self._validated_named_components(
-            constraint, self.displacement_dofs, "constraint"
-        )
-        if values:
-            self._record_prescribed_displacements(node, **values)
+        super().__init__(name=name)
 
 
 class BarModel(Model):
     """One-dimensional axial bar model."""
 
+    element_type = "bar"
     displacement_dofs = ("ux",)
     force_dofs = ("fx",)
 
     def __init__(self, name="Bar Model 01"):
-        super().__init__(name=name, mtype="bar")
-        self.dof = 1
-
-    def add_force(self, node, force):
-        values = self._validated_component_vector(
-            force, self.force_dofs, "force"
-        )
-        self._record_applied_forces(node, **values)
-
-    def add_constraint(self, node, **constraint):
-        values = self._validated_named_components(
-            constraint, self.displacement_dofs, "constraint"
-        )
-        if values:
-            self._record_prescribed_displacements(node, **values)
+        super().__init__(name=name)
 
 
 class TrussModel(Model):
     """Two-dimensional truss model."""
 
+    element_type = "truss"
     displacement_dofs = ("ux", "uy")
     force_dofs = ("fx", "fy")
 
     def __init__(self, name="Truss Model 01"):
-        super().__init__(name=name, mtype="truss")
-        self.dof = 2
-
-    def add_force(self, node, force):
-        values = self._validated_component_vector(
-            force, self.force_dofs, "force"
-        )
-        self._record_applied_forces(node, **values)
-
-    def add_constraint(self, node, **constraint):
-        values = self._validated_named_components(
-            constraint, self.displacement_dofs, "constraint"
-        )
-        if values:
-            self._record_prescribed_displacements(node, **values)
+        super().__init__(name=name)
 
 
 class BeamModel(Model):
     """Euler-Bernoulli beam model."""
 
+    element_type = "beam"
     displacement_dofs = ("uy", "ur")
     force_dofs = ("fy", "m")
+    load_dofs = ("fy",)
 
     def __init__(self, name="Beam Model 01"):
-        super().__init__(name=name, mtype="beam")
-        self.dof = 2
-
-    def add_force(self, node, force):
-        values = self._validated_component_vector(force, ("fy",), "force")
-        self._record_applied_forces(node, **values)
+        super().__init__(name=name)
 
     def add_moment(self, node, moment):
         values = self._validated_component_vector(moment, ("m",), "moment")
         self._record_applied_forces(node, **values)
 
-    def add_constraint(self, node, **constraint):
-        values = self._validated_named_components(
-            constraint, self.displacement_dofs, "constraint"
-        )
-        if values:
-            self._record_prescribed_displacements(node, **values)
-
 
 class LinearTriangleModel(Model):
     """Two-dimensional constant-strain triangle model."""
 
+    element_type = "triangle"
     displacement_dofs = ("ux", "uy")
     force_dofs = ("fx", "fy")
 
     def __init__(self, name="LT Model 01"):
-        super().__init__(name=name, mtype="triangle")
-        self.dof = 2
+        super().__init__(name=name)
 
-    def add_force(self, node, force):
-        values = self._validated_component_vector(
-            force, self.force_dofs, "force"
-        )
-        self._record_applied_forces(node, **values)
-
-    def add_constraint(self, node, **constraint):
-        values = self._validated_named_components(
-            constraint, self.displacement_dofs, "constraint"
-        )
-        if values:
-            self._record_prescribed_displacements(node, **values)
