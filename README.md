@@ -17,6 +17,7 @@ A Python library for structural analysis using the finite element method, design
 * **0.3.0rc1** Release candidate (22/09/2026)
 * **0.3.0rc2** Release candidate (22/09/2026)
 * **0.3.0** Stable release (23/09/2026)
+* **0.4.0.dev0** Current development line
 
 ## Requirements
 
@@ -36,7 +37,7 @@ pip install nusa
 ```
 
 Mesh-file support through `meshio` is included in the default installation.
-The historical `nusa[mesh]` extra remains accepted during the 0.3.0 transition,
+The historical `nusa[mesh]` extra remains accepted as a compatibility alias,
 but is no longer required.
 
 To generate meshes, install Gmsh separately and verify that NuSA can discover it:
@@ -61,6 +62,23 @@ python -m pip install -e ".[test]"
 python -m pytest
 ```
 
+
+## Analysis workflow
+
+NuSA 0.4 separates finite-element problem definition from solved state:
+
+```python
+from nusa import LinearStaticAnalysis, solve
+
+result = solve(model)
+
+# Equivalent explicit form:
+result = LinearStaticAnalysis().solve(model)
+```
+
+`Model` contains topology, loads, and prescribed displacements. A solve returns
+an independent `StaticResult` snapshot containing displacements, reactions,
+nodal forces, and canonical element results.
 
 ## Supported element types
 
@@ -230,7 +248,7 @@ You can view the online documentation at the following link: [https://jorgedelos
 The repository also contains historical Jupyter notebooks under `docs/nusa-info/`.
 Some of those notebooks predate the 0.3.0 API and are retained as archival material;
 the executable scripts under `examples/` and the current Sphinx documentation are
-the recommended references for 0.3.0.
+the recommended references for the current API.
 
 ## About...
 

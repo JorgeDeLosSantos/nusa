@@ -6,6 +6,34 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
+### Added
+- Added `LinearStaticAnalysis`, the top-level `solve(model)` shortcut, and immutable `StaticResult` snapshots as the primary linear-static analysis workflow.
+- Added result-owned reporting, post-processing, and solved visualization APIs.
+- Added canonical element-result mappings and explicit `compute_results(u_e)` contracts for all five public element families.
+- Added result-based scalar field helpers, CST nodal recovery, displacement magnitude, and plane-stress von Mises stress.
+- Added top-level `plot_model(model)` for problem visualization.
+
+### Changed
+- Redesigned NuSA around the explicit flow `Model -> LinearStaticAnalysis -> StaticResult`.
+- Made `Model` a stateless finite-element problem definition containing topology, loads, and prescribed displacements only.
+- Reduced `Node` to geometry and identity; solved displacements, forces, stresses, and strains are no longer written back to node objects.
+- Made element response evaluation explicit from local displacement vectors rather than mutable node state.
+- Moved reporting and solved visualization out of model classes and onto `StaticResult` consumers.
+- Reorganized the package so `Node`, `Element`, and `Model` live in `nusa.node`, `nusa.element`, and `nusa.model` respectively.
+- Simplified model families into declarative element/DOF definitions with shared load and constraint handling.
+
+### Removed
+- Removed model-owned assembled/solved state, including public assembly/stiffness-matrix lifecycle and model-level result caches.
+- Removed solved-result properties from `Node` and `Element` instances.
+- Removed the obsolete `nusa.core` module instead of retaining a compatibility shim.
+- Removed solved plotting/reporting methods from model classes.
+
+### Notes
+- 0.4.0 is intentionally backward-incompatible with parts of the 0.3.x solved-state API.
+- Existing mesh generation remains based on external Gmsh plus `meshio`; a broader mesh/preprocessing redesign is deferred.
+- Material/section objects and explicit multiple load cases are deferred until they are required by supported analyses.
+
+
 ## [0.3.0] - 2026-09-23
 
 ### Changed
