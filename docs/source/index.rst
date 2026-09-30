@@ -13,9 +13,14 @@ NuSA is a Python library for academic structural analysis using the finite eleme
    :caption: Contents:
 
    installation
-   core
+   node
    elements
    models
+   analysis
+   results
+   postprocessing
+   reporting
+   visualization
    mesh
 
 
