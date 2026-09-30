@@ -15,9 +15,9 @@ Install the current release from PyPI:
 The default package includes the finite-element models, elements, plotting,
 reporting, and ``meshio`` for reading triangular mesh files.
 
-The historical ``nusa[mesh]`` extra remains accepted during the 0.3.0
-transition, but ``meshio`` is now installed by default and the extra is no
-longer necessary.
+The historical ``nusa[mesh]`` extra remains accepted as a compatibility
+alias, but ``meshio`` is installed by default and the extra is no longer
+necessary.
 
 Gmsh for mesh generation
 ------------------------
