@@ -1,43 +1,36 @@
 # -*- coding: utf-8 -*-
 # ***********************************
-#  Author: Pedro Jorge De Los Santos     
-#  E-mail: delossantosmfq@gmail.com 
+#  Author: Pedro Jorge De Los Santos
+#  E-mail: delossantosmfq@gmail.com
 #  License: MIT License
 # ***********************************
+
 from nusa import Beam, BeamModel, Node
 
+
 def test3():
-    """
-    Kattan, P. (XXXX).
-    Example 7.1, pp. 109.
-    """
-    # Input data 
+    """Kattan, Example 7.1."""
     E = 210e9
     I = 60e-6
     P = 20e3
-    L = 2.0
-    # Model
-    m1 = BeamModel("Beam Model")
-    # Nodes
-    n1 = Node((0,0))
-    n2 = Node((2,0))
-    n3 = Node((4,0))
-    # Elements
-    e1 = Beam((n1,n2),E,I)
-    e2 = Beam((n2,n3),E,I)
 
-    # Add elements 
-    for nd in (n1,n2,n3): m1.add_node(nd)
-    for el in (e1,e2): m1.add_element(el)
-        
-    m1.add_force(n2, (-P,))
-    m1.add_constraint(n1, uy=0, ur=0) # fixed 
-    m1.add_constraint(n3, uy=0) # fixed
-    m1.solve() # Solve model
-    print(m1.stiffness_matrix)
-    print([node.uy for node in m1.nodes])
-    return m1
+    model = BeamModel("Beam Model")
+    n1 = Node((0.0, 0.0))
+    n2 = Node((2.0, 0.0))
+    n3 = Node((4.0, 0.0))
+    elements = [Beam((n1, n2), E, I), Beam((n2, n3), E, I)]
+
+    model.add_nodes([n1, n2, n3])
+    model.add_elements(elements)
+    model.add_force(n2, (-P,))
+    model.add_constraint(n1, uy=0.0, ur=0.0)
+    model.add_constraint(n3, uy=0.0)
+
+    result = model.solve()
+
+    print([result.displacement(node)["uy"] for node in model.nodes])
+    return result
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test3()
