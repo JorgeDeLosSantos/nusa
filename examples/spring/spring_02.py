@@ -16,8 +16,8 @@ def test2():
     model = SpringModel("Spring Model 02")
     nodes = [Node((0.0, 0.0)) for _ in range(5)]
     elements = [
-        Spring((nodes[k], nodes[k + 1]), k)
-        for k in range(4)
+        Spring((nodes[index], nodes[index + 1]), k)
+        for index in range(4)
     ]
 
     model.add_nodes(nodes)
