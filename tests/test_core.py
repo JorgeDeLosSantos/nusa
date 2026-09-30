@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from nusa.core import Element, Model, Node
+from nusa import Element, Model, Node
 
 
 class TestNode:

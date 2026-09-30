@@ -6,7 +6,7 @@ from nusa import (
     Bar, BarModel, Beam, BeamModel, LinearTriangle, LinearTriangleModel,
     Model, Node, Spring, SpringModel, Truss, TrussModel,
 )
-from nusa.core import Element
+from nusa import Element
 
 
 class MockBarElement(Element):

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .core import Model
+from .model import Model
 from .result import StaticResult
 
 

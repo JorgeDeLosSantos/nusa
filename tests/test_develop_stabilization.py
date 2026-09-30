@@ -4,7 +4,7 @@ import re
 import numpy as np
 
 from nusa import BeamModel, Node, Spring, SpringModel
-from nusa.core import Element, Model
+from nusa import Element, Model
 from nusa.version import __version__
 
 
