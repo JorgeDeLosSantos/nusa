@@ -1,49 +1,47 @@
 # -*- coding: utf-8 -*-
 # ***********************************
-#  Author: Pedro Jorge De Los Santos     
-#  E-mail: delossantosmfq@gmail.com 
+#  Author: Pedro Jorge De Los Santos
+#  E-mail: delossantosmfq@gmail.com
 #  License: MIT License
 # ***********************************
 
 from nusa import Node, Spring, SpringModel
 
+
 def test2():
-    """
-    Logan, D. (2007). A first course in the finite element analysis.
-    Example 2.2, pp. 45.
-    """
+    """Logan (2007), Example 2.2."""
     P = 4e3
     k = 200e3
-    # Model
-    m2 = SpringModel("Spring Model 02")
-    # Nodes
-    n1 = Node((0,0))
-    n2 = Node((0,0))
-    n3 = Node((0,0))
-    n4 = Node((0,0))
-    n5 = Node((0,0))
-    # Elements
-    e1 = Spring((n1,n2),k)
-    e2 = Spring((n2,n3),k)
-    e3 = Spring((n3,n4),k)
-    e4 = Spring((n4,n5),k)
-    
-    for nd in (n1,n2,n3,n4,n5):
-        m2.add_node(nd)
-    for el in (e1,e2,e3,e4):
-        m2.add_element(el)
-    
-    m2.add_force(n4,(P,))
-    m2.add_constraint(n1,ux=0)
-    m2.add_constraint(n5,ux=0.02)
-    m2.solve()
 
-    print(f"Global stiffness matrix:\n\n{m2.stiffness_matrix}")
-    print(f"Displacements of nodes 2,3 and 4: \n\t{n2.ux}\n\t{n3.ux}\n\t{n4.ux}")
-    print(f"Nodal forces: \n\t{n1.fx}\n\t{n2.fx}\n\t{n3.fx}\n\t{n4.fx}\n\t{n5.fx} ")
-    print(f"Element forces: \n{e1.fx}\n{e2.fx}\n{e3.fx}\n{e4.fx}")
-    return m2
-    
+    model = SpringModel("Spring Model 02")
+    nodes = [Node((0.0, 0.0)) for _ in range(5)]
+    elements = [
+        Spring((nodes[k], nodes[k + 1]), k)
+        for k in range(4)
+    ]
 
-if __name__ == '__main__':
+    model.add_nodes(nodes)
+    model.add_elements(elements)
+    model.add_force(nodes[3], (P,))
+    model.add_constraint(nodes[0], ux=0.0)
+    model.add_constraint(nodes[4], ux=0.02)
+
+    result = model.solve()
+
+    print(
+        "Displacements of nodes 2, 3 and 4:",
+        [result.displacement(node)["ux"] for node in nodes[1:4]],
+    )
+    print(
+        "Nodal forces:",
+        [result.nodal_force(node)["fx"] for node in nodes],
+    )
+    print(
+        "Element forces:",
+        [result.element_result(element) for element in elements],
+    )
+    return result
+
+
+if __name__ == "__main__":
     test2()
