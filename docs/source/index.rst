@@ -55,6 +55,15 @@ Examples
 
    examples/index
 
+Migration
+---------
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Migration
+
+   migration_0_3_to_0_4
+
 API reference
 -------------
 
