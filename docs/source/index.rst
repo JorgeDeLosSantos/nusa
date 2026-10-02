@@ -46,6 +46,15 @@ Getting started
    getting_started
    how_nusa_works
 
+Examples
+--------
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Examples
+
+   examples/index
+
 API reference
 -------------
 
