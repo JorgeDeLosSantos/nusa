@@ -7,7 +7,7 @@ import subprocess
 import numpy as np
 import pytest
 
-from nusa import _mesh
+from nusa import LinearTriangle, LinearTriangleModel, Node, _mesh
 from nusa.mesh import Modeler
 
 
@@ -220,6 +220,47 @@ def test_real_gmsh_rectangle_mesh_smoke():
     assert elements.shape[1] == 3
     assert elements.min() >= 0
     assert elements.max() < nodes.shape[0]
+
+
+@pytest.mark.skipif(shutil.which("gmsh") is None, reason="Gmsh is not installed")
+def test_real_gmsh_mesh_can_build_solve_and_postprocess_cst_model():
+    modeler = Modeler()
+    modeler.add_rectangle((0.0, 0.0), (1.0, 1.0), esize=0.5)
+    coordinates, connectivity = modeler.generate_mesh()
+
+    nodes = [Node(tuple(point[:2])) for point in coordinates]
+    elements = [
+        LinearTriangle(
+            (nodes[int(i)], nodes[int(j)], nodes[int(k)]),
+            E=200e9,
+            nu=0.3,
+            t=0.01,
+        )
+        for i, j, k in connectivity
+    ]
+
+    model = LinearTriangleModel("Gmsh CST smoke")
+    model.add_nodes(nodes)
+    model.add_elements(elements)
+
+    xmin = coordinates[:, 0].min()
+    xmax = coordinates[:, 0].max()
+    loaded_nodes = [node for node in nodes if np.isclose(node.x, xmax)]
+    force_per_node = 1000.0 / len(loaded_nodes)
+
+    for node in nodes:
+        if np.isclose(node.x, xmin):
+            model.add_constraint(node, ux=0.0, uy=0.0)
+        if np.isclose(node.x, xmax):
+            model.add_force(node, (force_per_node, 0.0))
+
+    result = model.solve()
+    von_mises = result.nodal_field("von_mises_stress")
+
+    assert np.all(np.isfinite(result.displacements))
+    assert np.all(np.isfinite(von_mises))
+    assert len(von_mises) == len(nodes)
+    np.testing.assert_allclose(result.applied_loads.sum(), 1000.0)
 
 
 def test_simple_gmsh_reports_missing_executable(monkeypatch):
