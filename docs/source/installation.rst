@@ -85,20 +85,9 @@ Debian/Ubuntu systems, for example:
 Google Colab
 ~~~~~~~~~~~~
 
-Colab runs on an Ubuntu-based environment, so install Gmsh in the notebook
-session before generating meshes:
-
-.. code-block:: bash
-
-   !apt-get update -qq
-   !apt-get install -y gmsh
-   !gmsh --version
-
-Then install NuSA normally:
-
-.. code-block:: bash
-
-   !pip install git+https://github.com/JorgeDeLosSantos/nusa.git@develop
+Colab runs on an Ubuntu-based environment, so Gmsh can be installed in the
+notebook runtime with ``apt``. See :doc:`colab` for a complete installation,
+solve, mesh-generation, and post-processing walkthrough.
 
 The Gmsh installation is specific to the current Colab runtime and must be
 repeated when a new runtime is created.

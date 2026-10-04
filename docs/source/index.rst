@@ -45,6 +45,7 @@ Getting started
    installation
    getting_started
    how_nusa_works
+   colab
 
 Examples
 --------
