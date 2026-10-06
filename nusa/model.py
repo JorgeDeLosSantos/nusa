@@ -1,821 +1,471 @@
-# ***********************************
-#  Author: Pedro Jorge De Los Santos     
-#  E-mail: delossantosmfq@gmail.com 
-#  Blog: numython.github.io
-#  License: MIT License
-# ***********************************
-import re
+"""Finite-element problem model definitions."""
+
 import numpy as np
-import numpy.linalg as la
-import matplotlib.pyplot as plt
-from .core import Model
+
+from .element import Element
+from .node import Node
 
 
-def _partition_system(K, F, U):
-    """Build the reduced system for prescribed and free displacement DOFs."""
-    U = np.asarray(U, dtype=float)
-    F = np.asarray(F, dtype=float)
+class Model:
+    """Base class for finite-element problem definitions."""
 
-    prescribed_dofs = np.flatnonzero(~np.isnan(U))
-    free_dofs = np.flatnonzero(np.isnan(U))
+    element_type = None
+    displacement_dofs = ()
+    force_dofs = ()
+    load_dofs = None
 
-    K_reduced = K[np.ix_(free_dofs, free_dofs)]
-    rhs_reduced = F[free_dofs].copy()
-    if prescribed_dofs.size:
-        K_free_prescribed = K[np.ix_(free_dofs, prescribed_dofs)]
-        rhs_reduced -= np.dot(K_free_prescribed, U[prescribed_dofs])
+    def __init__(self, name="Model", mtype=None):
+        """
+        Initialize a new FEA model.
 
-    return (
-        prescribed_dofs.tolist(),
-        free_dofs.tolist(),
-        K_reduced,
-        rhs_reduced,
-    )
+        Parameters
+        ----------
+        name : str
+            Name of the model.
+        mtype : str
+            Type of model (e.g., 'bar', 'truss', 'beam').
+        """
+        resolved_type = mtype if mtype is not None else self.element_type
+        if resolved_type is None:
+            raise ValueError("Model requires an element type")
+        self.mtype = resolved_type
+        self.name = name
+        self.dof = len(self.displacement_dofs)
+        self._nodes = [] # Nodes in model insertion order
+        self._node_index = {} # Node object -> contiguous internal solver index
+        self._elements = {} # Dictionary for elements {number: ElementObject}
+        self._applied_forces = {} # Node -> explicitly applied nodal loads
+        self._prescribed_displacements = {} # Node -> explicitly prescribed DOFs
+        
+    def add_node(self,node):
+        """
+        Add a node to the model.
+
+        Parameters
+        ----------
+        node : :class:`~nusa.node.Node`
+            Instance of a Node to be added.
+
+        Returns
+        -------
+        None
+        """
+        if not isinstance(node, Node):
+            raise TypeError("Model nodes must be Node instances")
+
+        labels = [current.label for current in self._nodes]
+        if node.label is None:
+            label = 0
+            while label in labels:
+                label += 1
+            node.label = label
+        elif node.label in labels:
+            raise ValueError(
+                f"Node label {node.label!r} already exists in this model"
+            )
+
+        self._node_index[node] = len(self._nodes)
+        self._nodes.append(node)
+
+    def add_nodes(self, nodes):
+        """
+        Add multiple nodes to the model.
+
+        Parameters
+        ----------  
+
+        nodes : list
+            List of Node instances to be added.
+        """
+        for node in nodes:
+            self.add_node(node)
+        
+    def add_element(self,element):
+        """
+        Add an element to the model.
+
+        Parameters
+        ----------
+        element : :class:`~nusa.element.Element`
+            Instance of an Element to be added.
+
+        Raises
+        ------
+        ValueError
+            If the element type does not match the model type.
+
+        Example
+        -------
+        >>> m1 = BarModel()
+        >>> E, A = 200e9, 0.001
+        >>> n1 = Node((0,0))
+        >>> n2 = Node((1,0))
+        >>> e1 = Bar((n1,n2), E, A)
+        >>> m1.add_element(e1)
+        """
+
+        if not isinstance(element, Element):
+            raise TypeError("Model elements must be Element instances")
+
+        if element.etype != self.mtype:
+            raise ValueError(
+                f"Element type '{element.etype}' incompatible with model '{self.mtype}'"
+            )
+
+        if element in self._elements.values():
+            raise ValueError("Element already belongs to this model")
+
+        missing_nodes = [node for node in element.nodes if node not in self._node_index]
+        if missing_nodes:
+            raise ValueError(
+                "Element references nodes that do not belong to this model"
+            )
+
+        labels = set(self._elements)
+        if element.label is None:
+            label = 0
+            while label in labels:
+                label += 1
+            element.label = label
+        elif element.label in labels:
+            raise ValueError(
+                f"Element label {element.label!r} already exists in this model"
+            )
+
+        self._elements[element.label] = element
+
+    def add_elements(self, elements):
+        """
+        Add multiple elements to the model.
+
+        Parameters
+        ----------
+        elements : list
+            List of Element instances to be added.
+        """
+        for element in elements:
+            self.add_element(element)
+
+    def _validate_topology(self):
+        """Validate structural connectivity before global assembly."""
+        if not self._elements:
+            raise ValueError("Cannot assemble a model without elements")
+
+        connected_nodes = {
+            node
+            for element in self.elements
+            for node in element.nodes
+        }
+        orphan_nodes = [
+            node for node in self.nodes
+            if node not in connected_nodes
+        ]
+        if orphan_nodes:
+            labels = [node.label for node in orphan_nodes]
+            raise ValueError(
+                "Model contains nodes not connected to any element: "
+                f"{labels}"
+            )
+
+    @property
+    def nodes(self):
+        """
+        Return a list of node objects.
+
+        Returns
+        -------
+        list
+            List of Node instances.
+        """
+        return list(self._nodes)
+
+    @property
+    def n_nodes(self):
+        """
+        Return the number of nodes in the model.
+
+        Returns
+        -------
+        int
+            Total number of nodes.
+        """
+        return len(self._nodes)
+
+    def _get_node_index(self, node):
+        """Return the model-owned contiguous index for a node."""
+        try:
+            return self._node_index[node]
+        except KeyError:
+            raise ValueError("Node does not belong to this model")
+
+    def _global_dof_index(self, node, variable, dof_names):
+        """Return the global vector index for one nodal degree of freedom."""
+        try:
+            component = dof_names.index(variable)
+        except ValueError:
+            raise ValueError(
+                f"Unknown degree of freedom {variable!r}; expected one of {dof_names}"
+            )
+        return self.dof * self._get_node_index(node) + component
 
 
-def _element_dof_indices(model, element):
-    """Return global DOF indices using model-owned contiguous node indices."""
-    indices = []
-    for node in element.nodes:
-        node_index = model._get_node_index(node)
-        base = model.dof * node_index
-        indices.extend(base + component for component in range(model.dof))
-    return indices
+    def _validated_component_vector(self, values, names, quantity):
+        """Return finite numeric components in the declared model order."""
+        try:
+            array = np.asarray(values, dtype=float)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"{quantity} must contain {len(names)} finite numeric component(s)"
+            ) from exc
 
+        if array.ndim == 0:
+            array = array.reshape(1)
+        else:
+            array = array.reshape(-1)
 
-def _assemble_global_stiffness(model):
-    """Assemble the dense global stiffness matrix from element matrices."""
-    model._validate_topology()
-    matrix_size = model.dof * model.n_nodes
-    model._K = np.zeros((matrix_size, matrix_size))
+        if array.size != len(names):
+            raise ValueError(
+                f"{quantity} requires exactly {len(names)} component(s) "
+                f"{names}; got {array.size}"
+            )
+        if not np.isfinite(array).all():
+            raise ValueError(f"{quantity} components must be finite")
 
-    for element in model.elements:
-        element_stiffness = element.get_element_stiffness()
-        global_dofs = _element_dof_indices(model, element)
-        model._K[np.ix_(global_dofs, global_dofs)] += element_stiffness
+        return {
+            name: float(array[index])
+            for index, name in enumerate(names)
+        }
 
-    model._is_assembled = True
-    model._invalidate_solution()
+    def _validated_named_components(self, values, names, quantity):
+        """Validate finite named components against the model's active DOFs."""
+        unknown = set(values) - set(names)
+        if unknown:
+            unknown_names = ", ".join(sorted(unknown))
+            expected = ", ".join(names)
+            raise ValueError(
+                f"Unsupported {quantity} component(s): {unknown_names}; "
+                f"expected only: {expected}"
+            )
 
+        validated = {}
+        for name, value in values.items():
+            try:
+                scalar = float(value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"{quantity} component {name!r} must be a finite scalar"
+                ) from exc
+            if not np.isfinite(scalar):
+                raise ValueError(
+                    f"{quantity} component {name!r} must be a finite scalar"
+                )
+            validated[name] = scalar
+        return validated
 
-def _solve_model_system(model):
-    """Solve a model using vector-based global force and displacement state."""
-    if not model._is_assembled:
-        model.assemble()
+    def _record_applied_forces(self, node, **values):
+        """Persist explicitly applied nodal loads."""
+        self._get_node_index(node)
+        self._applied_forces.setdefault(node, {}).update(values)
 
-    (
-        model._prescribed_dofs,
-        model._free_dofs,
-        model._K_reduced,
-        model._rhs_reduced,
-    ) = _partition_system(model._K, model._f, model._u)
+    def _record_prescribed_displacements(self, node, **values):
+        """Persist explicitly prescribed nodal degrees of freedom."""
+        self._get_node_index(node)
+        self._prescribed_displacements.setdefault(node, {}).update(values)
 
-    if (
-        model._K_reduced.size
-        and np.linalg.matrix_rank(model._K_reduced) < model._K_reduced.shape[0]
-    ):
-        raise np.linalg.LinAlgError(
-            "Singular stiffness matrix: the model may be underconstrained "
-            "or contain a mechanism."
+    def add_force(self, node, force):
+        """Add a nodal force vector using the model's declared load DOFs."""
+        names = self.force_dofs if self.load_dofs is None else self.load_dofs
+        values = self._validated_component_vector(force, names, "force")
+        self._record_applied_forces(node, **values)
+
+    def add_constraint(self, node, **constraint):
+        """Prescribe one or more active displacement degrees of freedom."""
+        values = self._validated_named_components(
+            constraint,
+            self.displacement_dofs,
+            "constraint",
+        )
+        if values:
+            self._record_prescribed_displacements(node, **values)
+
+    @property
+    def applied_loads(self):
+        """Return the global vector of explicitly applied nodal loads.
+
+        Components follow node insertion order and ``force_dofs``.
+        """
+        vector = np.zeros(self.dof * self.n_nodes, dtype=float)
+        for node, values in self._applied_forces.items():
+            if node not in self._node_index:
+                continue
+            for variable, value in values.items():
+                if variable in self.force_dofs:
+                    index = self._global_dof_index(node, variable, self.force_dofs)
+                    vector[index] = value
+        return vector
+
+    @property
+    def prescribed_displacements(self):
+        """Return the global prescribed-displacement vector.
+
+        Free degrees of freedom are represented by ``numpy.nan``. Components
+        follow node insertion order and ``displacement_dofs``.
+        """
+        vector = np.full(self.dof * self.n_nodes, np.nan, dtype=float)
+        for node, values in self._prescribed_displacements.items():
+            if node not in self._node_index:
+                continue
+            for variable, value in values.items():
+                if variable in self.displacement_dofs:
+                    index = self._global_dof_index(
+                        node, variable, self.displacement_dofs
+                    )
+                    vector[index] = value
+        return vector
+
+    def solve(self):
+        """Run a linear-static analysis and return a new StaticResult.
+
+        The model remains a problem definition: solving does not write
+        displacements, forces, reactions, matrices, or result caches back to
+        the model or its nodes.
+        """
+        from .analysis import LinearStaticAnalysis
+
+        return LinearStaticAnalysis().solve(self)
+
+    def applied_load(self, node):
+        """Return explicitly applied load components for one node."""
+        self._get_node_index(node)
+        values = self._applied_forces.get(node, {})
+        return {name: values.get(name, 0.0) for name in self.force_dofs}
+
+    def prescribed_displacement(self, node):
+        """Return prescribed displacement components for one node.
+
+        Unprescribed degrees of freedom are returned as numpy.nan.
+        """
+        self._get_node_index(node)
+        values = self._prescribed_displacements.get(node, {})
+        return {
+            name: values.get(name, np.nan)
+            for name in self.displacement_dofs
+        }
+
+    @property
+    def elements(self):
+        """
+        Return a list of element objects.
+
+        Returns
+        -------
+        list
+            List of Element instances.
+        """
+        return list(self._elements.values())
+
+    @property
+    def n_elements(self):
+        """
+        Return the number of elements in the model.
+
+        Returns
+        -------
+        int
+            Total number of elements.
+        """
+        return len(self._elements)
+
+    
+    def __str__(self):
+        """
+        Return a string representation of the model.
+
+        Returns
+        -------
+        str
+            Model name and number of nodes/elements.
+        """
+        return (
+            f"Model: {self.name}\n"
+            f"Nodes: {self.n_nodes}\n"
+            f"Elements: {self.n_elements}"
+        )
+    
+    def __repr__(self):
+        """
+        Return a string representation of the model.
+
+        Returns
+        -------
+        str
+            Model name and number of nodes/elements.
+        """
+        return (
+            f"Model: {self.name}\n"
+            f"Nodes: {self.n_nodes}\n"
+            f"Elements: {self.n_elements}"
         )
 
-    free_displacements = la.solve(model._K_reduced, model._rhs_reduced)
-    model._u[model._free_dofs] = free_displacements
 
-    for dof_index, value in enumerate(model._u):
-        node_index, component = divmod(dof_index, model.dof)
-        setattr(model.nodes[node_index], model.displacement_dofs[component], value)
 
-    model._nodal_forces = np.dot(model._K, model._u)
-    model._reactions = np.zeros_like(model._nodal_forces)
-    model._reactions[model._prescribed_dofs] = (
-        model._nodal_forces[model._prescribed_dofs]
-        - model._f[model._prescribed_dofs]
-    )
-
-    for dof_index, value in enumerate(model._nodal_forces):
-        node_index, component = divmod(dof_index, model.dof)
-        setattr(model.nodes[node_index], model.force_dofs[component], value)
-
-#~ *********************************************************************
-#~ ****************************  SpringModel ***************************
-#~ *********************************************************************
 
 class SpringModel(Model):
-    """
-    Spring Model for finite element analysis
-    """
+    """One-dimensional spring model."""
+
+    element_type = "spring"
     displacement_dofs = ("ux",)
     force_dofs = ("fx",)
 
-    def __init__(self,name="Spring Model 01"):
-        Model.__init__(self,name=name,mtype="spring")
-        self.dof = 1 # 1 DOF per Node
-
-    def assemble(self):
-        """Assemble the current global finite-element system."""
-        _assemble_global_stiffness(self)
-        
-    def add_force(self,node,force):
-        values = self._validated_component_vector(force, self.force_dofs, "force")
-        self._record_applied_forces(node, **values)
-        
-    def add_constraint(self,node,**constraint):
-        """Prescribe spring-model displacement components."""
-        values = self._validated_named_components(
-            constraint, self.displacement_dofs, "constraint"
-        )
-        for variable, value in values.items():
-            setattr(node, variable, value)
-        if values:
-            self._record_prescribed_displacements(node, **values)
-        
-    def solve(self):
-        _solve_model_system(self)
-            
-    def _get_element_results(self, options):
-        from tabulate import tabulate
-
-        rows = [["Element", "Fi", "Fj"]]
-        for element in self.elements:
-            values = np.asarray(element.fx, dtype=float).reshape(-1)
-            rows.append([element.label, values[0], values[-1]])
-        return tabulate(rows, **options)
+    def __init__(self, name="Spring Model 01"):
+        super().__init__(name=name)
 
 
-
-#~ *********************************************************************
-#~ ****************************  BarModel ******************************
-#~ *********************************************************************
 class BarModel(Model):
-    """
-    Bar model for finite element analysis
-    """
+    """One-dimensional axial bar model."""
+
+    element_type = "bar"
     displacement_dofs = ("ux",)
     force_dofs = ("fx",)
 
-    def __init__(self,name="Bar Model 01"):
-        Model.__init__(self,name=name,mtype="bar")
-        self.dof = 1 # 1 DOF for bar element (per node)
-        
-    def assemble(self):
-        """Assemble the current global finite-element system."""
-        _assemble_global_stiffness(self)
-        
-    def add_force(self,node,force):
-        values = self._validated_component_vector(force, self.force_dofs, "force")
-        self._record_applied_forces(node, **values)
-        
-    def add_constraint(self,node,**constraint):
-        values = self._validated_named_components(
-            constraint, self.displacement_dofs, "constraint"
-        )
-        for variable, value in values.items():
-            setattr(node, variable, value)
-        if values:
-            self._record_prescribed_displacements(node, **values)
-        
-    def solve(self):
-        _solve_model_system(self)
+    def __init__(self, name="Bar Model 01"):
+        super().__init__(name=name)
 
-    def _get_element_results(self, options):
-        from tabulate import tabulate
 
-        rows = [["Element", "Fi", "Fj", "Si", "Sj"]]
-        for element in self.elements:
-            forces = np.asarray(element.fx, dtype=float).reshape(-1)
-            stresses = np.asarray(element.sx, dtype=float).reshape(-1)
-            rows.append([
-                element.label,
-                forces[0],
-                forces[-1],
-                stresses[0],
-                stresses[-1],
-            ])
-        return tabulate(rows, **options)
-
-#~ *********************************************************************
-#~ ****************************  TrussModel ****************************
-#~ *********************************************************************
 class TrussModel(Model):
-    """
-    Truss model for finite element analysis
-    """
+    """Two-dimensional truss model."""
+
+    element_type = "truss"
     displacement_dofs = ("ux", "uy")
     force_dofs = ("fx", "fy")
 
-    def __init__(self,name="Truss Model 01"):
-        Model.__init__(self,name=name,mtype="truss")
-        self.dof = 2 # 2 DOF for truss element
-        
-    def assemble(self):
-        """Assemble the current global finite-element system."""
-        _assemble_global_stiffness(self)
-        
-    def add_force(self,node,force):
-        values = self._validated_component_vector(force, self.force_dofs, "force")
-        self._record_applied_forces(node, **values)
-        
-    def add_constraint(self,node,**constraint):
-        values = self._validated_named_components(
-            constraint, self.displacement_dofs, "constraint"
-        )
-        for variable, value in values.items():
-            setattr(node, variable, value)
-        if values:
-            self._record_prescribed_displacements(node, **values)
-        
-    def solve(self):
-        _solve_model_system(self)
-                
-    def plot_model(self, show_reactions=False):
-        """
-        Plot model geometry, applied loads, constraints, and optional reactions.
-        """
-        import matplotlib.pyplot as plt
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        for elm in self.elements:
-            ni, nj = elm.nodes
-            ax.plot([ni.x,nj.x],[ni.y,nj.y],"b-")
-
-        for nd in self.nodes:
-            applied = self.applied_load(nd)
-            if applied["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1)
-            if applied["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1)
-            if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
-            if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
-
-            if show_reactions:
-                reaction = self.reaction(nd)
-                if reaction["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1,reaction=True)
-                if reaction["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1,reaction=True)
-                if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
-                if reaction["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1,reaction=True)
-
-            if nd.ux == 0: self._draw_xconstraint(ax,nd.x,nd.y)
-            if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
-        
-        x0,x1,y0,y1 = self._rect_region()
-        plt.axis('equal')
-        ax.set_xlim(x0,x1)
-        ax.set_ylim(y0,y1)
-
-    def _draw_xforce(self,axes,x,y,ddir=1,reaction=False):
-        """
-        Draw horizontal applied-load or reaction arrow.
-        """
-        dx, dy = self._calculate_arrow_size(), 0
-        HW = dx/5.0
-        HL = dx/3.0
-        color = 'b' if reaction else 'r'
-        arrow_props = dict(head_width=HW, head_length=HL, fc=color, ec=color)
-        axes.arrow(x, y, ddir*dx, dy, **arrow_props)
-        
-    def _draw_yforce(self,axes,x,y,ddir=1,reaction=False):
-        """
-        Draw vertical applied-load or reaction arrow.
-        """
-        dx,dy = 0, self._calculate_arrow_size()
-        HW = dy/5.0
-        HL = dy/3.0
-        color = 'b' if reaction else 'r'
-        arrow_props = dict(head_width=HW, head_length=HL, fc=color, ec=color)
-        axes.arrow(x, y, dx, ddir*dy, **arrow_props)
-        
-    def _draw_xconstraint(self,axes,x,y):
-        axes.plot(x, y, "g<", markersize=10, alpha=0.6)
-    
-    def _draw_yconstraint(self,axes,x,y):
-        axes.plot(x, y, "gv", markersize=10, alpha=0.6)
-        
-    def _calculate_arrow_size(self):
-        x0,x1,y0,y1 = self._rect_region(factor=50)
-        sf = 5e-2
-        kfx = sf*(x1-x0)
-        kfy = sf*(y1-y0)
-        return np.mean([kfx,kfy])
-        
-    def plot_deformed_shape(self, scale=1.0):
-        import matplotlib.pyplot as plt
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        df = scale*self._calculate_deformed_factor()
-        
-        for elm in self.elements:
-            ni,nj = elm.nodes
-            x, y = [ni.x,nj.x], [ni.y,nj.y]
-            xx = [ni.x+ni.ux*df, nj.x+nj.ux*df]
-            yy = [ni.y+ni.uy*scale, nj.y+nj.uy*scale]
-            ax.plot(x,y,'bo-')
-            ax.plot(xx,yy,'ro--')
-
-        x0,x1,y0,y1 = self._rect_region()
-        plt.axis('equal')
-        ax.set_xlim(x0,x1)
-        ax.set_ylim(y0,y1)
-        
-    def _calculate_deformed_factor(self):
-        x0,x1,y0,y1 = self._rect_region()
-        ux = np.abs(np.array([n.ux for n in self.nodes]))
-        uy = np.abs(np.array([n.uy for n in self.nodes]))
-        sf = 1.5e-2
-        if ux.max()==0 and uy.max()!=0:
-            kfx = sf*(y1-y0)/uy.max()
-            kfy = sf*(y1-y0)/uy.max()
-        if uy.max()==0 and ux.max()!=0:
-            kfx = sf*(x1-x0)/ux.max()
-            kfy = sf*(x1-x0)/ux.max()
-        if ux.max()!=0 and uy.max()!=0:
-            kfx = sf*(x1-x0)/ux.max()
-            kfy = sf*(y1-y0)/uy.max()
-        return np.mean([kfx,kfy])
-
-    def show(self):
-        import matplotlib.pyplot as plt
-        plt.show()
-        
-    def _rect_region(self,factor=7.0):
-        nx,ny = [],[]
-        for n in self.nodes:
-            nx.append(n.x)
-            ny.append(n.y)
-        xmn,xmx,ymn,ymx = min(nx),max(nx),min(ny),max(ny)
-        kx = (xmx-xmn)/factor
-        ky = (ymx-ymn)/factor
-        if ky == 0:
-            ky = 1.0/factor
-        return xmn-kx, xmx+kx, ymn-ky, ymx+ky
-        
-    def _get_element_results(self, options):
-        from tabulate import tabulate
-
-        rows = [["Element", "F", "S"]]
-        for element in self.elements:
-            rows.append([element.label, element.f, element.s])
-        return tabulate(rows, **options)
+    def __init__(self, name="Truss Model 01"):
+        super().__init__(name=name)
 
 
-
-#~ *********************************************************************
-#~ ****************************  BeamModel *****************************
-#~ *********************************************************************    
 class BeamModel(Model):
-    """
-    Model for finite element analysis
-    """
+    """Euler-Bernoulli beam model."""
+
+    element_type = "beam"
     displacement_dofs = ("uy", "ur")
     force_dofs = ("fy", "m")
+    load_dofs = ("fy",)
 
-    def __init__(self,name="Beam Model 01"):
-        Model.__init__(self,name=name,mtype="beam")
-        self.dof = 2 # 2 DOF for beam element
-        
-    def assemble(self):
-        """Assemble the current global finite-element system."""
-        _assemble_global_stiffness(self)
-    
-    def add_force(self,node,force):
-        values = self._validated_component_vector(force, ("fy",), "force")
-        self._record_applied_forces(node, **values)
-        
-    def add_moment(self,node,moment):
+    def __init__(self, name="Beam Model 01"):
+        super().__init__(name=name)
+
+    def add_moment(self, node, moment):
         values = self._validated_component_vector(moment, ("m",), "moment")
         self._record_applied_forces(node, **values)
-        
-    def add_constraint(self,node,**constraint):
-        values = self._validated_named_components(
-            constraint, self.displacement_dofs, "constraint"
-        )
-        for variable, value in values.items():
-            setattr(node, variable, value)
-        if values:
-            self._record_prescribed_displacements(node, **values)
-        
-    def solve(self):
-        _solve_model_system(self)
-
-    def _get_element_results(self, options):
-        from tabulate import tabulate
-
-        rows = [["Element", "Vi", "Vj", "Mi", "Mj"]]
-        for element in self.elements:
-            shear = np.asarray(element.fy, dtype=float).reshape(-1)
-            moment = np.asarray(element.m, dtype=float).reshape(-1)
-            rows.append([
-                element.label,
-                shear[0],
-                shear[-1],
-                moment[0],
-                moment[-1],
-            ])
-        return tabulate(rows, **options)
-            
-    def plot_model(self, show_reactions=False):
-        """Plot beam geometry, applied transverse loads, and optional reactions."""
-        import matplotlib.pyplot as plt
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        for elm in self.elements:
-            ni,nj = elm.nodes
-            xx = [ni.x, nj.x]
-            yy = [ni.y, nj.y]
-            ax.plot(xx, yy, "r.-")
-
-        for nd in self.nodes:
-            applied = self.applied_load(nd)
-            if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
-            if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
-
-            if show_reactions:
-                reaction = self.reaction(nd)
-                if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
-                if reaction["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1,reaction=True)
-
-            if nd.ux == 0: self._draw_xconstraint(ax,nd.x,nd.y)
-            if nd.uy == 0: self._draw_yconstraint(ax,nd.x,nd.y)
-            
-        ax.axis("equal")
-        x0,x1,y0,y1 = self._rect_region()
-        ax.set_xlim(x0,x1)
-        ax.set_ylim(y0,y1)
-
-    def _draw_xforce(self,axes,x,y,ddir=1,reaction=False):
-        """
-        Draw horizontal applied-load or reaction arrow.
-        """
-        dx, dy = self._calculate_arrow_size(), 0
-        HW = dx/5.0
-        HL = dx/3.0
-        color = 'b' if reaction else 'r'
-        arrow_props = dict(head_width=HW, head_length=HL, fc=color, ec=color)
-        axes.arrow(x, y, ddir*dx, dy, **arrow_props)
-        
-    def _draw_yforce(self,axes,x,y,ddir=1,reaction=False):
-        """
-        Draw vertical applied-load or reaction arrow.
-        """
-        dx,dy = 0, self._calculate_arrow_size()
-        HW = dy/5.0
-        HL = dy/3.0
-        color = 'b' if reaction else 'r'
-        arrow_props = dict(head_width=HW, head_length=HL, fc=color, ec=color)
-        axes.arrow(x, y, dx, ddir*dy, **arrow_props)
-        
-    def _draw_xconstraint(self,axes,x,y):
-        axes.plot(x, y, "g<", markersize=10, alpha=0.6)
-    
-    def _draw_yconstraint(self,axes,x,y):
-        axes.plot(x, y, "gv", markersize=10, alpha=0.6)
-        
-    def _calculate_arrow_size(self):
-        x0,x1,y0,y1 = self._rect_region(factor=10)
-        sf = 5e-2
-        kfx = sf*(x1-x0)
-        kfy = sf*(y1-y0)
-        return np.mean([kfx,kfy])
-
-    def _rect_region(self,factor=7.0):
-        nx,ny = [],[]
-        for n in self.nodes:
-            nx.append(n.x)
-            ny.append(n.y)
-        xmn,xmx,ymn,ymx = min(nx),max(nx),min(ny),max(ny)
-        kx = (xmx-xmn)/factor
-        if ymx==0 and ymn==0:
-            ky = 1.0/factor
-        else:
-            ky = (ymx-ymn)/factor
-        return xmn-kx, xmx+kx, ymn-ky, ymx+ky
-        
-    def plot_deformed_shape(self, scale=1000, **kwargs):
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        xx = []
-        yy = []
-        for elm in self.elements:
-            ni,nj = elm.nodes
-            xx.append( ni.x )
-            xx.append( nj.x )
-            yy.append( ni.y+ni.uy*scale )
-            yy.append( nj.y+nj.uy*scale )
-        
-        ax.plot(xx, yy, "ro--", **kwargs)
-            
-        ax.axis("equal")
-        
-    def plot_moment_diagram(self):
-        import matplotlib.pyplot as plt
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        X,M = self._get_data_for_moment_diagram()
-        ax.plot(X, M, "r")
-        ax.fill_between(X, M, facecolor="#EE5B5B")
-        
-    def plot_shear_diagram(self):
-        import matplotlib.pyplot as plt
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        X,S = self._get_data_for_shear_diagram()
-        ax.plot(X, S, "b")
-        ax.fill_between(X, S, facecolor="#559EE5")
-        
-    def _get_data_for_moment_diagram(self):
-        cx = 0
-        X, M = [], []
-        for el in self.elements:
-            L = el.L
-            X = np.concatenate((X, np.array([cx, cx+L])))
-            mel = el.m.squeeze()
-            mel[0] = - mel[0]
-            M = np.concatenate((M, mel))
-            cx = cx + L
-        return X, M
-        
-    def _get_data_for_shear_diagram(self):
-        cx = 0
-        X, S = [], []
-        for el in self.elements:
-            L = el.L # element length
-            X = np.concatenate((X, np.array([cx, cx+L])))
-            fel = el.fy.squeeze()
-            fel[-1] = - fel[-1]
-            S = np.concatenate((S, fel))
-            cx = cx + L
-        return X, S
-    
-    def show(self):
-        import matplotlib.pyplot as plt
-        plt.show()
 
 
-#~ *********************************************************************
-#~ ****************************  LinearTriangleModel *******************
-#~ *********************************************************************    
 class LinearTriangleModel(Model):
-    """
-    Model for finite element analysis
-    """
+    """Two-dimensional constant-strain triangle model."""
+
+    element_type = "triangle"
     displacement_dofs = ("ux", "uy")
     force_dofs = ("fx", "fy")
 
-    def __init__(self,name="LT Model 01"):
-        Model.__init__(self,name=name,mtype="triangle")
-        self.dof = 2 # 2 DOF for triangle element (per node)
-        
-    def assemble(self):
-        """Assemble the current global finite-element system."""
-        _assemble_global_stiffness(self)
+    def __init__(self, name="LT Model 01"):
+        super().__init__(name=name)
 
-    def add_force(self,node,force):
-        values = self._validated_component_vector(force, self.force_dofs, "force")
-        self._record_applied_forces(node, **values)
-        
-    def add_constraint(self,node,**constraint):
-        values = self._validated_named_components(
-            constraint, self.displacement_dofs, "constraint"
-        )
-        for variable, value in values.items():
-            setattr(node, variable, value)
-        if values:
-            self._record_prescribed_displacements(node, **values)
-        
-    def solve(self):
-        _solve_model_system(self)
-
-    def _get_element_results(self, options):
-        from tabulate import tabulate
-
-        rows = [["Element", "SXX", "SYY", "SXY", "EXX", "EYY", "EXY"]]
-        for element in self.elements:
-            stress = np.asarray(element.get_element_stresses(), dtype=float).reshape(-1)
-            strain = np.asarray(element.get_element_strains(), dtype=float).reshape(-1)
-            rows.append([
-                element.label,
-                stress[0],
-                stress[1],
-                stress[2],
-                strain[0],
-                strain[1],
-                strain[2],
-            ])
-        return tabulate(rows, **options)
-                
-    def plot_model(self, show_reactions=False):
-        """
-        Plot mesh geometry, applied loads, constraints, and optional reactions.
-        """
-        import matplotlib.pyplot as plt
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-
-        patches = []
-        for elm in self.elements:
-            _x,_y = [],[]
-            for nd in elm.nodes:
-                _x.append(nd.x)
-                _y.append(nd.y)
-            polygon = Polygon(list(zip(_x,_y)))
-            patches.append(polygon)
-
-        for nd in self.nodes:
-            applied = self.applied_load(nd)
-            if applied["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1)
-            if applied["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1)
-            if applied["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1)
-            if applied["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1)
-
-            if show_reactions:
-                reaction = self.reaction(nd)
-                if reaction["fx"] > 0: self._draw_xforce(ax,nd.x,nd.y,1,reaction=True)
-                if reaction["fx"] < 0: self._draw_xforce(ax,nd.x,nd.y,-1,reaction=True)
-                if reaction["fy"] > 0: self._draw_yforce(ax,nd.x,nd.y,1,reaction=True)
-                if reaction["fy"] < 0: self._draw_yforce(ax,nd.x,nd.y,-1,reaction=True)
-
-            if nd.ux == 0 and nd.uy == 0:
-                self._draw_xyconstraint(ax,nd.x,nd.y)
-
-        pc = PatchCollection(patches, color="#7CE7FF", edgecolor="k", alpha=0.4)
-        ax.add_collection(pc)
-        x0,x1,y0,y1 = self._rect_region()
-        ax.set_xlim(x0,x1)
-        ax.set_ylim(y0,y1)
-        ax.set_title("Model %s"%(self.name))
-        ax.set_aspect("equal")
-
-    def _draw_xforce(self,axes,x,y,ddir=1,reaction=False):
-        """
-        Draw horizontal applied-load or reaction arrow.
-        """
-        dx, dy = self._calculate_arrow_size(), 0
-        HW = dx/5.0
-        HL = dx/3.0
-        color = 'b' if reaction else 'r'
-        arrow_props = dict(head_width=HW, head_length=HL, fc=color, ec=color)
-        axes.arrow(x, y, ddir*dx, dy, **arrow_props)
-        
-    def _draw_yforce(self,axes,x,y,ddir=1,reaction=False):
-        """
-        Draw vertical applied-load or reaction arrow.
-        """
-        dx,dy = 0, self._calculate_arrow_size()
-        HW = dy/5.0
-        HL = dy/3.0
-        color = 'b' if reaction else 'r'
-        arrow_props = dict(head_width=HW, head_length=HL, fc=color, ec=color)
-        axes.arrow(x, y, dx, ddir*dy, **arrow_props)
-        
-    def _draw_xyconstraint(self,axes,x,y):
-        axes.plot(x, y, "gv", markersize=10, alpha=0.6)
-        axes.plot(x, y, "g<", markersize=10, alpha=0.6)
-        
-    def _calculate_arrow_size(self):
-        x0,x1,y0,y1 = self._rect_region(factor=10)
-        sf = 8e-2
-        kfx = sf*(x1-x0)
-        kfy = sf*(y1-y0)
-        return np.mean([kfx,kfy])
-        
-    def _get_tri(self):
-        import matplotlib.tri as tri
-        
-        _x,_y = [],[]
-        # ~ df = 1
-        for n in self.nodes:
-            _x.append(n.x)
-            # ~ _x.append(n.x + n.ux*df)
-            _y.append(n.y)
-            # ~ _y.append(n.y + n.uy*df)
-            
-        tg = []
-        for e in self.elements:
-            ni,nj,nm = e.nodes
-            tg.append([
-                self._get_node_index(ni),
-                self._get_node_index(nj),
-                self._get_node_index(nm),
-            ])
-            
-        tr = tri.Triangulation(_x,_y, triangles=tg)
-        return tr
-
-
-    def plot_nodal_result(self, var="ux"):
-        import matplotlib.pyplot as plt
-        import numpy as np
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-        solutions = {
-             "ux": (n.ux for n in self.nodes),
-             "uy": (n.uy for n in self.nodes),
-             "usum": (np.sqrt(n.ux**2 + n.uy**2) for n in self.nodes),
-             "sxx": (n.sx for n in self.nodes),
-             "syy": (n.sy for n in self.nodes),
-             "sxy": (n.sxy for n in self.nodes),
-             "seqv": (n.seqv for n in self.nodes),
-             "exx": (n.ex for n in self.nodes),
-             "eyy": (n.ey for n in self.nodes),
-             "exy": (n.exy for n in self.nodes)
-             }
-        
-        tr = self._get_tri()
-        try:
-            fsol = list(solutions.get(var))
-        except:
-            return None
-        if isinstance(fsol,list): fsol = np.array(fsol)
-        tp = ax.tricontourf(tr, fsol, cmap="jet")
-        fig.colorbar(tp)
-        x0,x1,y0,y1 = self._rect_region()
-        ax.set_xlim(x0,x1)
-        ax.set_ylim(y0,y1)
-        ax.set_aspect("equal")
-        ax_title = "{0} (Max:{1:0.3e}, Min:{2:0.3e})".format(var,fsol.max(),fsol.min())
-        ax.set_title(ax_title, fontsize=8)
-
-
-    def plot_element_result(self, var="sxx"):
-        import matplotlib.pyplot as plt
-        import numpy as np
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-
-        _x,_y = [],[]
-        patches = []
-        for k,elm in enumerate(self.elements):
-            _x,_y,_ux,_uy = [],[],[],[]
-            for nd in elm.nodes:
-                _x.append(nd.x)
-                _y.append(nd.y)
-            polygon = Polygon(list(zip(_x,_y)))
-            patches.append(polygon)
-            
-        pc = PatchCollection(patches, cmap="jet", alpha=1)
-        solutions = {
-             "sxx": (e.sx for e in self.elements),
-             "syy": (e.sy for e in self.elements),
-             "sxy": (e.sxy for e in self.elements),
-             "exx": (e.ex for e in self.elements),
-             "eyy": (e.ey for e in self.elements),
-             "exy": (e.exy for e in self.elements)
-             }
-        fsol = np.array(list(solutions.get(var.lower())))
-        pc.set_array(fsol)
-        ax.add_collection(pc)
-        fig.colorbar(pc)
-        x0,x1,y0,y1 = self._rect_region()
-        ax.set_xlim(x0,x1)
-        ax.set_ylim(y0,y1)
-        ax.set_aspect("equal")
-        ax_title = "{0} (Max:{1:0.3e}, Min:{2:0.3e})".format(var,fsol.max(),fsol.min())
-        ax.set_title(ax_title, fontsize=8)
-        
-    def show(self):
-        """
-        Show matplotlib plots
-        """
-        import matplotlib.pyplot as plt
-        plt.show()
-    
-    def _calculate_deformed_factor(self):
-        x0,x1,y0,y1 = self._rect_region()
-        ux = np.array([n.ux for n in self.nodes])
-        uy = np.array([n.uy for n in self.nodes])
-        sf = 1.5e-2
-        kfx = sf*(x1-x0)/ux.max()
-        kfy = sf*(y1-y0)/uy.max()
-        return np.mean([kfx,kfy])
-                
-    def _rect_region(self,factor=7.0):
-        nx,ny = [],[]
-        for n in self.nodes:
-            nx.append(n.x)
-            ny.append(n.y)
-        xmn,xmx,ymn,ymx = min(nx),max(nx),min(ny),max(ny)
-        kx = (xmx-xmn)/factor
-        ky = (ymx-ymn)/factor
-        return xmn-kx, xmx+kx, ymn-ky, ymx+ky
-
-
-
-
-if __name__=='__main__':
-    pass

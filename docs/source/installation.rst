@@ -15,9 +15,9 @@ Install the current release from PyPI:
 The default package includes the finite-element models, elements, plotting,
 reporting, and ``meshio`` for reading triangular mesh files.
 
-The historical ``nusa[mesh]`` extra remains accepted during the 0.3.0
-transition, but ``meshio`` is now installed by default and the extra is no
-longer necessary.
+The historical ``nusa[mesh]`` extra remains accepted as a compatibility
+alias, but ``meshio`` is installed by default and the extra is no longer
+necessary.
 
 Gmsh for mesh generation
 ------------------------
@@ -38,8 +38,17 @@ same executable on ``PATH``.
 Windows
 ~~~~~~~
 
-Two practical options are:
+Three practical options are:
 
+* install Gmsh into the same Python environment with ``pip``:
+
+  .. code-block:: powershell
+
+     python -m pip install gmsh
+     gmsh --version
+
+  This route was validated with the NuSA 0.4.0 Windows release checks and keeps
+  the Gmsh launcher in the same virtual environment as NuSA;
 * install a precompiled Gmsh application from the official Gmsh downloads and
   add its executable directory to ``PATH``;
 * install the conda-forge package:
@@ -85,20 +94,9 @@ Debian/Ubuntu systems, for example:
 Google Colab
 ~~~~~~~~~~~~
 
-Colab runs on an Ubuntu-based environment, so install Gmsh in the notebook
-session before generating meshes:
-
-.. code-block:: bash
-
-   !apt-get update -qq
-   !apt-get install -y gmsh
-   !gmsh --version
-
-Then install NuSA normally:
-
-.. code-block:: bash
-
-   !pip install git+https://github.com/JorgeDeLosSantos/nusa.git@develop
+Colab runs on an Ubuntu-based environment, so Gmsh can be installed in the
+notebook runtime with ``apt``. See :doc:`colab` for a complete installation,
+solve, mesh-generation, and post-processing walkthrough.
 
 The Gmsh installation is specific to the current Colab runtime and must be
 repeated when a new runtime is created.

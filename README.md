@@ -17,6 +17,7 @@ A Python library for structural analysis using the finite element method, design
 * **0.3.0rc1** Release candidate (22/09/2026)
 * **0.3.0rc2** Release candidate (22/09/2026)
 * **0.3.0** Stable release (23/09/2026)
+* **0.4.0** Stable release (06/10/2026)
 
 ## Requirements
 
@@ -36,7 +37,7 @@ pip install nusa
 ```
 
 Mesh-file support through `meshio` is included in the default installation.
-The historical `nusa[mesh]` extra remains accepted during the 0.3.0 transition,
+The historical `nusa[mesh]` extra remains accepted as a compatibility alias,
 but is no longer required.
 
 To generate meshes, install Gmsh separately and verify that NuSA can discover it:
@@ -62,6 +63,23 @@ python -m pytest
 ```
 
 
+## Analysis workflow
+
+NuSA 0.4 separates finite-element problem definition from solved state:
+
+```python
+from nusa import LinearStaticAnalysis, solve
+
+result = solve(model)
+
+# Equivalent explicit form:
+result = LinearStaticAnalysis().solve(model)
+```
+
+`Model` contains topology, loads, and prescribed displacements. A solve returns
+an independent `StaticResult` snapshot containing displacements, reactions,
+nodal forces, and canonical element results.
+
 ## Supported element types
 
 * Spring
@@ -77,7 +95,7 @@ python -m pytest
 ```python
 import numpy as np
 
-from nusa import LinearTriangle, LinearTriangleModel, Node
+from nusa import LinearTriangle, LinearTriangleModel, Node, plot_model
 import nusa.mesh as nmsh
 
 md = nmsh.Modeler()
@@ -114,9 +132,9 @@ for node in nodes:
     if np.isclose(node.x, maxx):
         model.add_force(node, (10e3,0))
 
-model.plot_model()
-model.solve()
-model.plot_nodal_result("seqv")
+plot_model(model)
+result = model.solve()
+result.plot_nodal_field("von_mises_stress")
 ```
 
 ![](docs/nusa-info/es/src/linear-triangle-element/model_plot.png)
@@ -125,9 +143,9 @@ model.plot_nodal_result("seqv")
 
 ### Spring element
 
-**Example 01**. For the spring assemblage with arbitrarily numbered nodes shown in the figure 
-obtain (a) the global stiffness matrix, (b) the displacements of nodes 3 and 4, (c) the 
-reaction forces at nodes 1 and 2, and (d) the forces in each spring. A force of 5000 lb
+**Example 01**. For the spring assemblage with arbitrarily numbered nodes shown in the figure,
+obtain (a) the displacements of nodes 3 and 4, (b) the reaction forces at nodes 1 and 2,
+and (c) the forces in each spring. A force of 5000 lb
 is applied at node 4 in the `x` direction. The spring constants are given in the figure.
 Nodes 1 and 2 are fixed.
 
@@ -167,7 +185,8 @@ def test1():
     m1.add_force(n4, (P,))
     m1.add_constraint(n1, ux=0)
     m1.add_constraint(n2, ux=0)
-    m1.solve()
+    result = m1.solve()
+    return result
 
 if __name__ == '__main__':
     test1()
@@ -211,10 +230,10 @@ for el in (e1,e2): m1.add_element(el)
 m1.add_force(n2, (-P,))
 m1.add_constraint(n1, uy=0) # pin
 m1.add_constraint(n3, uy=0) # roller
-m1.solve() # Solve model
+result = m1.solve()
 
 # Displacement at C point
-print(n2.uy)
+print(result.displacement(n2)["uy"])
 ```
 
 ## GUIs based on NuSA
@@ -229,7 +248,7 @@ You can view the online documentation at the following link: [https://jorgedelos
 The repository also contains historical Jupyter notebooks under `docs/nusa-info/`.
 Some of those notebooks predate the 0.3.0 API and are retained as archival material;
 the executable scripts under `examples/` and the current Sphinx documentation are
-the recommended references for 0.3.0.
+the recommended references for the current API.
 
 ## About...
 

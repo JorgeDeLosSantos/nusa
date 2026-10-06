@@ -1,9 +1,22 @@
 """NuSA: Numerical Structural Analysis in Python."""
 
 from .version import __version__
-from .core import Element, Model, Node
-from .element import Bar, Beam, LinearTriangle, Spring, Truss
+from .analysis import LinearStaticAnalysis, solve
+from .result import StaticResult
+from .reporting import simple_report
+from .post import element_field, nodal_field
+from .visualization import (
+    plot_model,
+    plot_deformed_shape,
+    plot_element_field,
+    plot_moment_diagram,
+    plot_nodal_field,
+    plot_shear_diagram,
+)
+from .node import Node
+from .element import Bar, Beam, Element, LinearTriangle, Spring, Truss
 from .model import (
+    Model,
     BarModel,
     BeamModel,
     LinearTriangleModel,
@@ -16,6 +29,18 @@ __email__ = "delossantosmfq@gmail.com"
 
 __all__ = [
     "__version__",
+    "solve",
+    "LinearStaticAnalysis",
+    "StaticResult",
+    "simple_report",
+    "element_field",
+    "nodal_field",
+    "plot_model",
+    "plot_deformed_shape",
+    "plot_nodal_field",
+    "plot_element_field",
+    "plot_moment_diagram",
+    "plot_shear_diagram",
     "Model",
     "Element",
     "Node",

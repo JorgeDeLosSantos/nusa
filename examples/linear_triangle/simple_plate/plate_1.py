@@ -5,7 +5,9 @@
 #  Blog: numython.github.io
 #  License: MIT License
 # ***********************************
-from nusa import LinearTriangle, LinearTriangleModel, Node
+import matplotlib.pyplot as plt
+
+from nusa import LinearTriangle, LinearTriangleModel, Node, plot_model
 
 
 def build_model():
@@ -29,15 +31,15 @@ def build_model():
     model.add_constraint(n5, ux=0, uy=0)
     model.add_force(n2, (9375, 0))
     model.add_force(n3, (9375, 0))
-    model.solve()
     return model
 
 
 def main():
     model = build_model()
-    model.plot_model()
-    model.plot_nodal_result("seqv")
-    model.show()
+    plot_model(model)
+    result = model.solve()
+    result.plot_nodal_field("seqv")
+    plt.show()
 
 
 if __name__ == "__main__":

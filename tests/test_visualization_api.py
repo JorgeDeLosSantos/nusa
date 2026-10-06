@@ -1,56 +1,84 @@
-"""Regression tests for normalized visualization API names."""
+"""Regression tests for result-owned visualization API."""
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from nusa.core import Node
-from nusa.element import Beam
-from nusa.model import BeamModel, LinearTriangleModel, TrussModel
+from nusa import (
+    Beam,
+    BeamModel,
+    LinearTriangleModel,
+    Node,
+    StaticResult,
+    TrussModel,
+    plot_deformed_shape,
+    plot_model,
+)
 
 
-def test_visualization_api_uses_descriptive_public_names():
+def test_all_visualization_is_not_model_owned():
     truss = TrussModel()
     beam = BeamModel()
     triangle = LinearTriangleModel()
 
-    assert hasattr(truss, "plot_deformed_shape")
-    assert hasattr(beam, "plot_deformed_shape")
-    assert hasattr(triangle, "plot_nodal_result")
-    assert hasattr(triangle, "plot_element_result")
-
-    assert not hasattr(beam, "plot_disp")
-    assert not hasattr(triangle, "plot_nsol")
-    assert not hasattr(triangle, "plot_esol")
-
-
-def test_geometry_and_scaling_helpers_are_private():
-    truss = TrussModel()
-    beam = BeamModel()
-    triangle = LinearTriangleModel()
-
-    for model in (truss, beam, triangle):
-        assert hasattr(model, "_rect_region")
-        assert not hasattr(model, "rect_region")
-
-    assert hasattr(truss, "_calculate_deformed_factor")
-    assert hasattr(triangle, "_calculate_deformed_factor")
-    assert not hasattr(triangle, "calculate_deformed_factor")
+    for model, names in (
+        (truss, ("plot_model", "plot_deformed_shape")),
+        (beam, ("plot_model", "plot_deformed_shape", "plot_moment_diagram", "plot_shear_diagram")),
+        (triangle, ("plot_model", "plot_nodal_result", "plot_element_result")),
+    ):
+        for name in names:
+            assert not hasattr(model, name)
 
 
-def test_beam_plot_deformed_shape_uses_scale_keyword():
-    model = BeamModel("Scaled deformation")
+def _beam_result():
+    model = BeamModel("deformation")
     n1 = Node((0.0, 0.0))
     n2 = Node((1.0, 0.0))
     model.add_nodes([n1, n2])
     model.add_element(Beam((n1, n2), E=1.0, I=1.0))
+    model.add_constraint(n1, uy=0.0, ur=0.0)
+    model.add_force(n2, (-0.6,))
+    return model.solve()
 
-    n1.uy = 0.0
-    n2.uy = 0.2
 
-    model.plot_deformed_shape(scale=10.0)
-    ax = plt.gcf().axes[0]
-    xdata, ydata = ax.lines[0].get_data()
+def test_static_result_exposes_visualization_convenience():
+    result = _beam_result()
 
-    np.testing.assert_allclose(xdata, [0.0, 1.0])
-    np.testing.assert_allclose(ydata, [0.0, 2.0])
+    assert isinstance(result, StaticResult)
+    ax = result.plot_deformed_shape(scale=10.0)
+    assert ax is not None
+    plt.close("all")
+
+
+def test_top_level_deformed_plot_consumes_static_result():
+    result = _beam_result()
+    ax = plot_deformed_shape(result, scale=2.0)
+
+    assert len(ax.lines) == 2
+    undeformed_x, undeformed_y = ax.lines[0].get_data()
+    deformed_x, deformed_y = ax.lines[1].get_data()
+
+    np.testing.assert_allclose(undeformed_x, [0.0, 1.0])
+    np.testing.assert_allclose(undeformed_y, [0.0, 0.0])
+    np.testing.assert_allclose(deformed_x, [0.0, 1.0])
+    np.testing.assert_allclose(
+        deformed_y,
+        [0.0, 2.0 * result.displacements[2]],
+    )
+    plt.close("all")
+
+
+def test_top_level_plot_model_consumes_problem_definition():
+    model = BeamModel("problem plot")
+    n1 = Node((0.0, 0.0))
+    n2 = Node((1.0, 0.0))
+    model.add_nodes([n1, n2])
+    model.add_element(Beam((n1, n2), E=1.0, I=1.0))
+    model.add_constraint(n1, uy=0.0, ur=0.0)
+    model.add_force(n2, (-1.0,))
+
+    ax = plot_model(model)
+
+    assert ax is not None
+    assert len(ax.lines) >= 1
+    assert len(ax.patches) >= 1
     plt.close("all")

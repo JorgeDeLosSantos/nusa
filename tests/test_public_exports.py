@@ -8,6 +8,18 @@ import nusa
 
 EXPECTED_PUBLIC_API = {
     "__version__",
+    "solve",
+    "LinearStaticAnalysis",
+    "StaticResult",
+    "simple_report",
+    "plot_shear_diagram",
+    "plot_moment_diagram",
+    "plot_element_field",
+    "plot_nodal_field",
+    "plot_model",
+    "plot_deformed_shape",
+    "nodal_field",
+    "element_field",
     "Model",
     "Element",
     "Node",
@@ -62,6 +74,7 @@ def test_removed_legacy_modules_are_not_importable():
         "nusa.templates",
         "nusa.lib",
         "nusa._lib",
+        "nusa.core",
     )
 
     for module_name in legacy_modules:
@@ -88,3 +101,9 @@ def test_importing_nusa_does_not_override_matplotlib_rcparams():
         assert {key: mpl.rcParams[key] for key in keys} == sentinel
     finally:
         mpl.rcParams.update(original)
+
+
+def test_domain_classes_live_in_dedicated_modules():
+    assert nusa.Node.__module__ == "nusa.node"
+    assert nusa.Element.__module__ == "nusa.element"
+    assert nusa.Model.__module__ == "nusa.model"

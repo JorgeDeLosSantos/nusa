@@ -5,7 +5,24 @@
 #  License: MIT License
 # ***********************************
 import numpy as np
-from .core import Element, Node
+from .node import Node
+
+class Element:
+    """Base class for finite elements.
+
+    Elements own formulation, connectivity, and physical properties. Solved
+    response belongs to analysis results, not to the element instance.
+    """
+
+    def __init__(self, etype):
+        self.etype = etype
+        self.label = None
+
+    def __str__(self):
+        return str(self.__class__)
+
+
+#~ =========================== NODE ===========================
 
 
 def _validate_nodes(nodes, expected_count, element_name):
@@ -75,7 +92,7 @@ class Spring(Element):
     
     *nodes* : tuple
         Connectivity for element given as tuple of 
-        :class:`~core.base.Node` objects
+        :class:`~nusa.node.Node` objects
     
     *ke* : float
         Spring stiffness
@@ -92,17 +109,17 @@ class Spring(Element):
         self.nodes = _validate_nodes(nodes, 2, "Spring")
         self.k = _positive_finite(ke, "Spring stiffness k")
     
-    @property
-    def fx(self):
-        ke = self.get_element_stiffness() # Element stiffness
-        n1, n2 = self.nodes
-        un = np.array([[n1.ux],[n2.ux]]) # Nodal displacements
-        return np.dot(ke, un) # Return  {fxe} = [Ke]{uxe}
-        
-    @fx.setter
-    def fx(self,val):
-        self._fx = val
-        
+    def compute_results(self, u_e):
+        """Return canonical spring results from local displacements."""
+        u_e = np.asarray(u_e, dtype=float).reshape(-1)
+        if u_e.size != 2:
+            raise ValueError("Spring result evaluation requires 2 displacements")
+        values = self.get_element_stiffness() @ u_e
+        return {
+            "force_i": float(values[0]),
+            "force_j": float(values[1]),
+        }
+
     def get_element_stiffness(self):
         r"""
         Get stiffness matrix for this element.
@@ -128,7 +145,7 @@ class Bar(Element):
     """
     Bar element for finite element analysis
     
-    *nodes* : :class:`~core.base.Node`
+    *nodes* : :class:`~nusa.node.Node`
         Connectivity for element
     
     *E* : float
@@ -144,47 +161,21 @@ class Bar(Element):
         self.E = _positive_finite(E, "Young's modulus E")
         self.A = _positive_finite(A, "Cross-sectional area A")
         
-    @property
-    def fx(self):
-        """
-        Compute force in x-dir (axial-dir)
-        """
-        ke = self.get_element_stiffness() # Element stiffness
-        n1, n2 = self.nodes
-        un = np.array([[n1.ux],[n2.ux]]) # Nodal displacements
-        return np.dot(ke, un) # Return  {fxe} = [Ke]{uxe}
-        
-    @fx.setter
-    def fx(self,val):
-        self._fx = val
-        
-    @property
-    def sx(self):
-        r"""
-        Compute normal stress in x-dir
-        
-        Given by:
-        
-        .. math::
-            
-            S_x = K \left( \frac{u}{A} \right)
-        
-        where
-        
-        * K - Element stiffness matrix
-        * u - Nodal displacements
-        * A - Cross-section of element
-        """
-        ke = self.get_element_stiffness() # Element stiffness
-        na, nb = self.nodes
-        u = np.array([na.ux, nb.ux]) # Nodes displacements
-        sx = np.dot(ke, u/self.A) # matrix multiplication
-        return sx
-        
-    @sx.setter
-    def sx(self,val):
-        self._sx = val
-    
+    def compute_results(self, u_e):
+        """Return canonical bar results from local displacements."""
+        u_e = np.asarray(u_e, dtype=float).reshape(-1)
+        if u_e.size != 2:
+            raise ValueError("Bar result evaluation requires 2 displacements")
+        forces = self.get_element_stiffness() @ u_e
+        axial_strain = (u_e[1] - u_e[0]) / self.L
+        axial_force = self.E * self.A * axial_strain
+        return {
+            "force_i": float(forces[0]),
+            "force_j": float(forces[1]),
+            "axial_force": float(axial_force),
+            "axial_stress": float(axial_force / self.A),
+        }
+
     @property
     def L(self):
         """
@@ -223,7 +214,7 @@ class Truss(Element):
     """
     Truss element for finite element analysis
     
-    *nodes* : Tuple of :class:`~nusa.core.Node`
+    *nodes* : Tuple of :class:`~nusa.node.Node`
         Connectivity for element
     
     *E* : float
@@ -262,46 +253,22 @@ class Truss(Element):
         theta = np.arctan2((y1-y0),(x1-x0))
         return theta
     
-    @property
-    def f(self):
-        r"""
-        Force in this element, given by
-        
-        .. math::
-        
-            f = \frac{EA}{L}\begin{bmatrix} C & S & -C & -S \end{bmatrix}\left\{u\right\}
-        
-        where:
-        
-            * E - Elastic modulus
-            * A - Cross-section
-            * L - Length
-            * C - :math:`\cos(\theta)`
-            * S - :math:`\sin(\theta)`
-            * u - Four-element vector of nodal displacements -> :math:`\left\{ ux_i; uy_i; ux_j; uy_j \right\}`
-        """
-        return self._compute_force()
-    
-    @property
-    def s(self):
-        """
-        Stress in this element, given by:
-        
-        s = f/A
-        """
-        s = self.f/self.A
-        return s
-        
-    def _compute_force(self):
-        theta = self.theta
-        E, A, L = self.E, self.A, self.L
-        C = np.cos(theta)
-        S = np.sin(theta)
-        ni, nj = self.nodes
-        u = np.array([ni.ux, ni.uy, nj.ux, nj.uy]).T
-        F = (E*A/L)*np.dot(np.array([-C, -S, C, S]), u)
-        return F
-        
+    def compute_results(self, u_e):
+        """Return canonical truss results from global element displacements."""
+        u_e = np.asarray(u_e, dtype=float).reshape(-1)
+        if u_e.size != 4:
+            raise ValueError("Truss result evaluation requires 4 displacements")
+        C = np.cos(self.theta)
+        S = np.sin(self.theta)
+        axial_force = (self.E * self.A / self.L) * np.dot(
+            np.array([-C, -S, C, S], dtype=float),
+            u_e,
+        )
+        return {
+            "axial_force": float(axial_force),
+            "axial_stress": float(axial_force / self.A),
+        }
+
     def get_element_stiffness(self):
         """
         Get stiffness matrix for this element
@@ -323,7 +290,7 @@ class Beam(Element):
     """
     Beam element for finite element analysis
     
-    *nodes* : :class:`~core.base.Node`
+    *nodes* : :class:`~nusa.node.Node`
         Connectivity for element
     
     *E* : float
@@ -355,42 +322,18 @@ class Beam(Element):
                                        [  a, c,  -a, b]])
         return self._K
 
-    def _compute_element_forces(self):
-        """
-        Just that 
-        
-        Set fy and m properties.
-        """
-        ke = self.get_element_stiffness() # Element stiffness
-        n1, n2 = self.nodes
-        un = np.array([[n1.uy, n1.ur, n2.uy, n2.ur]]).transpose() # Nodal displacements
-        EF = np.dot(ke, un) # Return  {fxe} = [Ke]{uxe}
-        self.fy = EF[::2] # Set fy
-        self.m = EF[1::2] # Set m
-        
-    @property
-    def fy(self):
-        """
-        Compute y-force 
-        """
-        self._compute_element_forces()
-        return self._fy
-        
-    @fy.setter
-    def fy(self,val):
-        self._fy = val
-        
-    @property
-    def m(self):
-        """
-        Compute moment 
-        """
-        self._compute_element_forces()
-        return self._m
-        
-    @m.setter
-    def m(self,val):
-        self._m = val
+    def compute_results(self, u_e):
+        """Return canonical beam end actions from local displacements."""
+        u_e = np.asarray(u_e, dtype=float).reshape(-1)
+        if u_e.size != 4:
+            raise ValueError("Beam result evaluation requires 4 displacements")
+        actions = self.get_element_stiffness() @ u_e
+        return {
+            "shear_force_i": float(actions[0]),
+            "shear_force_j": float(actions[2]),
+            "bending_moment_i": float(actions[1]),
+            "bending_moment_j": float(actions[3]),
+        }
 
     @property
     def L(self):
@@ -409,7 +352,7 @@ class LinearTriangle(Element):
     """
     Linear triangle element for finite element analysis
     
-    *nodes* : :class:`~nusa.core.Node`
+    *nodes* : :class:`~nusa.node.Node`
         Connectivity for element
     
     *E* : float
@@ -434,70 +377,7 @@ class LinearTriangle(Element):
         self.E = _positive_finite(E, "Young's modulus E")
         self.nu = _poisson_ratio(nu)
         self.t = _positive_finite(t, "Thickness t")
-        self._sx = 0
-        self._sy = 0
-        self._sxy = 0
         
-    @property
-    def sx(self):
-        _sx,_sy,_sxy = self.get_element_stresses()
-        self._sx = _sx
-        return self._sx
-    
-    @sx.setter
-    def sx(self,val):
-        self._sx = val
-        
-    @property
-    def sy(self):
-        _sx,_sy,_sxy = self.get_element_stresses()
-        self._sy = _sy
-        return self._sy
-    
-    @sy.setter
-    def sy(self,val):
-        self._sy = val
-    
-    @property
-    def sxy(self):
-        _sx,_sy,_sxy = self.get_element_stresses()
-        self._sxy = _sxy
-        return self._sxy
-    
-    @sxy.setter
-    def sxy(self,val):
-        self._sxy = val
-    
-    @property
-    def ex(self):
-        ex,ey,exy = self.get_element_strains()
-        self._ex = ex
-        return self._ex
-    
-    @ex.setter
-    def ex(self,val):
-        self._ex = val
-    
-    @property
-    def ey(self):
-        ex,ey,exy = self.get_element_strains()
-        self._ey = ey
-        return self._ey
-    
-    @ey.setter
-    def ey(self,val):
-        self._ey = val
-    
-    @property
-    def exy(self):
-        ex,ey,exy = self.get_element_strains()
-        self._exy = exy
-        return self._exy
-    
-    @exy.setter
-    def exy(self,val):
-        self._exy = val
-    
     @property
     def D(self):
         """
@@ -550,20 +430,31 @@ class LinearTriangle(Element):
         B, D = self.B, self.D
         return t*A*np.dot(np.dot(B.T,D),B)
         
-    def get_element_stresses(self):
-        ni, nj, nm = self.nodes
-        A, nu, t, E = self.A, self.nu, self.t, self.E
-        u = np.array([ni.ux,ni.uy,nj.ux,nj.uy,nm.ux,nm.uy])
-        B, D = self.B, self.D
-        return np.dot(np.dot(D,B),u)
-        
-    def get_element_strains(self):
-        ni, nj, nm = self.nodes
-        A, nu, t, E = self.A, self.nu, self.t, self.E 
-        u = np.array([ni.ux,ni.uy,nj.ux,nj.uy,nm.ux,nm.uy])
-        B = self.B
-        return np.dot(B,u)
-        
+    def compute_strain(self, u_e):
+        """Return the constant engineering strain vector for local displacements."""
+        u_e = np.asarray(u_e, dtype=float).reshape(-1)
+        if u_e.size != 6:
+            raise ValueError(
+                "LinearTriangle strain evaluation requires 6 displacements"
+            )
+        return self.B @ u_e
+
+    def compute_stress(self, u_e):
+        """Return the constant stress vector for local displacements."""
+        return self.D @ self.compute_strain(u_e)
+
+    def compute_results(self, u_e):
+        """Return canonical CST stress/strain results from local displacements."""
+        strain = np.asarray(self.compute_strain(u_e), dtype=float).reshape(-1)
+        stress = np.asarray(self.D @ strain, dtype=float).reshape(-1)
+        return {
+            "stress_xx": float(stress[0]),
+            "stress_yy": float(stress[1]),
+            "stress_xy": float(stress[2]),
+            "strain_xx": float(strain[0]),
+            "strain_yy": float(strain[1]),
+            "strain_xy": float(strain[2]),
+        }
 
 
 

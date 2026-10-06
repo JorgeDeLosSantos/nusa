@@ -1,92 +1,76 @@
-"""Regression tests for report and plot force semantics."""
+"""Regression tests for reporting and problem-plot force semantics."""
 
 import matplotlib.pyplot as plt
-import numpy as np
 
-from nusa.core import Node
-from nusa.element import LinearTriangle, Spring, Truss
-from nusa.model import LinearTriangleModel, SpringModel, TrussModel
+import nusa.visualization as viz
+from nusa import (
+    LinearTriangle,
+    LinearTriangleModel,
+    Node,
+    Spring,
+    SpringModel,
+    Truss,
+    TrussModel,
+    plot_model,
+)
 
 
-def test_spring_report_separates_applied_loads_nodal_forces_and_reactions():
+def test_spring_result_report_separates_force_quantities():
     model = SpringModel("Report semantics")
-    n1 = Node((0.0, 0.0))
-    n2 = Node((0.0, 0.0))
+    n1, n2 = Node((0, 0)), Node((0, 0))
     model.add_nodes([n1, n2])
-    model.add_element(Spring((n1, n2), 100.0))
-    model.add_constraint(n1, ux=0.0)
-    model.add_force(n2, (50.0,))
-    model.solve()
+    model.add_element(Spring((n1, n2), 100))
+    model.add_constraint(n1, ux=0)
+    model.add_force(n2, (50,))
 
-    report = model.simple_report(report_type="string")
+    report = model.solve().simple_report(report_type="string")
 
     assert "APPLIED LOADS" in report
     assert "NODAL FORCES (K @ U)" in report
     assert "REACTIONS" in report
-    assert "50" in report
-    assert "-50" in report
+    assert "50" in report and "-50" in report
 
 
-def test_truss_plot_defaults_to_applied_loads_and_reactions_are_optional(monkeypatch):
+def test_truss_problem_plot_shows_applied_load_direction(monkeypatch):
     model = TrussModel("Plot semantics")
-    n1 = Node((0.0, 0.0))
-    n2 = Node((1.0, 0.0))
+    n1, n2 = Node((0, 0)), Node((1, 0))
     model.add_nodes([n1, n2])
-    model.add_element(Truss((n1, n2), E=100.0, A=1.0))
-    model.add_constraint(n1, ux=0.0, uy=0.0)
-    model.add_constraint(n2, uy=0.0)
-    model.add_force(n2, (10.0, 0.0))
-    model.solve()
-
-    x_arrows = []
-    monkeypatch.setattr(
-        model,
-        "_draw_xforce",
-        lambda axes, x, y, ddir=1, reaction=False:
-            x_arrows.append((x, y, ddir, reaction)),
-    )
-    monkeypatch.setattr(model, "_draw_yforce", lambda *args, **kwargs: None)
-    monkeypatch.setattr(model, "_draw_xconstraint", lambda *args, **kwargs: None)
-    monkeypatch.setattr(model, "_draw_yconstraint", lambda *args, **kwargs: None)
-
-    model.plot_model()
-    assert x_arrows == [(1.0, 0.0, 1, False)]
-    plt.close("all")
-
-    x_arrows.clear()
-    model.plot_model(show_reactions=True)
-    assert (1.0, 0.0, 1, False) in x_arrows
-    assert (0.0, 0.0, -1, True) in x_arrows
-    assert len(x_arrows) == 2
-    plt.close("all")
-
-
-def test_linear_triangle_plot_preserves_negative_applied_load_direction(monkeypatch):
-    model = LinearTriangleModel("Negative load plot")
-    n1 = Node((0.0, 0.0))
-    n2 = Node((1.0, 0.0))
-    n3 = Node((0.0, 1.0))
-    model.add_nodes([n1, n2, n3])
-    model.add_element(LinearTriangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5))
-    model.add_force(n2, (-10.0, -5.0))
+    model.add_element(Truss((n1, n2), 100, 1))
+    model.add_constraint(n1, ux=0, uy=0)
+    model.add_constraint(n2, uy=0)
+    model.add_force(n2, (10, 0))
 
     arrows = []
     monkeypatch.setattr(
-        model,
-        "_draw_xforce",
-        lambda axes, x, y, ddir=1, reaction=False:
-            arrows.append(("x", x, y, ddir, reaction)),
+        viz,
+        "_draw_force_arrow",
+        lambda ax, x, y, axis, direction, size:
+            arrows.append((x, y, axis, direction)),
     )
+
+    plot_model(model)
+
+    assert arrows == [(1.0, 0.0, "x", 1)]
+    plt.close("all")
+
+
+def test_triangle_problem_plot_preserves_negative_load_direction(monkeypatch):
+    model = LinearTriangleModel("Negative load plot")
+    n1, n2, n3 = Node((0, 0)), Node((1, 0)), Node((0, 1))
+    model.add_nodes([n1, n2, n3])
+    model.add_element(LinearTriangle((n1, n2, n3), 1000, 0.25, 0.5))
+    model.add_force(n2, (-10, -5))
+
+    arrows = []
     monkeypatch.setattr(
-        model,
-        "_draw_yforce",
-        lambda axes, x, y, ddir=1, reaction=False:
-            arrows.append(("y", x, y, ddir, reaction)),
+        viz,
+        "_draw_force_arrow",
+        lambda ax, x, y, axis, direction, size:
+            arrows.append((axis, x, y, direction)),
     )
-    monkeypatch.setattr(model, "_draw_xyconstraint", lambda *args, **kwargs: None)
 
-    model.plot_model()
+    plot_model(model)
 
-    assert ("x", 1.0, 0.0, -1, False) in arrows
-    assert ("y", 1.0, 0.0, -1, False) in arrows
+    assert ("x", 1.0, 0.0, -1) in arrows
+    assert ("y", 1.0, 0.0, -1) in arrows
     plt.close("all")

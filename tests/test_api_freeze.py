@@ -35,11 +35,12 @@ def test_model_rejects_non_node_objects():
         model.add_node((0.0, 0.0))
 
 
-def test_node_element_registration_is_not_public():
+def test_node_has_no_element_registration_state():
     node = Node((0.0, 0.0))
 
     assert not hasattr(node, "add_element")
-    assert hasattr(node, "_add_element")
+    assert not hasattr(node, "_add_element")
+    assert not hasattr(node, "_elements")
 
 
 @pytest.mark.parametrize(
