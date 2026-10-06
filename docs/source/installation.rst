@@ -38,8 +38,17 @@ same executable on ``PATH``.
 Windows
 ~~~~~~~
 
-Two practical options are:
+Three practical options are:
 
+* install Gmsh into the same Python environment with ``pip``:
+
+  .. code-block:: powershell
+
+     python -m pip install gmsh
+     gmsh --version
+
+  This route was validated with the NuSA 0.4.0 Windows release checks and keeps
+  the Gmsh launcher in the same virtual environment as NuSA;
 * install a precompiled Gmsh application from the official Gmsh downloads and
   add its executable directory to ``PATH``;
 * install the conda-forge package:
