@@ -17,7 +17,7 @@ A Python library for structural analysis using the finite element method, design
 * **0.3.0rc1** Release candidate (22/09/2026)
 * **0.3.0rc2** Release candidate (22/09/2026)
 * **0.3.0** Stable release (23/09/2026)
-* **0.4.0.dev0** Current development line
+* **0.4.0** Stable release (06/10/2026)
 
 ## Requirements
 
