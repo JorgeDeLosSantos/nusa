@@ -6,12 +6,15 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-06
+
 ### Added
 - Added `LinearStaticAnalysis`, the top-level `solve(model)` shortcut, and immutable `StaticResult` snapshots as the primary linear-static analysis workflow.
 - Added result-owned reporting, post-processing, and solved visualization APIs.
 - Added canonical element-result mappings and explicit `compute_results(u_e)` contracts for all five public element families.
 - Added result-based scalar field helpers, CST nodal recovery, displacement magnitude, and plane-stress von Mises stress.
 - Added top-level `plot_model(model)` for problem visualization.
+- Added focused Getting Started, architecture, API, migration, meshing, and Google Colab documentation for the 0.4 workflow.
 
 ### Changed
 - Redesigned NuSA around the explicit flow `Model -> LinearStaticAnalysis -> StaticResult`.
@@ -21,12 +24,18 @@ This file contains information related to the development of the project, such a
 - Moved reporting and solved visualization out of model classes and onto `StaticResult` consumers.
 - Reorganized the package so `Node`, `Element`, and `Model` live in `nusa.node`, `nusa.element`, and `nusa.model` respectively.
 - Simplified model families into declarative element/DOF definitions with shared load and constraint handling.
+- Expanded Windows, Linux, macOS, and Colab installation guidance for the external Gmsh meshing workflow.
 
 ### Removed
 - Removed model-owned assembled/solved state, including public assembly/stiffness-matrix lifecycle and model-level result caches.
 - Removed solved-result properties from `Node` and `Element` instances.
 - Removed the obsolete `nusa.core` module instead of retaining a compatibility shim.
 - Removed solved plotting/reporting methods from model classes.
+
+### Tests
+- Added release-acceptance coverage for Spring, Bar, Truss, Beam, and LinearTriangle workflows.
+- Added real-Gmsh end-to-end coverage from geometry generation through CST solution and recovered von Mises stress.
+- Manually validated installation, solve, meshing, post-processing, and plotting on Windows and a fresh Google Colab runtime.
 
 ### Notes
 - 0.4.0 is intentionally backward-incompatible with parts of the 0.3.x solved-state API.
