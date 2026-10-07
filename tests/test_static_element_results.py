@@ -18,6 +18,15 @@ from nusa import (
     solve,
 )
 
+from nusa import Material, Section
+
+def _make_bar(nodes, E, A):
+    return Bar(nodes, material=Material(E=E), section=Section(A=A))
+
+def _make_truss(nodes, E, A):
+    return Truss(nodes, material=Material(E=E), section=Section(A=A))
+
+
 
 def _spring():
     model = SpringModel("spring")
@@ -33,7 +42,7 @@ def _spring():
 def _bar():
     model = BarModel("bar")
     n1, n2 = Node((0.0, 0.0)), Node((2.0, 0.0))
-    element = Bar((n1, n2), E=100.0, A=2.0)
+    element = _make_bar((n1, n2), E=100.0, A=2.0)
     model.add_nodes([n1, n2])
     model.add_element(element)
     model.add_constraint(n1, ux=0.0)
@@ -44,7 +53,7 @@ def _bar():
 def _truss():
     model = TrussModel("truss")
     n1, n2 = Node((0.0, 0.0)), Node((2.0, 0.0))
-    element = Truss((n1, n2), E=100.0, A=2.0)
+    element = _make_truss((n1, n2), E=100.0, A=2.0)
     model.add_nodes([n1, n2])
     model.add_element(element)
     model.add_constraint(n1, ux=0.0, uy=0.0)
