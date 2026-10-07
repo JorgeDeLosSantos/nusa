@@ -5,13 +5,16 @@
 #  License: MIT License
 # ***********************************
 import numpy as np
+from .material import Material
 from .node import Node
+from .section import Section
 
 class Element:
     """Base class for finite elements.
 
-    Elements own formulation, connectivity, and physical properties. Solved
-    response belongs to analysis results, not to the element instance.
+    Elements own formulation and connectivity and reference the physical
+    properties required by that formulation. Solved response belongs to
+    analysis results, not to the element instance.
     """
 
     def __init__(self, etype):
@@ -142,93 +145,103 @@ class Spring(Element):
     
 
 class Bar(Element):
-    """
-    Bar element for finite element analysis
-    
-    *nodes* : :class:`~nusa.node.Node`
-        Connectivity for element
-    
-    *E* : float
-        Young's modulus
-        
-    *A* : float
-        Area of element
-    """
-    def __init__(self,nodes,E,A):
-        Element.__init__(self,etype="bar")
-        self.nodes = _validate_nodes(nodes, 2, "Bar")
-        _validate_nonzero_length(self.nodes, "Bar")
-        self.E = _positive_finite(E, "Young's modulus E")
-        self.A = _positive_finite(A, "Cross-sectional area A")
+    '''Bar element for finite element analysis.
+
+    Parameters
+    ----------
+    nodes : tuple of Node
+        Element connectivity.
+    material : Material
+        Material providing Young's modulus E.
+    section : Section
+        Section providing cross-sectional area A.
+    '''
+    def __init__(self, nodes, *, material, section):
+        Element.__init__(self, etype='bar')
+        self.nodes = _validate_nodes(nodes, 2, 'Bar')
+        _validate_nonzero_length(self.nodes, 'Bar')
+        if not isinstance(material, Material):
+            raise TypeError('Bar material must be a Material instance')
+        if not isinstance(section, Section):
+            raise TypeError('Bar section must be a Section instance')
+        if section.A is None:
+            raise ValueError("Bar requires section property 'A'")
+        self.material = material
+        self.section = section
+
+    @property
+    def E(self):
+        '''Young's modulus provided by the material.'''
+        return self.material.E
+
+    @property
+    def A(self):
+        '''Cross-sectional area provided by the section.'''
+        return self.section.A
         
     def compute_results(self, u_e):
-        """Return canonical bar results from local displacements."""
+        '''Return canonical bar results from local displacements.'''
         u_e = np.asarray(u_e, dtype=float).reshape(-1)
         if u_e.size != 2:
-            raise ValueError("Bar result evaluation requires 2 displacements")
+            raise ValueError('Bar result evaluation requires 2 displacements')
         forces = self.get_element_stiffness() @ u_e
         axial_strain = (u_e[1] - u_e[0]) / self.L
         axial_force = self.E * self.A * axial_strain
         return {
-            "force_i": float(forces[0]),
-            "force_j": float(forces[1]),
-            "axial_force": float(axial_force),
-            "axial_stress": float(axial_force / self.A),
+            'force_i': float(forces[0]),
+            'force_j': float(forces[1]),
+            'axial_force': float(axial_force),
+            'axial_stress': float(axial_force / self.A),
         }
 
     @property
     def L(self):
-        """
-        Length of element
-        """
-        ni,nj = self.nodes
-        x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
-        _l = np.sqrt( (x1-x0)**2 + (y1-y0)**2 )
-        return _l
+        '''Length of element.'''
+        ni, nj = self.nodes
+        x0, x1, y0, y1 = ni.x, nj.x, ni.y, nj.y
+        return np.sqrt((x1-x0)**2 + (y1-y0)**2)
 
     def get_element_stiffness(self):
-        r"""
-        Get stiffness matrix for this element
-        
-        The stiffness matrix for bar element is given by:
-        
-        .. math::
-        
-            [k]_e = \frac{AE}{L} \begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix}
-        
-        where
-        
-        * A - Cross-section of element
-        * E - Young's Modulus
-        * L - Length of element
-        """
+        '''Return the bar element stiffness matrix.'''
         self._KE = (self.A*self.E/self.L)*np.array([[1,-1],[-1,1]])
         return self._KE
-        
-
-
 
 
 
 class Truss(Element):
-    """
-    Truss element for finite element analysis
-    
-    *nodes* : Tuple of :class:`~nusa.node.Node`
-        Connectivity for element
-    
-    *E* : float
-        Young modulus
-        
-    *A* : float
-        Area of element
-    """
-    def __init__(self,nodes,E,A):
-        Element.__init__(self,etype="truss")
-        self.nodes = _validate_nodes(nodes, 2, "Truss")
-        _validate_nonzero_length(self.nodes, "Truss")
-        self.E = _positive_finite(E, "Young's modulus E")
-        self.A = _positive_finite(A, "Cross-sectional area A")
+    '''Truss element for finite element analysis.
+
+    Parameters
+    ----------
+    nodes : tuple of Node
+        Element connectivity.
+    material : Material
+        Material providing Young's modulus E.
+    section : Section
+        Section providing cross-sectional area A.
+    '''
+    def __init__(self, nodes, *, material, section):
+        Element.__init__(self, etype='truss')
+        self.nodes = _validate_nodes(nodes, 2, 'Truss')
+        _validate_nonzero_length(self.nodes, 'Truss')
+        if not isinstance(material, Material):
+            raise TypeError('Truss material must be a Material instance')
+        if not isinstance(section, Section):
+            raise TypeError('Truss section must be a Section instance')
+        if section.A is None:
+            raise ValueError("Truss requires section property 'A'")
+        self.material = material
+        self.section = section
+
+    @property
+    def E(self):
+        '''Young's modulus provided by the material.'''
+        return self.material.E
+
+    @property
+    def A(self):
+        '''Cross-sectional area provided by the section.'''
+        return self.section.A
         
     @property
     def L(self):

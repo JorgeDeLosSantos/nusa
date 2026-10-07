@@ -5,6 +5,15 @@ import numpy as np
 from nusa import Bar, BarModel, Beam, BeamModel, LinearTriangle, LinearTriangleModel, Node, Spring, SpringModel, Truss, TrussModel
 from nusa.analysis import _assemble_stiffness
 
+from nusa import Material, Section
+
+def _make_bar(nodes, E, A):
+    return Bar(nodes, material=Material(E=E), section=Section(A=A))
+
+def _make_truss(nodes, E, A):
+    return Truss(nodes, material=Material(E=E), section=Section(A=A))
+
+
 
 def _assert_symmetric(model):
     K = _assemble_stiffness(model)
@@ -13,8 +22,8 @@ def _assert_symmetric(model):
 
 def test_global_stiffness_is_symmetric_for_all_public_models():
     spring=SpringModel(); a,b=Node((0,0)),Node((0,0)); spring.add_nodes([a,b]); spring.add_element(Spring((a,b),100)); _assert_symmetric(spring)
-    bar=BarModel(); a,b=Node((0,0)),Node((2,0)); bar.add_nodes([a,b]); bar.add_element(Bar((a,b),200,3)); _assert_symmetric(bar)
-    truss=TrussModel(); a,b=Node((0,0)),Node((3,4)); truss.add_nodes([a,b]); truss.add_element(Truss((a,b),200,2)); _assert_symmetric(truss)
+    bar=BarModel(); a,b=Node((0,0)),Node((2,0)); bar.add_nodes([a,b]); bar.add_element(_make_bar((a,b),200,3)); _assert_symmetric(bar)
+    truss=TrussModel(); a,b=Node((0,0)),Node((3,4)); truss.add_nodes([a,b]); truss.add_element(_make_truss((a,b),200,2)); _assert_symmetric(truss)
     beam=BeamModel(); a,b=Node((0,0)),Node((2,0)); beam.add_nodes([a,b]); beam.add_element(Beam((a,b),200,4)); _assert_symmetric(beam)
     tri=LinearTriangleModel(); a,b,c=Node((0,0)),Node((1,0)),Node((0,1)); tri.add_nodes([a,b,c]); tri.add_element(LinearTriangle((a,b,c),1000,.25,.5)); _assert_symmetric(tri)
 
@@ -24,13 +33,13 @@ def test_spring_and_bar_global_equilibrium():
     sr=spring.solve()
     assert np.isclose(sr.applied_loads.sum()+sr.reactions.sum(),0)
 
-    bar=BarModel(); a,b,c=Node((0,0)),Node((1,0)),Node((2,0)); bar.add_nodes([a,b,c]); bar.add_elements([Bar((a,b),100,1),Bar((b,c),100,1)]); bar.add_constraint(a,ux=0); bar.add_force(c,(40,))
+    bar=BarModel(); a,b,c=Node((0,0)),Node((1,0)),Node((2,0)); bar.add_nodes([a,b,c]); bar.add_elements([_make_bar((a,b),100,1),_make_bar((b,c),100,1)]); bar.add_constraint(a,ux=0); bar.add_force(c,(40,))
     br=bar.solve()
     assert np.isclose(br.applied_loads.sum()+br.reactions.sum(),0)
 
 
 def test_truss_triangle_and_beam_equilibrium():
-    tr=TrussModel(); n1,n2,n3=Node((0,0)),Node((1,1)),Node((2,0)); tr.add_nodes([n1,n2,n3]); tr.add_elements([Truss((n1,n2),1000,1),Truss((n2,n3),1000,1),Truss((n1,n3),1000,1)]); tr.add_constraint(n1,ux=0,uy=0); tr.add_constraint(n3,ux=0,uy=0); tr.add_force(n2,(10,-30))
+    tr=TrussModel(); n1,n2,n3=Node((0,0)),Node((1,1)),Node((2,0)); tr.add_nodes([n1,n2,n3]); tr.add_elements([_make_truss((n1,n2),1000,1),_make_truss((n2,n3),1000,1),_make_truss((n1,n3),1000,1)]); tr.add_constraint(n1,ux=0,uy=0); tr.add_constraint(n3,ux=0,uy=0); tr.add_force(n2,(10,-30))
     r=tr.solve()
     np.testing.assert_allclose(r.applied_loads.reshape(-1,2).sum(0)+r.reactions.reshape(-1,2).sum(0),[0,0],atol=1e-10)
 

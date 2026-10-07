@@ -7,13 +7,16 @@
 # ***********************************
 import matplotlib.pyplot as plt
 
-from nusa import Node, Truss, TrussModel, plot_model
+from nusa import Material, Node, Section, Truss, TrussModel, plot_model
 
 
 def build_model():
     """Kattan, Problem 5.1."""
     E = 210e9
     A = 0.005
+
+    material = Material(E=E)
+    section = Section(A=A)
 
     nodes = [
         Node((0, 0)),
@@ -26,15 +29,15 @@ def build_model():
     n1, n2, n3, n4, n5, n6 = nodes
 
     elements = [
-        Truss((n1, n2), E, A),
-        Truss((n1, n3), E, A),
-        Truss((n2, n3), E, A),
-        Truss((n2, n4), E, A),
-        Truss((n2, n5), E, A),
-        Truss((n3, n5), E, A),
-        Truss((n4, n5), E, A),
-        Truss((n4, n6), E, A),
-        Truss((n5, n6), E, A),
+        Truss((n1, n2), material=material, section=section),
+        Truss((n1, n3), material=material, section=section),
+        Truss((n2, n3), material=material, section=section),
+        Truss((n2, n4), material=material, section=section),
+        Truss((n2, n5), material=material, section=section),
+        Truss((n3, n5), material=material, section=section),
+        Truss((n4, n5), material=material, section=section),
+        Truss((n4, n6), material=material, section=section),
+        Truss((n5, n6), material=material, section=section),
     ]
 
     model = TrussModel("Example 02")

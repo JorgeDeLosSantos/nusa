@@ -38,14 +38,16 @@ workflow without Gmsh:
 
 .. code-block:: python
 
-   from nusa import Bar, BarModel, Node
+   from nusa import Bar, BarModel, Material, Node, Section
 
    n1 = Node((0.0, 0.0))
    n2 = Node((1.0, 0.0))
+   material = Material(E=200e9)
+   section = Section(A=1e-4)
 
    model = BarModel("Colab bar smoke test")
    model.add_nodes([n1, n2])
-   model.add_element(Bar((n1, n2), E=200e9, A=1e-4))
+   model.add_element(Bar((n1, n2), material=material, section=section))
    model.add_constraint(n1, ux=0.0)
    model.add_force(n2, (1000.0,))
 

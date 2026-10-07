@@ -4,6 +4,15 @@ import numpy as np
 
 from nusa import Bar, BarModel, Beam, BeamModel, LinearTriangle, LinearTriangleModel, Node, Spring, SpringModel, Truss, TrussModel
 
+from nusa import Material, Section
+
+def _make_bar(nodes, E, A):
+    return Bar(nodes, material=Material(E=E), section=Section(A=A))
+
+def _make_truss(nodes, E, A):
+    return Truss(nodes, material=Material(E=E), section=Section(A=A))
+
+
 
 def test_spring_solver_accepts_string_labels_and_label_mutation():
     model = SpringModel("labels")
@@ -26,7 +35,7 @@ def test_sparse_bar_labels_do_not_affect_solver_order():
     n1,n2,n3 = Node((0,0)),Node((1,0)),Node((2,0))
     n1.label,n2.label,n3.label = 10,30,80
     model.add_nodes([n1,n2,n3])
-    model.add_elements([Bar((n1,n2),1,1),Bar((n2,n3),1,1)])
+    model.add_elements([_make_bar((n1,n2),1,1),_make_bar((n2,n3),1,1)])
     model.add_constraint(n1,ux=0)
     model.add_force(n3,(1,))
 
@@ -39,7 +48,7 @@ def test_sparse_bar_labels_do_not_affect_solver_order():
 def test_truss_and_beam_accept_string_labels():
     truss = TrussModel("truss")
     a,b = Node((0,0)),Node((2,0)); a.label,b.label="A","B"
-    e=Truss((a,b),100,2)
+    e=_make_truss((a,b),100,2)
     truss.add_nodes([a,b]); truss.add_element(e); truss.add_constraint(a,ux=0,uy=0); truss.add_constraint(b,uy=0); truss.add_force(b,(10,0))
     tr = truss.solve()
     assert np.isclose(tr.displacement(b)["ux"],0.1)

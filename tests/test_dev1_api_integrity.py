@@ -8,6 +8,15 @@ from nusa import (
 )
 from nusa import Element
 
+from nusa import Material, Section
+
+def _make_bar(nodes, E, A):
+    return Bar(nodes, material=Material(E=E), section=Section(A=A))
+
+def _make_truss(nodes, E, A):
+    return Truss(nodes, material=Material(E=E), section=Section(A=A))
+
+
 
 class MockBarElement(Element):
     def __init__(self, nodes):
@@ -64,7 +73,7 @@ def _bar():
     model = BarModel("bar report")
     n1, n2 = Node((0, 0)), Node((1, 0))
     model.add_nodes([n1, n2])
-    model.add_element(Bar((n1, n2), E=100.0, A=2.0))
+    model.add_element(_make_bar((n1, n2), E=100.0, A=2.0))
     model.add_constraint(n1, ux=0.0)
     model.add_force(n2, (10.0,))
     return model
@@ -74,7 +83,7 @@ def _truss():
     model = TrussModel("truss report")
     n1, n2 = Node((0, 0)), Node((1, 0))
     model.add_nodes([n1, n2])
-    model.add_element(Truss((n1, n2), E=100.0, A=1.0))
+    model.add_element(_make_truss((n1, n2), E=100.0, A=1.0))
     model.add_constraint(n1, ux=0.0, uy=0.0)
     model.add_constraint(n2, uy=0.0)
     model.add_force(n2, (10.0, 0.0))

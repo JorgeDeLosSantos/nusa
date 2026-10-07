@@ -8,6 +8,15 @@ from nusa import (
     Node, Spring, SpringModel, Truss, TrussModel,
 )
 
+from nusa import Material, Section
+
+def _make_bar(nodes, E, A):
+    return Bar(nodes, material=Material(E=E), section=Section(A=A))
+
+def _make_truss(nodes, E, A):
+    return Truss(nodes, material=Material(E=E), section=Section(A=A))
+
+
 
 @pytest.mark.parametrize(
     ("model_builder", "expected_keys"),
@@ -24,10 +33,10 @@ def test_all_public_families_expose_canonical_result_keys(model_builder, expecte
         model = SpringModel(); n1, n2 = Node((0,0)), Node((0,0)); e = Spring((n1,n2),100)
         model.add_nodes([n1,n2]); model.add_element(e); model.add_constraint(n1,ux=0); model.add_force(n2,(10,))
     elif model_builder == "bar":
-        model = BarModel(); n1, n2 = Node((0,0)), Node((2,0)); e = Bar((n1,n2),100,2)
+        model = BarModel(); n1, n2 = Node((0,0)), Node((2,0)); e = _make_bar((n1,n2),100,2)
         model.add_nodes([n1,n2]); model.add_element(e); model.add_constraint(n1,ux=0); model.add_force(n2,(10,))
     elif model_builder == "truss":
-        model = TrussModel(); n1, n2 = Node((0,0)), Node((2,0)); e = Truss((n1,n2),100,2)
+        model = TrussModel(); n1, n2 = Node((0,0)), Node((2,0)); e = _make_truss((n1,n2),100,2)
         model.add_nodes([n1,n2]); model.add_element(e); model.add_constraint(n1,ux=0,uy=0); model.add_constraint(n2,uy=0); model.add_force(n2,(10,0))
     elif model_builder == "beam":
         model = BeamModel(); n1, n2 = Node((0,0)), Node((2,0)); e = Beam((n1,n2),100,1)
@@ -41,7 +50,7 @@ def test_all_public_families_expose_canonical_result_keys(model_builder, expecte
 
 
 def test_bar_axial_sign_convention_is_positive_in_tension():
-    e = Bar((Node((0,0)), Node((2,0))), E=100.0, A=2.0)
+    e = _make_bar((Node((0,0)), Node((2,0))), E=100.0, A=2.0)
     values = e.compute_results([0.0, 0.1])
     assert values["axial_force"] > 0
     assert values["axial_stress"] > 0
@@ -50,8 +59,8 @@ def test_bar_axial_sign_convention_is_positive_in_tension():
 def test_element_objects_do_not_expose_solution_dependent_properties():
     elements = [
         Spring((Node((0,0)), Node((0,0))), 1.0),
-        Bar((Node((0,0)), Node((1,0))), 1.0, 1.0),
-        Truss((Node((0,0)), Node((1,0))), 1.0, 1.0),
+        _make_bar((Node((0,0)), Node((1,0))), 1.0, 1.0),
+        _make_truss((Node((0,0)), Node((1,0))), 1.0, 1.0),
         Beam((Node((0,0)), Node((1,0))), 1.0, 1.0),
         LinearTriangle((Node((0,0)), Node((1,0)), Node((0,1))), 1.0, 0.25, 1.0),
     ]

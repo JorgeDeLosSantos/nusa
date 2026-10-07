@@ -13,6 +13,15 @@ from nusa.model import (
     TrussModel,
 )
 
+from nusa import Material, Section
+
+def _make_bar(nodes, E, A):
+    return Bar(nodes, material=Material(E=E), section=Section(A=A))
+
+def _make_truss(nodes, E, A):
+    return Truss(nodes, material=Material(E=E), section=Section(A=A))
+
+
 
 def _spring_case():
     model = SpringModel("orphan spring")
@@ -30,7 +39,7 @@ def _bar_case():
     n2 = Node((1.0, 0.0))
     orphan = Node((2.0, 0.0))
     model.add_nodes([n1, n2, orphan])
-    model.add_element(Bar((n1, n2), E=100.0, A=1.0))
+    model.add_element(_make_bar((n1, n2), E=100.0, A=1.0))
     return model, orphan
 
 
@@ -40,7 +49,7 @@ def _truss_case():
     n2 = Node((1.0, 0.0))
     orphan = Node((2.0, 0.0))
     model.add_nodes([n1, n2, orphan])
-    model.add_element(Truss((n1, n2), E=100.0, A=1.0))
+    model.add_element(_make_truss((n1, n2), E=100.0, A=1.0))
     return model, orphan
 
 

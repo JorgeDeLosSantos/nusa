@@ -11,11 +11,20 @@ Use :class:`nusa.model.TrussModel` with :class:`nusa.element.Truss`.
 Element properties
 ------------------
 
-A truss element requires Young's modulus ``E`` and cross-sectional area ``A``:
+A truss receives reusable material and section objects. Its formulation requires
+Young's modulus ``E`` from the material and cross-sectional area ``A`` from
+the section:
 
 .. code-block:: python
 
-   element = Truss((n1, n2), E=30e6, A=2.0)
+   material = Material(E=30e6)
+   section = Section(A=2.0)
+
+   element = Truss(
+       (n1, n2),
+       material=material,
+       section=section,
+   )
 
 Its canonical result contains:
 
