@@ -12,8 +12,9 @@ from .section import Section
 class Element:
     """Base class for finite elements.
 
-    Elements own formulation, connectivity, and physical properties. Solved
-    response belongs to analysis results, not to the element instance.
+    Elements own formulation and connectivity and reference the physical
+    properties required by that formulation. Solved response belongs to
+    analysis results, not to the element instance.
     """
 
     def __init__(self, etype):
