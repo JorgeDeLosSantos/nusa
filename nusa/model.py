@@ -97,10 +97,11 @@ class Model:
         Example
         -------
         >>> m1 = BarModel()
-        >>> E, A = 200e9, 0.001
+        >>> material = Material(E=200e9)
+        >>> section = Section(A=0.001)
         >>> n1 = Node((0,0))
         >>> n2 = Node((1,0))
-        >>> e1 = Bar((n1,n2), E, A)
+        >>> e1 = Bar((n1,n2), material=material, section=section)
         >>> m1.add_element(e1)
         """
 
