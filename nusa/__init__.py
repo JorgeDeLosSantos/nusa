@@ -14,6 +14,8 @@ from .visualization import (
     plot_shear_diagram,
 )
 from .node import Node
+from .material import Material
+from .section import Section
 from .element import Bar, Beam, Element, LinearTriangle, Spring, Truss
 from .model import (
     Model,
@@ -44,6 +46,8 @@ __all__ = [
     "Model",
     "Element",
     "Node",
+    "Material",
+    "Section",
     "Spring",
     "Bar",
     "Truss",
