@@ -4,14 +4,23 @@ import pytest
 
 from nusa import Bar, BarModel, Beam, BeamModel, LinearTriangle, LinearTriangleModel, Node, Spring, SpringModel, Truss, TrussModel
 
+from nusa import Material, Section
+
+def _make_bar(nodes, E, A):
+    return Bar(nodes, material=Material(E=E), section=Section(A=A))
+
+def _make_truss(nodes, E, A):
+    return Truss(nodes, material=Material(E=E), section=Section(A=A))
+
+
 
 def _result(kind):
     if kind=="spring":
         m=SpringModel("spring report"); a,b=Node((0,0)),Node((0,0)); e=Spring((a,b),100); m.add_nodes([a,b]); m.add_element(e); m.add_constraint(a,ux=0); m.add_force(b,(10,))
     elif kind=="bar":
-        m=BarModel("bar report"); a,b=Node((0,0)),Node((2,0)); e=Bar((a,b),100,2); m.add_nodes([a,b]); m.add_element(e); m.add_constraint(a,ux=0); m.add_force(b,(10,))
+        m=BarModel("bar report"); a,b=Node((0,0)),Node((2,0)); e=_make_bar((a,b),100,2); m.add_nodes([a,b]); m.add_element(e); m.add_constraint(a,ux=0); m.add_force(b,(10,))
     elif kind=="truss":
-        m=TrussModel("truss report"); a,b=Node((0,0)),Node((2,0)); e=Truss((a,b),100,2); m.add_nodes([a,b]); m.add_element(e); m.add_constraint(a,ux=0,uy=0); m.add_constraint(b,uy=0); m.add_force(b,(10,0))
+        m=TrussModel("truss report"); a,b=Node((0,0)),Node((2,0)); e=_make_truss((a,b),100,2); m.add_nodes([a,b]); m.add_element(e); m.add_constraint(a,ux=0,uy=0); m.add_constraint(b,uy=0); m.add_force(b,(10,0))
     elif kind=="beam":
         m=BeamModel("beam report"); a,b=Node((0,0)),Node((2,0)); e=Beam((a,b),100,1); m.add_nodes([a,b]); m.add_element(e); m.add_constraint(a,uy=0,ur=0); m.add_force(b,(-10,))
     else:
