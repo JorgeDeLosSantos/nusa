@@ -20,6 +20,15 @@ from nusa import (
     solve,
 )
 
+from nusa import Material, Section
+
+def _make_bar(nodes, E, A):
+    return Bar(nodes, material=Material(E=E), section=Section(A=A))
+
+def _make_truss(nodes, E, A):
+    return Truss(nodes, material=Material(E=E), section=Section(A=A))
+
+
 
 def _spring_problem(load=50.0):
     model = SpringModel("spring analysis")
@@ -119,7 +128,7 @@ def test_result_freezes_geometry_connectivity_and_labels():
     model = TrussModel("snapshot")
     n1 = Node((0.0, 0.0))
     n2 = Node((2.0, 0.0))
-    element = Truss((n1, n2), E=100.0, A=2.0)
+    element = _make_truss((n1, n2), E=100.0, A=2.0)
     model.add_nodes([n1, n2])
     model.add_element(element)
     model.add_constraint(n1, ux=0.0, uy=0.0)
@@ -168,7 +177,7 @@ def _bar_problem():
     n1 = Node((0.0, 0.0))
     n2 = Node((2.0, 0.0))
     model.add_nodes([n1, n2])
-    model.add_element(Bar((n1, n2), E=100.0, A=2.0))
+    model.add_element(_make_bar((n1, n2), E=100.0, A=2.0))
     model.add_constraint(n1, ux=0.0)
     model.add_force(n2, (10.0,))
     return model
@@ -179,7 +188,7 @@ def _truss_problem():
     n1 = Node((0.0, 0.0))
     n2 = Node((2.0, 0.0))
     model.add_nodes([n1, n2])
-    model.add_element(Truss((n1, n2), E=100.0, A=2.0))
+    model.add_element(_make_truss((n1, n2), E=100.0, A=2.0))
     model.add_constraint(n1, ux=0.0, uy=0.0)
     model.add_constraint(n2, uy=0.0)
     model.add_force(n2, (10.0, 0.0))
