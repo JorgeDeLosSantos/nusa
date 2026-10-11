@@ -8,7 +8,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from nusa import LinearTriangle, LinearTriangleModel, Node, plot_model
+from nusa import LinearTriangle, LinearTriangleModel, Material, Node, plot_model
 from nusa.mesh import Modeler
 
 
@@ -26,13 +26,13 @@ def build_model(esize=0.05, gmsh_executable="gmsh"):
         gmsh_executable=gmsh_executable,
     )
 
+    material = Material(E=E, nu=NU)
     nodes = [Node(tuple(point[:2])) for point in coordinates]
     elements = [
         LinearTriangle(
             (nodes[int(i)], nodes[int(j)], nodes[int(k)]),
-            E=E,
-            nu=NU,
-            t=THICKNESS,
+            material=material,
+            thickness=THICKNESS,
         )
         for i, j, k in connectivity
     ]
