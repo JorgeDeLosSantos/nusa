@@ -8,7 +8,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from nusa import LinearTriangle, LinearTriangleModel, Node, plot_model
+from nusa import LinearTriangle, LinearTriangleModel, Material, Node, plot_model
 from nusa.mesh import Modeler
 
 modeler = Modeler()
@@ -23,10 +23,12 @@ for k,nd in enumerate(nc):
     cn = Node((x[k],y[k]))
     nodos.append(cn)
     
+material = Material(E=200e9, nu=0.3)
+
 for elm in ec:
     i, j, k = int(elm[0]), int(elm[1]), int(elm[2])
     ni, nj, nk = nodos[i], nodos[j], nodos[k]
-    ce = LinearTriangle((ni,nj,nk),200e9, 0.3, 0.1)
+    ce = LinearTriangle((ni,nj,nk), material=material, thickness=0.1)
     elementos.append(ce)
 
 model = LinearTriangleModel()
