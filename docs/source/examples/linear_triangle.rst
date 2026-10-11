@@ -11,16 +11,16 @@ Use :class:`nusa.model.LinearTriangleModel` with
 Element properties
 ------------------
 
-A CST element requires Young's modulus ``E``, Poisson's ratio ``nu``, and
-thickness ``t``:
+A CST element requires a material with Young's modulus ``E`` and Poisson's ratio
+``nu``, plus an explicitly specified thickness:
 
 .. code-block:: python
 
+   material = Material(E=200e9, nu=0.3)
    element = LinearTriangle(
        (n1, n2, n3),
-       E=200e9,
-       nu=0.3,
-       t=0.1,
+       material=material,
+       thickness=0.1,
    )
 
 The canonical element result contains constant strain and stress components:
