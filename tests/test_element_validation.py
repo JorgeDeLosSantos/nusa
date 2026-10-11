@@ -40,6 +40,11 @@ def test_spring_rejects_nonfinite_stiffness(line_nodes, invalid_value):
         Spring(line_nodes, invalid_value)
 
 
+
+def test_spring_rejects_boolean_stiffness(line_nodes):
+    with pytest.raises(ValueError, match='finite positive'):
+        Spring(line_nodes, True)
+
 def test_beam_requires_material_instance(line_nodes):
     with pytest.raises(TypeError, match="Material instance"):
         Beam(line_nodes, material=object(), section=Section(I=1.0))
