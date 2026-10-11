@@ -2,10 +2,12 @@
 
 import math
 
+import numpy as np
+
 
 def _positive_finite(value, name):
     '''Return a finite positive scalar.'''
-    if isinstance(value, bool):
+    if isinstance(value, (bool, np.bool_)):
         raise ValueError(f'{name} must be a finite positive scalar')
     try:
         value = float(value)
@@ -19,7 +21,7 @@ def _positive_finite(value, name):
 def _poisson_ratio(value):
     '''Return a physically admissible isotropic Poisson ratio.'''
     message = 'nu must be a finite scalar in the range -1 < nu < 0.5'
-    if isinstance(value, bool):
+    if isinstance(value, (bool, np.bool_)):
         raise ValueError(message)
     try:
         value = float(value)
