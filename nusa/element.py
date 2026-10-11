@@ -51,6 +51,8 @@ def _validate_nodes(nodes, expected_count, element_name):
 
 def _positive_finite(value, name):
     """Return a finite positive scalar material or section property."""
+    if isinstance(value, (bool, np.bool_)):
+        raise ValueError(f"{name} must be a finite positive scalar")
     try:
         value = float(value)
     except (TypeError, ValueError) as exc:
