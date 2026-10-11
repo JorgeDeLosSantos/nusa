@@ -7,7 +7,7 @@
 
 import matplotlib.pyplot as plt
 
-from nusa import Beam, BeamModel, Node
+from nusa import Beam, BeamModel, Material, Node, Section
 
 
 def test1():
@@ -17,10 +17,13 @@ def test1():
     P = 10e3
     L = 10 * 12.0
 
+    material = Material(E=E)
+    section = Section(I=I)
+
     model = BeamModel("Beam Model")
     nodes = [Node((k * L, 0.0)) for k in range(5)]
     elements = [
-        Beam((nodes[k], nodes[k + 1]), E, I)
+        Beam((nodes[k], nodes[k + 1]), material=material, section=section)
         for k in range(4)
     ]
 
