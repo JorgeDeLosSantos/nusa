@@ -87,7 +87,7 @@ This example exercises the complete preprocessing and solution path:
 
    import numpy as np
 
-   from nusa import LinearTriangle, LinearTriangleModel, Node
+   from nusa import LinearTriangle, LinearTriangleModel, Material, Node
    from nusa.mesh import Modeler
 
    modeler = Modeler()
@@ -95,12 +95,12 @@ This example exercises the complete preprocessing and solution path:
    coordinates, connectivity = modeler.generate_mesh()
 
    nodes = [Node(tuple(point[:2])) for point in coordinates]
+   material = Material(E=200e9, nu=0.3)
    elements = [
        LinearTriangle(
            (nodes[int(i)], nodes[int(j)], nodes[int(k)]),
-           E=200e9,
-           nu=0.3,
-           t=0.01,
+           material=material,
+           thickness=0.01,
        )
        for i, j, k in connectivity
    ]
