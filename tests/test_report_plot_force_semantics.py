@@ -15,6 +15,12 @@ from nusa import (
 )
 
 from nusa import Material, Section
+from nusa import Material
+
+def _make_triangle(nodes, E, nu, t):
+    return LinearTriangle(nodes, material=Material(E=E, nu=nu), thickness=t)
+
+
 
 def _make_truss(nodes, E, A):
     return Truss(nodes, material=Material(E=E), section=Section(A=A))
@@ -64,7 +70,7 @@ def test_triangle_problem_plot_preserves_negative_load_direction(monkeypatch):
     model = LinearTriangleModel("Negative load plot")
     n1, n2, n3 = Node((0, 0)), Node((1, 0)), Node((0, 1))
     model.add_nodes([n1, n2, n3])
-    model.add_element(LinearTriangle((n1, n2, n3), 1000, 0.25, 0.5))
+    model.add_element(_make_triangle((n1, n2, n3), 1000, 0.25, 0.5))
     model.add_force(n2, (-10, -5))
 
     arrows = []
