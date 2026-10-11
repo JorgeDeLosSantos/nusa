@@ -10,6 +10,12 @@ import pytest
 from nusa import LinearTriangle, LinearTriangleModel, Node, _mesh
 from nusa.mesh import Modeler
 
+from nusa import Material
+
+def _make_triangle(nodes, E, nu, t):
+    return LinearTriangle(nodes, material=Material(E=E, nu=nu), thickness=t)
+
+
 
 def test_rectangle_geometry_generates_closed_surface_code():
     modeler = Modeler()
@@ -230,7 +236,7 @@ def test_real_gmsh_mesh_can_build_solve_and_postprocess_cst_model():
 
     nodes = [Node(tuple(point[:2])) for point in coordinates]
     elements = [
-        LinearTriangle(
+        _make_triangle(
             (nodes[int(i)], nodes[int(j)], nodes[int(k)]),
             E=200e9,
             nu=0.3,
