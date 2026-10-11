@@ -2,12 +2,14 @@
 
 import math
 
+import numpy as np
+
 
 def _optional_positive_finite(value, name):
     '''Return None or a finite positive scalar.'''
     if value is None:
         return None
-    if isinstance(value, bool):
+    if isinstance(value, (bool, np.bool_)):
         raise ValueError(f'{name} must be a finite positive scalar')
     try:
         value = float(value)
