@@ -5,6 +5,12 @@ import numpy as np
 from nusa import Bar, BarModel, Beam, BeamModel, LinearTriangle, LinearTriangleModel, Node, Spring, SpringModel, Truss, TrussModel
 
 from nusa import Material, Section
+from nusa import Material, Section
+
+def _make_beam(nodes, E, I):
+    return Beam(nodes, material=Material(E=E), section=Section(I=I))
+
+
 
 def _make_bar(nodes, E, A):
     return Bar(nodes, material=Material(E=E), section=Section(A=A))
@@ -55,7 +61,7 @@ def test_truss_and_beam_accept_string_labels():
 
     beam = BeamModel("beam")
     f,t = Node((0,0)),Node((1,0)); f.label,t.label="fixed","tip"
-    beam.add_nodes([f,t]); beam.add_element(Beam((f,t),1,1)); beam.add_constraint(f,uy=0,ur=0); beam.add_force(t,(-1,))
+    beam.add_nodes([f,t]); beam.add_element(_make_beam((f,t),1,1)); beam.add_constraint(f,uy=0,ur=0); beam.add_force(t,(-1,))
     br=beam.solve()
     assert np.isclose(br.displacement(t)["uy"],-1/3)
     assert np.isclose(br.displacement(t)["ur"],-0.5)
