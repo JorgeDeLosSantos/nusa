@@ -205,12 +205,14 @@ Use E = 29 x 10<sup>6</sup> psi.
 Beer & Johnston. (2012) Mechanics of materials. 
 Problem 9.13 , pp. 568.
 """
-from nusa import Beam, BeamModel, Node
+from nusa import Beam, BeamModel, Material, Node, Section
 
 # Input data 
 E = 29e6
-I = 291 # W14x30 
+I = 291 # W14x30
 P = 35e3
+material = Material(E=E)
+section = Section(I=I)
 L1 = 5*12 # in
 L2 = 10*12 #in
 # Model
@@ -220,8 +222,8 @@ n1 = Node((0,0))
 n2 = Node((L1,0))
 n3 = Node((L1+L2,0))
 # Elements
-e1 = Beam((n1,n2),E,I)
-e2 = Beam((n2,n3),E,I)
+e1 = Beam((n1,n2), material=material, section=section)
+e2 = Beam((n2,n3), material=material, section=section)
 
 # Add elements and nodes
 for nd in (n1,n2,n3): m1.add_node(nd)
