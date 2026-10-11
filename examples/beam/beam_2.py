@@ -5,7 +5,7 @@
 #  License: MIT License
 # ***********************************
 
-from nusa import Beam, BeamModel, Node
+from nusa import Beam, BeamModel, Material, Node, Section
 
 
 def test2():
@@ -16,13 +16,16 @@ def test2():
     M = 20e3
     L = 3.0
 
+    material = Material(E=E)
+    section = Section(I=I)
+
     model = BeamModel("Beam Model")
     n1 = Node((0.0, 0.0))
     n2 = Node((L, 0.0))
     n3 = Node((2.0 * L, 0.0))
 
-    e1 = Beam((n1, n2), E, I)
-    e2 = Beam((n2, n3), E, I)
+    e1 = Beam((n1, n2), material=material, section=section)
+    e2 = Beam((n2, n3), material=material, section=section)
 
     model.add_nodes([n1, n2, n3])
     model.add_elements([e1, e2])
