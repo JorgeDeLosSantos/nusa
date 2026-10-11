@@ -7,7 +7,7 @@
 # ***********************************
 import matplotlib.pyplot as plt
 
-from nusa import LinearTriangle, LinearTriangleModel, Node, plot_model
+from nusa import LinearTriangle, LinearTriangleModel, Material, Node, plot_model
 
 
 def build_model():
@@ -17,10 +17,11 @@ def build_model():
     n4 = Node((0, 0.25))
     n5 = Node((0, 0.5))
 
+    material = Material(E=210e6, nu=0.3)
     elements = [
-        LinearTriangle((n1, n3, n4), 210e6, 0.3, 0.025),
-        LinearTriangle((n1, n2, n3), 210e6, 0.3, 0.025),
-        LinearTriangle((n4, n3, n5), 210e6, 0.3, 0.025),
+        LinearTriangle((n1, n3, n4), material=material, thickness=0.025),
+        LinearTriangle((n1, n2, n3), material=material, thickness=0.025),
+        LinearTriangle((n4, n3, n5), material=material, thickness=0.025),
     ]
 
     model = LinearTriangleModel("Simple plate")
