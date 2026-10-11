@@ -24,13 +24,13 @@ def test_material_normalizes_numeric_properties_to_float():
     assert isinstance(material.nu, float)
 
 
-@pytest.mark.parametrize('E', [0, -1, np.nan, np.inf, -np.inf, 'invalid', True])
+@pytest.mark.parametrize('E', [0, -1, np.nan, np.inf, -np.inf, 'invalid', True, np.bool_(True), np.bool_(False)])
 def test_material_rejects_invalid_E(E):
     with pytest.raises(ValueError):
         Material(E=E)
 
 
-@pytest.mark.parametrize('nu', [-1.0, 0.5, np.nan, np.inf, -np.inf, 'invalid', True])
+@pytest.mark.parametrize('nu', [-1.0, 0.5, np.nan, np.inf, -np.inf, 'invalid', True, np.bool_(True), np.bool_(False)])
 def test_material_rejects_invalid_nu(nu):
     with pytest.raises(ValueError):
         Material(E=210e9, nu=nu)

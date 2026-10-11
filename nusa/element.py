@@ -62,17 +62,6 @@ def _positive_finite(value, name):
     return value
 
 
-def _poisson_ratio(value):
-    """Return a physically admissible isotropic Poisson ratio."""
-    try:
-        value = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("nu must be a finite scalar in the range -1 < nu < 0.5") from exc
-    if not np.isfinite(value) or not (-1.0 < value < 0.5):
-        raise ValueError("nu must be a finite scalar in the range -1 < nu < 0.5")
-    return value
-
-
 def _validate_nonzero_length(nodes, element_name):
     """Reject coincident-node connectivity for length-dependent elements."""
     n1, n2 = nodes
@@ -168,8 +157,18 @@ class Bar(Element):
             raise TypeError('Bar section must be a Section instance')
         if section.A is None:
             raise ValueError("Bar requires section property 'A'")
-        self.material = material
-        self.section = section
+        self._material = material
+        self._section = section
+
+    @property
+    def material(self):
+        """Material associated with the element (read-only)."""
+        return self._material
+
+    @property
+    def section(self):
+        """Section associated with the element (read-only)."""
+        return self._section
 
     @property
     def E(self):
@@ -232,8 +231,18 @@ class Truss(Element):
             raise TypeError('Truss section must be a Section instance')
         if section.A is None:
             raise ValueError("Truss requires section property 'A'")
-        self.material = material
-        self.section = section
+        self._material = material
+        self._section = section
+
+    @property
+    def material(self):
+        """Material associated with the element (read-only)."""
+        return self._material
+
+    @property
+    def section(self):
+        """Section associated with the element (read-only)."""
+        return self._section
 
     @property
     def E(self):
@@ -323,8 +332,18 @@ class Beam(Element):
             raise TypeError('Beam section must be a Section instance')
         if section.I is None:
             raise ValueError("Beam requires section property 'I'")
-        self.material = material
-        self.section = section
+        self._material = material
+        self._section = section
+
+    @property
+    def material(self):
+        """Material associated with the element (read-only)."""
+        return self._material
+
+    @property
+    def section(self):
+        """Section associated with the element (read-only)."""
+        return self._section
 
     @property
     def E(self):

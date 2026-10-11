@@ -28,13 +28,13 @@ def test_section_requires_at_least_one_geometric_property():
         Section()
 
 
-@pytest.mark.parametrize('A', [0, -1, np.nan, np.inf, -np.inf, 'invalid', True])
+@pytest.mark.parametrize('A', [0, -1, np.nan, np.inf, -np.inf, 'invalid', True, np.bool_(True), np.bool_(False)])
 def test_section_rejects_invalid_area(A):
     with pytest.raises(ValueError):
         Section(A=A)
 
 
-@pytest.mark.parametrize('I', [0, -1, np.nan, np.inf, -np.inf, 'invalid', True])
+@pytest.mark.parametrize('I', [0, -1, np.nan, np.inf, -np.inf, 'invalid', True, np.bool_(True), np.bool_(False)])
 def test_section_rejects_invalid_second_moment(I):
     with pytest.raises(ValueError):
         Section(I=I)
