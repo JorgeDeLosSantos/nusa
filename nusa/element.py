@@ -369,35 +369,48 @@ class Beam(Element):
 
 
 class LinearTriangle(Element):
-    """
-    Linear triangle element for finite element analysis
-    
-    *nodes* : :class:`~nusa.node.Node`
-        Connectivity for element
-    
-    *E* : float
-        Young's modulus
-        
-    *nu* : float
-        Poisson ratio
-        
-    *t* : float
-        Thickness
-    
-    Example::
-        n1 = Node((0,0))
-        n2 = Node((0.5,0))
-        n3 = Node((0.5,0.25))
-        e1 = LinearTriangle((n1,n2,n3),210e9, 0.3, 0.025)
-    """
-    def __init__(self,nodes,E,nu,t):
-        Element.__init__(self,etype="triangle")
-        self.nodes = _validate_nodes(nodes, 3, "LinearTriangle")
+    '''Three-node constant-strain triangle (plane stress).
+
+    Parameters
+    ----------
+    nodes : tuple of Node
+        Triangle connectivity.
+    material : Material
+        Material defining E and nu (both required).
+    thickness : float
+        Finite, strictly positive thickness.
+    '''
+    def __init__(self, nodes, *, material, thickness):
+        Element.__init__(self, etype='triangle')
+        self.nodes = _validate_nodes(nodes, 3, 'LinearTriangle')
         _validate_triangle_geometry(self.nodes)
-        self.E = _positive_finite(E, "Young's modulus E")
-        self.nu = _poisson_ratio(nu)
-        self.t = _positive_finite(t, "Thickness t")
-        
+        if not isinstance(material, Material):
+            raise TypeError('LinearTriangle material must be a Material instance')
+        if material.nu is None:
+            raise ValueError("LinearTriangle requires material property 'nu'")
+        self._material = material
+        self._thickness = _positive_finite(thickness, 'Thickness')
+
+    @property
+    def material(self):
+        return self._material
+
+    @property
+    def E(self):
+        return self.material.E
+
+    @property
+    def nu(self):
+        return self.material.nu
+
+    @property
+    def thickness(self):
+        return self._thickness
+
+    @property
+    def t(self):
+        return self.thickness
+
     @property
     def D(self):
         """
