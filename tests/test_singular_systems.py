@@ -8,6 +8,12 @@ from nusa.element import Bar, LinearTriangle
 from nusa.model import BarModel, LinearTriangleModel
 
 from nusa import Material, Section
+from nusa import Material
+
+def _make_triangle(nodes, E, nu, t):
+    return LinearTriangle(nodes, material=Material(E=E, nu=nu), thickness=t)
+
+
 
 def _make_bar(nodes, E, A):
     return Bar(nodes, material=Material(E=E), section=Section(A=A))
@@ -36,7 +42,7 @@ def test_unconstrained_linear_triangle_raises_clear_singularity_error():
     n3 = Node((0.0, 1.0))
     model.add_nodes([n1, n2, n3])
     model.add_element(
-        LinearTriangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5)
+        _make_triangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5)
     )
     model.add_force(n2, (1.0, 0.0))
 
