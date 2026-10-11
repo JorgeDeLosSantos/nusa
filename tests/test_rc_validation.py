@@ -7,6 +7,12 @@ from nusa.analysis import _assemble_stiffness
 
 from nusa import Material, Section
 from nusa import Material, Section
+from nusa import Material
+
+def _make_triangle(nodes, E, nu, t):
+    return LinearTriangle(nodes, material=Material(E=E, nu=nu), thickness=t)
+
+
 
 def _make_beam(nodes, E, I):
     return Beam(nodes, material=Material(E=E), section=Section(I=I))
@@ -31,7 +37,7 @@ def test_global_stiffness_is_symmetric_for_all_public_models():
     bar=BarModel(); a,b=Node((0,0)),Node((2,0)); bar.add_nodes([a,b]); bar.add_element(_make_bar((a,b),200,3)); _assert_symmetric(bar)
     truss=TrussModel(); a,b=Node((0,0)),Node((3,4)); truss.add_nodes([a,b]); truss.add_element(_make_truss((a,b),200,2)); _assert_symmetric(truss)
     beam=BeamModel(); a,b=Node((0,0)),Node((2,0)); beam.add_nodes([a,b]); beam.add_element(_make_beam((a,b),200,4)); _assert_symmetric(beam)
-    tri=LinearTriangleModel(); a,b,c=Node((0,0)),Node((1,0)),Node((0,1)); tri.add_nodes([a,b,c]); tri.add_element(LinearTriangle((a,b,c),1000,.25,.5)); _assert_symmetric(tri)
+    tri=LinearTriangleModel(); a,b,c=Node((0,0)),Node((1,0)),Node((0,1)); tri.add_nodes([a,b,c]); tri.add_element(_make_triangle((a,b,c),1000,.25,.5)); _assert_symmetric(tri)
 
 
 def test_spring_and_bar_global_equilibrium():
@@ -49,7 +55,7 @@ def test_truss_triangle_and_beam_equilibrium():
     r=tr.solve()
     np.testing.assert_allclose(r.applied_loads.reshape(-1,2).sum(0)+r.reactions.reshape(-1,2).sum(0),[0,0],atol=1e-10)
 
-    tri=LinearTriangleModel(); a,b,c=Node((0,0)),Node((1,.5)),Node((0,1)); tri.add_nodes([a,b,c]); tri.add_element(LinearTriangle((a,b,c),1000,.25,.5)); tri.add_constraint(a,ux=0,uy=0); tri.add_constraint(c,ux=0,uy=0); tri.add_force(b,(12,-7))
+    tri=LinearTriangleModel(); a,b,c=Node((0,0)),Node((1,.5)),Node((0,1)); tri.add_nodes([a,b,c]); tri.add_element(_make_triangle((a,b,c),1000,.25,.5)); tri.add_constraint(a,ux=0,uy=0); tri.add_constraint(c,ux=0,uy=0); tri.add_force(b,(12,-7))
     rr=tri.solve()
     np.testing.assert_allclose(rr.applied_loads.reshape(-1,2).sum(0)+rr.reactions.reshape(-1,2).sum(0),[0,0],atol=1e-10)
 

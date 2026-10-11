@@ -95,7 +95,7 @@ nodal forces, and canonical element results.
 ```python
 import numpy as np
 
-from nusa import LinearTriangle, LinearTriangleModel, Node, plot_model
+from nusa import LinearTriangle, LinearTriangleModel, Material, Node, plot_model
 import nusa.mesh as nmsh
 
 md = nmsh.Modeler()
@@ -112,10 +112,12 @@ for k,nd in enumerate(nc):
     cn = Node((x[k],y[k]))
     nodes.append(cn)
     
+material = Material(E=200e9, nu=0.3)
+
 for elm in ec:
     i, j, k = int(elm[0]), int(elm[1]), int(elm[2])
     ni, nj, nk = nodes[i], nodes[j], nodes[k]
-    ce = LinearTriangle((ni, nj, nk), 200e9, 0.3, 0.1)
+    ce = LinearTriangle((ni, nj, nk), material=material, thickness=0.1)
     elements.append(ce)
 
 model = LinearTriangleModel()

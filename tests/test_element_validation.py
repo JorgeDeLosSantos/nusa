@@ -40,6 +40,11 @@ def test_spring_rejects_nonfinite_stiffness(line_nodes, invalid_value):
         Spring(line_nodes, invalid_value)
 
 
+
+def test_spring_rejects_boolean_stiffness(line_nodes):
+    with pytest.raises(ValueError, match='finite positive'):
+        Spring(line_nodes, True)
+
 def test_beam_requires_material_instance(line_nodes):
     with pytest.raises(TypeError, match="Material instance"):
         Beam(line_nodes, material=object(), section=Section(I=1.0))
@@ -228,54 +233,55 @@ def test_element_connectivity_requires_finite_coordinates():
         )
 
 
-@pytest.mark.parametrize("nu", [-1.0, 0.5, -1.1, 0.75, np.nan, np.inf])
-def test_linear_triangle_rejects_invalid_poisson_ratio(nu):
-    nodes = (
-        Node((0.0, 0.0)),
-        Node((1.0, 0.0)),
-        Node((0.0, 1.0)),
-    )
-
-    with pytest.raises(ValueError, match="range -1 < nu < 0.5"):
-        LinearTriangle(nodes, E=1.0, nu=nu, t=1.0)
+@pytest.fixture
+def triangle_nodes():
+    return (Node((0.0, 0.0)), Node((1.0, 0.0)), Node((0.0, 1.0)))
 
 
-def test_linear_triangle_accepts_auxetic_poisson_ratio():
-    nodes = (
-        Node((0.0, 0.0)),
-        Node((1.0, 0.0)),
-        Node((0.0, 1.0)),
-    )
+@pytest.mark.parametrize('nu', [-1.0, 0.5, -1.1, 0.75, np.nan, np.inf])
+def test_triangle_material_rejects_invalid_poisson_ratio(nu):
+    with pytest.raises(ValueError, match='range -1 < nu < 0.5'):
+        Material(E=1.0, nu=nu)
 
-    element = LinearTriangle(nodes, E=1.0, nu=-0.2, t=1.0)
 
+def test_triangle_accepts_auxetic_poisson_ratio(triangle_nodes):
+    element = LinearTriangle(triangle_nodes, material=Material(E=1.0, nu=-0.2), thickness=1.0)
     assert element.nu == -0.2
 
 
-@pytest.mark.parametrize(
-    ("E", "t"),
-    [
-        (0.0, 1.0),
-        (-1.0, 1.0),
-        (1.0, 0.0),
-        (1.0, -1.0),
-        (np.inf, 1.0),
-        (1.0, np.nan),
-    ],
-)
-def test_linear_triangle_rejects_invalid_material_or_thickness(E, t):
-    nodes = (
-        Node((0.0, 0.0)),
-        Node((1.0, 0.0)),
-        Node((0.0, 1.0)),
-    )
-
-    with pytest.raises(ValueError, match="positive"):
-        LinearTriangle(nodes, E=E, nu=0.3, t=t)
+@pytest.mark.parametrize('thickness', [0, -1, np.inf, np.nan, True])
+def test_triangle_rejects_invalid_thickness(triangle_nodes, thickness):
+    with pytest.raises(ValueError, match='positive'):
+        LinearTriangle(triangle_nodes, material=Material(E=1.0, nu=0.3), thickness=thickness)
 
 
-def test_linear_triangle_requires_exactly_three_nodes():
+def test_triangle_requires_material_instance(triangle_nodes):
+    with pytest.raises(TypeError, match='Material instance'):
+        LinearTriangle(triangle_nodes, material=object(), thickness=1.0)
+
+
+def test_triangle_requires_material_poisson_ratio(triangle_nodes):
+    with pytest.raises(ValueError, match="requires material property 'nu'"):
+        LinearTriangle(triangle_nodes, material=Material(E=1.0), thickness=1.0)
+
+
+def test_triangle_domain_properties_and_alias(triangle_nodes):
+    material = Material(E=100.0, nu=0.25)
+    element = LinearTriangle(triangle_nodes, material=material, thickness=0.5)
+    assert element.material is material
+    assert element.E == 100.0
+    assert element.nu == 0.25
+    assert element.t == element.thickness == 0.5
+    with pytest.raises(AttributeError):
+        element.thickness = 1.0
+
+
+def test_triangle_keyword_only_parameters(triangle_nodes):
+    with pytest.raises(TypeError):
+        LinearTriangle(triangle_nodes, Material(E=1.0, nu=0.3), 1.0)
+
+
+def test_triangle_requires_exactly_three_nodes():
     nodes = (Node((0.0, 0.0)), Node((1.0, 0.0)))
-
-    with pytest.raises(ValueError, match="exactly 3 nodes"):
-        LinearTriangle(nodes, E=1.0, nu=0.3, t=1.0)
+    with pytest.raises(ValueError, match='exactly 3 nodes'):
+        LinearTriangle(nodes, material=Material(E=1.0, nu=0.3), thickness=1.0)
