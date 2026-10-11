@@ -10,6 +10,12 @@ from nusa import Element
 
 from nusa import Material, Section
 from nusa import Material, Section
+from nusa import Material
+
+def _make_triangle(nodes, E, nu, t):
+    return LinearTriangle(nodes, material=Material(E=E, nu=nu), thickness=t)
+
+
 
 def _make_beam(nodes, E, I):
     return Beam(nodes, material=Material(E=E), section=Section(I=I))
@@ -110,7 +116,7 @@ def _triangle():
     model = LinearTriangleModel("triangle report")
     n1, n2, n3 = Node((0, 0)), Node((1, 0.5)), Node((0, 1))
     model.add_nodes([n1, n2, n3])
-    model.add_element(LinearTriangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5))
+    model.add_element(_make_triangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5))
     model.add_constraint(n1, ux=0.0, uy=0.0)
     model.add_constraint(n3, ux=0.0, uy=0.0)
     model.add_force(n2, (10.0, 0.0))
