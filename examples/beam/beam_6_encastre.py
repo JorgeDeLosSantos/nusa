@@ -10,7 +10,7 @@ import itertools
 import matplotlib.pyplot as plt
 import numpy as np
 
-from nusa import Beam, BeamModel, Node
+from nusa import Beam, BeamModel, Material, Node, Section
 
 
 def pairwise(iterable):
@@ -24,10 +24,13 @@ I = 10.0
 L = 10.0
 P = 10e3
 
+material = Material(E=E)
+section = Section(I=I)
+
 nelm = 10
 parts = np.linspace(0.0, L, nelm + 1)
 nodes = [Node((x, 0.0)) for x in parts]
-elements = [Beam((ni, nj), E, I) for ni, nj in pairwise(nodes)]
+elements = [Beam((ni, nj), material=material, section=section) for ni, nj in pairwise(nodes)]
 
 model = BeamModel()
 model.add_nodes(nodes)
