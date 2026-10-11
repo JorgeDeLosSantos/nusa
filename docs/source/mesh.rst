@@ -67,7 +67,7 @@ First, convert mesh points to :class:`nusa.node.Node` objects:
 
 .. code-block:: python
 
-   from nusa import LinearTriangle, LinearTriangleModel, Node
+   from nusa import LinearTriangle, LinearTriangleModel, Material, Node
 
    nodes = [Node(tuple(point[:2])) for point in coordinates]
 
