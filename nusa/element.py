@@ -300,31 +300,42 @@ class Truss(Element):
 
 
 class Beam(Element):
-    """
-    Beam element for finite element analysis
-    
-    *nodes* : :class:`~nusa.node.Node`
-        Connectivity for element
-    
-    *E* : float
-        Young's modulus
-        
-    *I* : float
-        Moment of inertia
-    
-    """
-    def __init__(self,nodes,E,I):
-        Element.__init__(self,etype="beam")
-        self.nodes = _validate_nodes(nodes, 2, "Beam")
-        _validate_nonzero_length(self.nodes, "Beam")
-        self.E = _positive_finite(E, "Young's modulus E")
-        self.I = _positive_finite(I, "Second moment of area I")
-        
+    '''Euler-Bernoulli beam element for finite element analysis.
+
+    Parameters
+    ----------
+    nodes : tuple of Node
+        Element connectivity.
+    material : Material
+        Material providing Young's modulus E.
+    section : Section
+        Section providing second moment of area I.
+    '''
+    def __init__(self, nodes, *, material, section):
+        Element.__init__(self, etype='beam')
+        self.nodes = _validate_nodes(nodes, 2, 'Beam')
+        _validate_nonzero_length(self.nodes, 'Beam')
+        if not isinstance(material, Material):
+            raise TypeError('Beam material must be a Material instance')
+        if not isinstance(section, Section):
+            raise TypeError('Beam section must be a Section instance')
+        if section.I is None:
+            raise ValueError("Beam requires section property 'I'")
+        self.material = material
+        self.section = section
+
+    @property
+    def E(self):
+        '''Young's modulus provided by the material.'''
+        return self.material.E
+
+    @property
+    def I(self):
+        '''Second moment of area provided by the section.'''
+        return self.section.I
+
     def get_element_stiffness(self):
-        """
-        Get stiffness matrix for this element
-        
-        """
+        '''Return the beam element stiffness matrix.'''
         multiplier = (self.I*self.E/self.L**3)
         a = 6*self.L
         b = 4*self.L**2
@@ -336,28 +347,24 @@ class Beam(Element):
         return self._K
 
     def compute_results(self, u_e):
-        """Return canonical beam end actions from local displacements."""
+        '''Return canonical beam end actions from local displacements.'''
         u_e = np.asarray(u_e, dtype=float).reshape(-1)
         if u_e.size != 4:
-            raise ValueError("Beam result evaluation requires 4 displacements")
+            raise ValueError('Beam result evaluation requires 4 displacements')
         actions = self.get_element_stiffness() @ u_e
         return {
-            "shear_force_i": float(actions[0]),
-            "shear_force_j": float(actions[2]),
-            "bending_moment_i": float(actions[1]),
-            "bending_moment_j": float(actions[3]),
+            'shear_force_i': float(actions[0]),
+            'shear_force_j': float(actions[2]),
+            'bending_moment_i': float(actions[1]),
+            'bending_moment_j': float(actions[3]),
         }
 
     @property
     def L(self):
-        """
-        Length of element
-        """
-        ni,nj = self.nodes
-        x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
-        _l = np.sqrt( (x1-x0)**2 + (y1-y0)**2 )
-        return _l
-        
+        '''Length of element.'''
+        ni, nj = self.nodes
+        x0, x1, y0, y1 = ni.x, nj.x, ni.y, nj.y
+        return np.sqrt((x1-x0)**2 + (y1-y0)**2)
 
 
 

@@ -14,6 +14,12 @@ from nusa.model import (
 )
 
 from nusa import Material, Section
+from nusa import Material, Section
+
+def _make_beam(nodes, E, I):
+    return Beam(nodes, material=Material(E=E), section=Section(I=I))
+
+
 
 def _make_bar(nodes, E, A):
     return Bar(nodes, material=Material(E=E), section=Section(A=A))
@@ -59,7 +65,7 @@ def _beam_case():
     n2 = Node((1.0, 0.0))
     orphan = Node((2.0, 0.0))
     model.add_nodes([n1, n2, orphan])
-    model.add_element(Beam((n1, n2), E=1.0, I=1.0))
+    model.add_element(_make_beam((n1, n2), E=1.0, I=1.0))
     return model, orphan
 
 

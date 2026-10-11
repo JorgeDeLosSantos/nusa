@@ -4,6 +4,12 @@ import numpy as np
 
 from nusa import Beam, BeamModel, Node, Spring, SpringModel
 
+from nusa import Material, Section
+
+def _make_beam(nodes, E, I):
+    return Beam(nodes, material=Material(E=E), section=Section(I=I))
+
+
 
 def test_spring_force_semantics_live_on_result():
     model = SpringModel("force semantics")
@@ -31,7 +37,7 @@ def test_beam_force_and_moment_components_are_result_owned():
     model = BeamModel("beam force semantics")
     n1, n2 = Node((0.0, 0.0)), Node((1.0, 0.0))
     model.add_nodes([n1, n2])
-    model.add_element(Beam((n1, n2), E=1.0, I=1.0))
+    model.add_element(_make_beam((n1, n2), E=1.0, I=1.0))
     model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-1.0,))
 
@@ -70,7 +76,7 @@ def test_model_retains_only_problem_inputs_after_solve():
     model = BeamModel("inputs")
     n1, n2 = Node((0.0, 0.0)), Node((2.0, 0.0))
     model.add_nodes([n1, n2])
-    model.add_element(Beam((n1, n2), E=1.0, I=1.0))
+    model.add_element(_make_beam((n1, n2), E=1.0, I=1.0))
     model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-3.0,))
 

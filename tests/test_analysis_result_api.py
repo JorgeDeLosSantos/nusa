@@ -21,6 +21,12 @@ from nusa import (
 )
 
 from nusa import Material, Section
+from nusa import Material, Section
+
+def _make_beam(nodes, E, I):
+    return Beam(nodes, material=Material(E=E), section=Section(I=I))
+
+
 
 def _make_bar(nodes, E, A):
     return Bar(nodes, material=Material(E=E), section=Section(A=A))
@@ -200,7 +206,7 @@ def _beam_problem():
     n1 = Node((0.0, 0.0))
     n2 = Node((2.0, 0.0))
     model.add_nodes([n1, n2])
-    model.add_element(Beam((n1, n2), E=100.0, I=1.0))
+    model.add_element(_make_beam((n1, n2), E=100.0, I=1.0))
     model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-10.0,))
     return model

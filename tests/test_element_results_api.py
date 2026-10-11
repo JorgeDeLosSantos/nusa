@@ -9,6 +9,12 @@ from nusa import (
 )
 
 from nusa import Material, Section
+from nusa import Material, Section
+
+def _make_beam(nodes, E, I):
+    return Beam(nodes, material=Material(E=E), section=Section(I=I))
+
+
 
 def _make_bar(nodes, E, A):
     return Bar(nodes, material=Material(E=E), section=Section(A=A))
@@ -39,7 +45,7 @@ def test_all_public_families_expose_canonical_result_keys(model_builder, expecte
         model = TrussModel(); n1, n2 = Node((0,0)), Node((2,0)); e = _make_truss((n1,n2),100,2)
         model.add_nodes([n1,n2]); model.add_element(e); model.add_constraint(n1,ux=0,uy=0); model.add_constraint(n2,uy=0); model.add_force(n2,(10,0))
     elif model_builder == "beam":
-        model = BeamModel(); n1, n2 = Node((0,0)), Node((2,0)); e = Beam((n1,n2),100,1)
+        model = BeamModel(); n1, n2 = Node((0,0)), Node((2,0)); e = _make_beam((n1,n2),100,1)
         model.add_nodes([n1,n2]); model.add_element(e); model.add_constraint(n1,uy=0,ur=0); model.add_force(n2,(-10,))
     else:
         model = LinearTriangleModel(); n1,n2,n3 = Node((0,0)),Node((1,.5)),Node((0,1)); e = LinearTriangle((n1,n2,n3),200e9,.3,.1)
@@ -61,7 +67,7 @@ def test_element_objects_do_not_expose_solution_dependent_properties():
         Spring((Node((0,0)), Node((0,0))), 1.0),
         _make_bar((Node((0,0)), Node((1,0))), 1.0, 1.0),
         _make_truss((Node((0,0)), Node((1,0))), 1.0, 1.0),
-        Beam((Node((0,0)), Node((1,0))), 1.0, 1.0),
+        _make_beam((Node((0,0)), Node((1,0))), 1.0, 1.0),
         LinearTriangle((Node((0,0)), Node((1,0)), Node((0,1))), 1.0, 0.25, 1.0),
     ]
     for element in elements:

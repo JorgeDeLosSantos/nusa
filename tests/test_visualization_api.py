@@ -14,6 +14,12 @@ from nusa import (
     plot_model,
 )
 
+from nusa import Material, Section
+
+def _make_beam(nodes, E, I):
+    return Beam(nodes, material=Material(E=E), section=Section(I=I))
+
+
 
 def test_all_visualization_is_not_model_owned():
     truss = TrussModel()
@@ -34,7 +40,7 @@ def _beam_result():
     n1 = Node((0.0, 0.0))
     n2 = Node((1.0, 0.0))
     model.add_nodes([n1, n2])
-    model.add_element(Beam((n1, n2), E=1.0, I=1.0))
+    model.add_element(_make_beam((n1, n2), E=1.0, I=1.0))
     model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-0.6,))
     return model.solve()
@@ -72,7 +78,7 @@ def test_top_level_plot_model_consumes_problem_definition():
     n1 = Node((0.0, 0.0))
     n2 = Node((1.0, 0.0))
     model.add_nodes([n1, n2])
-    model.add_element(Beam((n1, n2), E=1.0, I=1.0))
+    model.add_element(_make_beam((n1, n2), E=1.0, I=1.0))
     model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-1.0,))
 

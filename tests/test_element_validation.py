@@ -25,11 +25,9 @@ def line_nodes():
     [
         (Spring, {"ke": 0.0}),
         (Spring, {"ke": -1.0}),
-        (Beam, {"E": 0.0, "I": 1.0}),
-        (Beam, {"E": 1.0, "I": 0.0}),
     ],
 )
-def test_two_node_elements_reject_nonpositive_direct_properties(
+def test_direct_element_properties_reject_nonpositive_values(
     line_nodes, factory, kwargs
 ):
     with pytest.raises(ValueError, match="positive"):
@@ -37,15 +35,48 @@ def test_two_node_elements_reject_nonpositive_direct_properties(
 
 
 @pytest.mark.parametrize("invalid_value", [np.nan, np.inf, -np.inf])
-def test_direct_element_properties_reject_nonfinite_values(line_nodes, invalid_value):
-    n1, n2 = line_nodes
-
+def test_spring_rejects_nonfinite_stiffness(line_nodes, invalid_value):
     with pytest.raises(ValueError, match="finite positive"):
-        Spring((n1, n2), invalid_value)
+        Spring(line_nodes, invalid_value)
 
-    with pytest.raises(ValueError, match="finite positive"):
-        Beam((n1, n2), 1.0, invalid_value)
 
+def test_beam_requires_material_instance(line_nodes):
+    with pytest.raises(TypeError, match="Material instance"):
+        Beam(line_nodes, material=object(), section=Section(I=1.0))
+
+
+def test_beam_requires_section_instance(line_nodes):
+    with pytest.raises(TypeError, match="Section instance"):
+        Beam(line_nodes, material=Material(E=1.0), section=object())
+
+
+def test_beam_requires_section_second_moment(line_nodes):
+    with pytest.raises(ValueError, match="requires section property 'I'"):
+        Beam(
+            line_nodes,
+            material=Material(E=1.0),
+            section=Section(A=1.0),
+        )
+
+
+def test_beam_properties_delegate_to_domain_objects(line_nodes):
+    material = Material(E=200.0)
+    section = Section(I=4.0)
+
+    element = Beam(line_nodes, material=material, section=section)
+
+    assert element.material is material
+    assert element.section is section
+    assert element.E == 200.0
+    assert element.I == 4.0
+
+
+def test_beam_material_and_section_are_keyword_only(line_nodes):
+    material = Material(E=1.0)
+    section = Section(I=1.0)
+
+    with pytest.raises(TypeError):
+        Beam(line_nodes, material, section)
 
 @pytest.mark.parametrize("element_type", [Bar, Truss])
 def test_axial_elements_require_material_instance(line_nodes, element_type):
@@ -112,7 +143,11 @@ def test_beam_rejects_coincident_nodes():
     n2 = Node((0.0, 0.0))
 
     with pytest.raises(ValueError, match="distinct node coordinates"):
-        Beam((n1, n2), E=1.0, I=1.0)
+        Beam(
+            (n1, n2),
+            material=Material(E=1.0),
+            section=Section(I=1.0),
+        )
 
 
 def test_spring_allows_coincident_nodes():
@@ -143,14 +178,7 @@ def test_axial_elements_require_exact_connectivity_size(element_type):
         )
 
 
-@pytest.mark.parametrize(
-    ("element_type", "args"),
-    [
-        (Spring, (1000.0,)),
-        (Beam, (1.0, 1.0)),
-    ],
-)
-def test_other_two_node_elements_require_exact_connectivity_size(element_type, args):
+def test_spring_requires_exact_connectivity_size():
     nodes = (
         Node((0.0, 0.0)),
         Node((1.0, 0.0)),
@@ -158,7 +186,22 @@ def test_other_two_node_elements_require_exact_connectivity_size(element_type, a
     )
 
     with pytest.raises(ValueError, match="exactly 2 nodes"):
-        element_type(nodes, *args)
+        Spring(nodes, 1000.0)
+
+
+def test_beam_requires_exact_connectivity_size():
+    nodes = (
+        Node((0.0, 0.0)),
+        Node((1.0, 0.0)),
+        Node((2.0, 0.0)),
+    )
+
+    with pytest.raises(ValueError, match="exactly 2 nodes"):
+        Beam(
+            nodes,
+            material=Material(E=1.0),
+            section=Section(I=1.0),
+        )
 
 
 def test_element_connectivity_requires_node_objects():

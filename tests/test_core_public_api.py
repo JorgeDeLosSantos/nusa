@@ -7,6 +7,12 @@ from nusa import Element, Node
 from nusa.element import Beam
 from nusa.model import BeamModel, LinearTriangleModel, TrussModel
 
+from nusa import Material, Section
+
+def _make_beam(nodes, E, I):
+    return Beam(nodes, material=Material(E=E), section=Section(I=I))
+
+
 
 def test_node_and_element_are_solution_state_free():
     node = Node((0.0, 0.0))
@@ -55,7 +61,7 @@ def test_beam_constraints_use_only_active_dofs():
     n1 = Node((0.0, 0.0))
     n2 = Node((1.0, 0.0))
     model.add_nodes([n1, n2])
-    model.add_element(Beam((n1, n2), E=1.0, I=1.0))
+    model.add_element(_make_beam((n1, n2), E=1.0, I=1.0))
 
     with pytest.raises(ValueError, match="Unsupported constraint"):
         model.add_constraint(n1, ux=0.0)
