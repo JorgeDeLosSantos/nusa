@@ -4,7 +4,7 @@ NuSA documentation
 NuSA is a small Python finite-element library for teaching, experimentation,
 and structural-analysis workflows.
 
-The public workflow in NuSA 0.4 is intentionally explicit:
+The public analysis workflow introduced in NuSA 0.4 remains explicit in 0.5:
 
 .. code-block:: text
 
@@ -68,6 +68,7 @@ Migration
    :caption: Migration
 
    migration_0_3_to_0_4
+   migration_0_4_to_0_5
 
 API reference
 -------------
@@ -77,6 +78,7 @@ API reference
    :caption: API reference
 
    node
+   materials_sections
    elements
    models
    analysis
