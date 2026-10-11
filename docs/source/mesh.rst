@@ -76,12 +76,12 @@ Then convert each connectivity row to a
 
 .. code-block:: python
 
+   material = Material(E=200e9, nu=0.3)
    elements = [
        LinearTriangle(
            (nodes[int(i)], nodes[int(j)], nodes[int(k)]),
-           E=200e9,
-           nu=0.3,
-           t=0.01,
+           material=material,
+           thickness=0.01,
        )
        for i, j, k in triangles
    ]
