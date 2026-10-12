@@ -80,6 +80,14 @@ result = LinearStaticAnalysis().solve(model)
 an independent `StaticResult` snapshot containing displacements, reactions,
 nodal forces, and canonical element results.
 
+## Physical properties in the development version
+
+NuSA 0.5 development uses reusable `Material` and `Section` objects for
+`Bar`, `Truss` and `Beam`, while `LinearTriangle` takes a `Material` and
+explicit `thickness`. These constructors are not available in the 0.4.0
+release on PyPI; install the `develop` branch to run the examples below.
+See the [0.4 → 0.5 migration guide](docs/source/migration_0_4_to_0_5.rst).
+
 ## Supported element types
 
 * Spring
