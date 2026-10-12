@@ -31,9 +31,9 @@ class MockBeam(Element):
         }
 
 
-def test_version_belongs_to_0_4_0_development_line():
+def test_version_belongs_to_0_5_0_release_line():
     assert re.fullmatch(
-        r"0\.4\.0(?:\.dev\d+|(?:a|b|rc)\d+(?:\.dev\d+)?)?",
+        r"0\.5\.0(?:\.dev\d+|(?:a|b|rc)\d+(?:\.dev\d+)?)?",
         __version__,
     )
 
