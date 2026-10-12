@@ -90,7 +90,7 @@ jobs:
 
           import numpy as np
           import nusa
-          from nusa import Node, Spring, SpringModel
+          from nusa import Bar, BarModel, Material, Node, Section, Spring, SpringModel
 
           assert nusa.__version__ == version("nusa")
 
@@ -105,6 +105,19 @@ jobs:
 
           assert np.isclose(result.displacement(n2)["ux"], 0.5)
           assert np.isclose(result.reaction(n1)["fx"], -50.0)
+          material = Material(E=100.0)
+          section = Section(A=2.0)
+          bar_model = BarModel("0.5 wheel smoke")
+          a, b = Node((0.0, 0.0)), Node((2.0, 0.0))
+          bar_model.add_nodes([a, b])
+          element = Bar((a, b), material=material, section=section)
+          bar_model.add_element(element)
+          bar_model.add_constraint(a, ux=0.0)
+          bar_model.add_force(b, (30.0,))
+          bar_result = bar_model.solve()
+          assert np.isclose(bar_result.displacement(b)["ux"], 0.3)
+          assert element.material is material
+          assert element.section is section
           print(nusa.__version__)
           PY
 
@@ -113,7 +126,7 @@ jobs:
           python -m pip install --force-reinstall dist/*.tar.gz
           python -m pip check
           cd /tmp
-          python -c "import nusa; from importlib.metadata import version; assert nusa.__version__ == version('nusa')"
+          python -c "import nusa; from nusa import Material, Section; from importlib.metadata import version; assert nusa.__version__ == version('nusa'); assert Material(E=1).E == 1; assert Section(A=1).A == 1"
 
   platform-install:
     name: Install on ${{ matrix.os }}
