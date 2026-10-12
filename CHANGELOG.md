@@ -6,7 +6,7 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
-## [0.5.0] - Pending release
+## [0.5.0] - 2026-10-12
 
 ### Added
 - Introduced reusable `Material(E, nu=None, name=None)` and `Section(A=None, I=None, name=None)` domain objects with validated, read-only physical properties.
