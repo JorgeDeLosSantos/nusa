@@ -18,6 +18,7 @@ A Python library for structural analysis using the finite element method, design
 * **0.3.0rc2** Release candidate (22/09/2026)
 * **0.3.0** Stable release (23/09/2026)
 * **0.4.0** Stable release (06/10/2026)
+* **0.5.0** Stable release (12/10/2026)
 
 ## Requirements
 
@@ -83,10 +84,10 @@ nodal forces, and canonical element results.
 ## Physical properties in NuSA 0.5
 
 NuSA 0.5 uses reusable `Material` and `Section` objects for
-`Bar`, `Truss` and `Beam`, while `LinearTriangle` takes a `Material` and
-explicit `thickness`. These constructors are not available in the 0.4.0
-release on PyPI until 0.5.0 is published; install the `develop` branch to run the examples below.
-See the [0.4 → 0.5 migration guide](docs/source/migration_0_4_to_0_5.rst).
+`Bar`, `Truss`, and `Beam`, while `LinearTriangle` takes a `Material` and
+explicit `thickness`. The examples below require NuSA 0.5.0 or newer
+(or the current `develop` branch). If upgrading from 0.4.0, consult the
+[0.4 → 0.5 migration guide](docs/source/migration_0_4_to_0_5.rst).
 
 ## Supported element types
 
