@@ -1,7 +1,7 @@
 How NuSA works
 ==============
 
-NuSA 0.4 separates the finite-element problem definition from the numerical
+NuSA 0.4 separated the finite-element problem definition from the numerical
 solution. The main public workflow is:
 
 .. code-block:: text
@@ -25,7 +25,8 @@ analysis, and presentation independent from one another.
 Problem definition
 ------------------
 
-A finite-element problem is constructed from three kinds of objects.
+A finite-element problem contains nodes, elements and a model. In NuSA 0.5,
+reusable material and section objects provide physical properties to elements.
 
 Node
 ~~~~
@@ -40,8 +41,10 @@ Element
 ~~~~~~~
 
 An :class:`nusa.element.Element` connects nodes and implements a finite-element
-formulation. Concrete elements store the physical and geometric parameters
-needed to compute their stiffness matrix and response.
+formulation. Concrete structural elements hold read-only references to
+:class:`nusa.material.Material` and :class:`nusa.section.Section` objects
+as needed; the constant-strain triangle takes a material and an explicit
+thickness. Spring retains its directly specified stiffness.
 
 Element response is evaluated explicitly from the local displacement vector:
 

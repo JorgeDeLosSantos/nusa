@@ -2,8 +2,8 @@ Elements
 ========
 
 NuSA provides five finite-element formulations in :mod:`nusa.element`.
-Elements own connectivity, geometry-dependent formulation, and physical
-properties. Solved response is evaluated explicitly from the element
+Elements own connectivity and geometry-dependent formulation and reference
+reusable physical-property objects when required. Solved response is evaluated explicitly from the element
 displacement vector and stored in analysis results.
 
 Common element contract
@@ -53,13 +53,9 @@ Bar
 
 ``Bar`` is a two-node axial element.
 
-Required properties:
-
-``E``
-   Young's modulus.
-
-``A``
-   Cross-sectional area.
+Requires ``material=Material(E=...)`` and ``section=Section(A=...)``.
+Both references are read-only. The convenience properties ``E`` and ``A``
+are delegated to these objects.
 
 Local displacement vector:
 
@@ -84,7 +80,7 @@ Truss
 ``Truss`` is a two-dimensional, two-node axial element whose orientation maps
 its axial response into the global coordinate system.
 
-Required properties are ``E`` and ``A``.
+Requires ``material=Material(E=...)`` and ``section=Section(A=...)``.
 
 Local/global element displacement vector used by the current formulation:
 
@@ -104,13 +100,7 @@ Beam
 
 ``Beam`` is the current two-node Euler-Bernoulli beam formulation.
 
-Required properties:
-
-``E``
-   Young's modulus.
-
-``I``
-   Second moment of area.
+Requires ``material=Material(E=...)`` and ``section=Section(I=...)``.
 
 Element displacement vector:
 
@@ -133,16 +123,8 @@ LinearTriangle
 ``LinearTriangle`` is a three-node constant-strain triangle (CST) for plane
 stress.
 
-Required properties:
-
-``E``
-   Young's modulus.
-
-``nu``
-   Poisson's ratio.
-
-``t``
-   Element thickness.
+Requires ``material=Material(E=..., nu=...)`` and a positive ``thickness``
+parameter. ``thickness`` and its alias ``t`` are read-only.
 
 Element displacement vector:
 
@@ -172,12 +154,13 @@ Canonical results:
 Validation
 ----------
 
-NuSA validates physical parameters when elements are created. Material/section
-quantities such as ``E``, ``A``, ``I``, ``t``, and spring stiffness must be
-finite and physically valid according to the corresponding formulation.
+NuSA validates material and section parameters when their domain objects are
+created and checks required properties at element construction. ``thickness``
+and spring stiffness must be finite, positive, and non-boolean.
 Degenerate triangular geometry is also rejected.
 
-For worked examples, see :doc:`examples/index`.
+For physical-property definitions see :doc:`materials_sections`.
+For worked examples see :doc:`examples/index`.
 
 API reference
 -------------

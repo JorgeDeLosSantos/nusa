@@ -10,11 +10,20 @@ Use :class:`nusa.model.BeamModel` with :class:`nusa.element.Beam`.
 Element properties
 ------------------
 
-A beam element requires Young's modulus ``E`` and second moment of area ``I``:
+A beam receives reusable material and section objects. Its formulation requires
+Young's modulus ``E`` from the material and second moment of area ``I`` from
+the section:
 
 .. code-block:: python
 
-   e1 = Beam((n1, n2), E=210e9, I=4e-4)
+   material = Material(E=210e9)
+   section = Section(I=4e-4)
+
+   e1 = Beam(
+       (n1, n2),
+       material=material,
+       section=section,
+   )
 
 Beam element results are reported as end actions:
 

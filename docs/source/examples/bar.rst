@@ -10,11 +10,20 @@ Use :class:`nusa.model.BarModel` with :class:`nusa.element.Bar`.
 Element properties
 ------------------
 
-A bar requires Young's modulus ``E`` and cross-sectional area ``A``:
+A bar receives reusable material and section objects. Its formulation requires
+Young's modulus ``E`` from the material and cross-sectional area ``A`` from
+the section:
 
 .. code-block:: python
 
-   e1 = Bar((n1, n2), E=30e6, A=1.0)
+   material = Material(E=30e6)
+   section = Section(A=1.0)
+
+   e1 = Bar(
+       (n1, n2),
+       material=material,
+       section=section,
+   )
 
 The element result contains end forces together with the physical axial force
 and axial stress:

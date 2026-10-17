@@ -70,17 +70,25 @@ Those quantities belong to the result of an analysis.
 2. Create elements
 ~~~~~~~~~~~~~~~~~~
 
-Elements connect nodes and define the finite-element formulation and physical
-properties:
+Elements connect nodes and define the finite-element formulation. Reusable
+material and section objects provide their physical properties:
 
 .. code-block:: python
 
-   from nusa import Bar
+   from nusa import Bar, Material, Section
 
-   e1 = Bar((n1, n2), E=30e6, A=1.0)
+   material = Material(E=30e6)
+   section = Section(A=1.0)
 
-For a bar element, ``E`` is Young's modulus and ``A`` is the cross-sectional
-area.
+   e1 = Bar(
+       (n1, n2),
+       material=material,
+       section=section,
+   )
+
+For a bar element, the material provides Young's modulus ``E`` and the
+section provides cross-sectional area ``A``. Both objects can be reused by
+multiple elements.
 
 3. Build the model
 ~~~~~~~~~~~~~~~~~~

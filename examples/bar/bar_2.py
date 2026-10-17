@@ -5,7 +5,7 @@
 #  License: MIT License
 # ***********************************
 
-from nusa import Bar, BarModel, Node
+from nusa import Bar, BarModel, Material, Node, Section
 
 
 def test2():
@@ -15,13 +15,16 @@ def test2():
     P = -10.0
     UX3 = 0.002
 
+    material = Material(E=E)
+    section = Section(A=A)
+
     model = BarModel("Bar model 02")
     n1 = Node((0.0, 0.0))
     n2 = Node((1.5, 0.0))
     n3 = Node((2.5, 0.0))
 
-    e1 = Bar((n1, n2), E, A)
-    e2 = Bar((n2, n3), E, A)
+    e1 = Bar((n1, n2), material=material, section=section)
+    e2 = Bar((n2, n3), material=material, section=section)
 
     model.add_nodes([n1, n2, n3])
     model.add_elements([e1, e2])

@@ -4,10 +4,16 @@ import numpy as np
 
 from nusa import Beam, BeamModel, Node
 
+from nusa import Material, Section
+
+def _make_beam(nodes, E, I):
+    return Beam(nodes, material=Material(E=E), section=Section(I=I))
+
+
 
 class TestBeamElement:
     def test_length_stiffness_and_explicit_actions(self):
-        element = Beam((Node((0.0, 0.0)), Node((2.0, 0.0))), E=1.0, I=1.0)
+        element = _make_beam((Node((0.0, 0.0)), Node((2.0, 0.0))), E=1.0, I=1.0)
         assert np.isclose(element.L, 2.0)
         np.testing.assert_allclose(
             element.get_element_stiffness(),
@@ -33,7 +39,7 @@ class TestBeamModel:
         E, I, L, P = 29e6, 10.0, 10.0, 10e3
         model = BeamModel("cantilever")
         n1, n2 = Node((0.0, 0.0)), Node((L, 0.0))
-        element = Beam((n1, n2), E, I)
+        element = _make_beam((n1, n2), E, I)
         model.add_nodes([n1, n2])
         model.add_element(element)
         model.add_constraint(n1, uy=0.0, ur=0.0)
@@ -55,7 +61,7 @@ class TestBeamModel:
         E, I, P, M, L = 210e9, 4e-4, 10e3, 20e3, 3.0
         model = BeamModel("Logan 4.4")
         n1, n2, n3 = Node((0.0, 0.0)), Node((L, 0.0)), Node((2*L, 0.0))
-        e1, e2 = Beam((n1, n2), E, I), Beam((n2, n3), E, I)
+        e1, e2 = _make_beam((n1, n2), E, I), _make_beam((n2, n3), E, I)
         model.add_nodes([n1, n2, n3])
         model.add_elements([e1, e2])
         model.add_force(n2, (-P,))
@@ -85,7 +91,7 @@ class TestBeamModel:
         model = BeamModel("simply supported")
         n1, n2, n3 = Node((0.0, 0.0)), Node((a, 0.0)), Node((L, 0.0))
         model.add_nodes([n1, n2, n3])
-        model.add_elements([Beam((n1, n2), E, I), Beam((n2, n3), E, I)])
+        model.add_elements([_make_beam((n1, n2), E, I), _make_beam((n2, n3), E, I)])
         model.add_force(n2, (-P,))
         model.add_constraint(n1, uy=0.0)
         model.add_constraint(n3, uy=0.0)
@@ -101,7 +107,7 @@ class TestBeamModel:
         model = BeamModel("settlement")
         n1, n2, n3 = Node((0.0, 0.0)), Node((1.0, 0.0)), Node((2.0, 0.0))
         model.add_nodes([n1, n2, n3])
-        model.add_elements([Beam((n1, n2), 1.0, 1.0), Beam((n2, n3), 1.0, 1.0)])
+        model.add_elements([_make_beam((n1, n2), 1.0, 1.0), _make_beam((n2, n3), 1.0, 1.0)])
         model.add_constraint(n1, uy=0.0, ur=0.0)
         model.add_constraint(n3, uy=0.1, ur=0.0)
 

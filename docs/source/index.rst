@@ -4,7 +4,7 @@ NuSA documentation
 NuSA is a small Python finite-element library for teaching, experimentation,
 and structural-analysis workflows.
 
-The public workflow in NuSA 0.4 is intentionally explicit:
+The public analysis workflow introduced in NuSA 0.4 remains explicit in 0.5:
 
 .. code-block:: text
 
@@ -19,14 +19,18 @@ Quick example
 
 .. code-block:: python
 
-   from nusa import Bar, BarModel, Node
+   from nusa import Bar, BarModel, Material, Node, Section
 
    n1 = Node((0.0, 0.0))
    n2 = Node((1.0, 0.0))
+   steel = Material(E=200e9)
+   section = Section(A=1e-4)
 
    model = BarModel("Simple bar")
    model.add_nodes([n1, n2])
-   model.add_element(Bar((n1, n2), E=200e9, A=1e-4))
+   model.add_element(
+       Bar((n1, n2), material=steel, section=section)
+   )
    model.add_constraint(n1, ux=0.0)
    model.add_force(n2, (1000.0,))
 
@@ -64,6 +68,7 @@ Migration
    :caption: Migration
 
    migration_0_3_to_0_4
+   migration_0_4_to_0_5
 
 API reference
 -------------
@@ -73,6 +78,7 @@ API reference
    :caption: API reference
 
    node
+   materials_sections
    elements
    models
    analysis

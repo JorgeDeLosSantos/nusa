@@ -4,6 +4,12 @@ import numpy as np
 
 from nusa import Bar, BarModel, Node, Spring, SpringModel
 
+from nusa import Material, Section
+
+def _make_bar(nodes, E, A):
+    return Bar(nodes, material=Material(E=E), section=Section(A=A))
+
+
 
 class TestSpringElement:
     def test_element_stiffness_matrix(self):
@@ -95,7 +101,7 @@ class TestSpringModel:
 class TestBarElement:
     def test_length_stiffness_and_explicit_results(self):
         n1, n2 = Node((0.0, 0.0)), Node((2.0, 0.0))
-        element = Bar((n1, n2), E=200e9, A=0.001)
+        element = _make_bar((n1, n2), E=200e9, A=0.001)
 
         assert np.isclose(element.L, 2.0)
         values = element.compute_results([0.0, 0.01])
@@ -117,9 +123,9 @@ class TestBarModel:
             Node((90.0, 0.0)),
         )
         elements = [
-            Bar((n1, n2), E=30e6, A=1.0),
-            Bar((n2, n3), E=30e6, A=1.0),
-            Bar((n3, n4), E=15e6, A=2.0),
+            _make_bar((n1, n2), E=30e6, A=1.0),
+            _make_bar((n2, n3), E=30e6, A=1.0),
+            _make_bar((n3, n4), E=15e6, A=2.0),
         ]
         model.add_nodes([n1, n2, n3, n4])
         model.add_elements(elements)
@@ -145,7 +151,7 @@ class TestBarModel:
         model = BarModel("Kattan 3.1")
         n1, n2, n3 = Node((0.0, 0.0)), Node((1.5, 0.0)), Node((2.5, 0.0))
         model.add_nodes([n1, n2, n3])
-        model.add_elements([Bar((n1, n2), E, A), Bar((n2, n3), E, A)])
+        model.add_elements([_make_bar((n1, n2), E, A), _make_bar((n2, n3), E, A)])
         model.add_constraint(n1, ux=0.0)
         model.add_constraint(n3, ux=0.002)
         model.add_force(n2, (-10.0,))
@@ -162,7 +168,7 @@ def test_bar_chain_prescribed_displacement():
     nodes = [Node((float(i), 0.0)) for i in range(4)]
     model.add_nodes(nodes)
     model.add_elements([
-        Bar((nodes[i], nodes[i + 1]), E=100.0, A=1.0)
+        _make_bar((nodes[i], nodes[i + 1]), E=100.0, A=1.0)
         for i in range(3)
     ])
     model.add_constraint(nodes[0], ux=0.0)

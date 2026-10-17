@@ -7,7 +7,7 @@
 
 import matplotlib.pyplot as plt
 
-from nusa import Node, Truss, TrussModel, plot_model
+from nusa import Material, Node, Section, Truss, TrussModel, plot_model
 
 
 def build_model():
@@ -15,6 +15,9 @@ def build_model():
     E = 30e6
     A = 2.0
     P = 10e3
+
+    material = Material(E=E)
+    section = Section(A=A)
 
     model = TrussModel("Truss Model")
     n1 = Node((0.0, 0.0))
@@ -24,9 +27,9 @@ def build_model():
 
     model.add_nodes([n1, n2, n3, n4])
     model.add_elements([
-        Truss((n1, n2), E, A),
-        Truss((n1, n3), E, A),
-        Truss((n1, n4), E, A),
+        Truss((n1, n2), material=material, section=section),
+        Truss((n1, n3), material=material, section=section),
+        Truss((n1, n4), material=material, section=section),
     ])
     model.add_force(n1, (0.0, -P))
     model.add_constraint(n2, ux=0.0, uy=0.0)

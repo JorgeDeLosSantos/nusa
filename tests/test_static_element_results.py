@@ -18,6 +18,27 @@ from nusa import (
     solve,
 )
 
+from nusa import Material, Section
+from nusa import Material, Section
+from nusa import Material
+
+def _make_triangle(nodes, E, nu, t):
+    return LinearTriangle(nodes, material=Material(E=E, nu=nu), thickness=t)
+
+
+
+def _make_beam(nodes, E, I):
+    return Beam(nodes, material=Material(E=E), section=Section(I=I))
+
+
+
+def _make_bar(nodes, E, A):
+    return Bar(nodes, material=Material(E=E), section=Section(A=A))
+
+def _make_truss(nodes, E, A):
+    return Truss(nodes, material=Material(E=E), section=Section(A=A))
+
+
 
 def _spring():
     model = SpringModel("spring")
@@ -33,7 +54,7 @@ def _spring():
 def _bar():
     model = BarModel("bar")
     n1, n2 = Node((0.0, 0.0)), Node((2.0, 0.0))
-    element = Bar((n1, n2), E=100.0, A=2.0)
+    element = _make_bar((n1, n2), E=100.0, A=2.0)
     model.add_nodes([n1, n2])
     model.add_element(element)
     model.add_constraint(n1, ux=0.0)
@@ -44,7 +65,7 @@ def _bar():
 def _truss():
     model = TrussModel("truss")
     n1, n2 = Node((0.0, 0.0)), Node((2.0, 0.0))
-    element = Truss((n1, n2), E=100.0, A=2.0)
+    element = _make_truss((n1, n2), E=100.0, A=2.0)
     model.add_nodes([n1, n2])
     model.add_element(element)
     model.add_constraint(n1, ux=0.0, uy=0.0)
@@ -56,7 +77,7 @@ def _truss():
 def _beam():
     model = BeamModel("beam")
     n1, n2 = Node((0.0, 0.0)), Node((2.0, 0.0))
-    element = Beam((n1, n2), E=100.0, I=1.0)
+    element = _make_beam((n1, n2), E=100.0, I=1.0)
     model.add_nodes([n1, n2])
     model.add_element(element)
     model.add_constraint(n1, uy=0.0, ur=0.0)
@@ -69,7 +90,7 @@ def _triangle():
     n1 = Node((0.0, 0.0))
     n2 = Node((1.0, 0.5))
     n3 = Node((0.0, 1.0))
-    element = LinearTriangle((n1, n2, n3), E=200e9, nu=0.3, t=0.1)
+    element = _make_triangle((n1, n2, n3), E=200e9, nu=0.3, t=0.1)
     model.add_nodes([n1, n2, n3])
     model.add_element(element)
     model.add_constraint(n1, ux=0.0, uy=0.0)

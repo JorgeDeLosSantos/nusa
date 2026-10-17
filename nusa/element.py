@@ -5,13 +5,16 @@
 #  License: MIT License
 # ***********************************
 import numpy as np
+from .material import Material
 from .node import Node
+from .section import Section
 
 class Element:
     """Base class for finite elements.
 
-    Elements own formulation, connectivity, and physical properties. Solved
-    response belongs to analysis results, not to the element instance.
+    Elements own formulation and connectivity and reference the physical
+    properties required by that formulation. Solved response belongs to
+    analysis results, not to the element instance.
     """
 
     def __init__(self, etype):
@@ -48,23 +51,14 @@ def _validate_nodes(nodes, expected_count, element_name):
 
 def _positive_finite(value, name):
     """Return a finite positive scalar material or section property."""
+    if isinstance(value, (bool, np.bool_)):
+        raise ValueError(f"{name} must be a finite positive scalar")
     try:
         value = float(value)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"{name} must be a finite positive scalar") from exc
     if not np.isfinite(value) or value <= 0.0:
         raise ValueError(f"{name} must be a finite positive scalar")
-    return value
-
-
-def _poisson_ratio(value):
-    """Return a physically admissible isotropic Poisson ratio."""
-    try:
-        value = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("nu must be a finite scalar in the range -1 < nu < 0.5") from exc
-    if not np.isfinite(value) or not (-1.0 < value < 0.5):
-        raise ValueError("nu must be a finite scalar in the range -1 < nu < 0.5")
     return value
 
 
@@ -142,93 +136,123 @@ class Spring(Element):
     
 
 class Bar(Element):
-    """
-    Bar element for finite element analysis
-    
-    *nodes* : :class:`~nusa.node.Node`
-        Connectivity for element
-    
-    *E* : float
-        Young's modulus
-        
-    *A* : float
-        Area of element
-    """
-    def __init__(self,nodes,E,A):
-        Element.__init__(self,etype="bar")
-        self.nodes = _validate_nodes(nodes, 2, "Bar")
-        _validate_nonzero_length(self.nodes, "Bar")
-        self.E = _positive_finite(E, "Young's modulus E")
-        self.A = _positive_finite(A, "Cross-sectional area A")
+    '''Bar element for finite element analysis.
+
+    Parameters
+    ----------
+    nodes : tuple of Node
+        Element connectivity.
+    material : Material
+        Material providing Young's modulus E.
+    section : Section
+        Section providing cross-sectional area A.
+    '''
+    def __init__(self, nodes, *, material, section):
+        Element.__init__(self, etype='bar')
+        self.nodes = _validate_nodes(nodes, 2, 'Bar')
+        _validate_nonzero_length(self.nodes, 'Bar')
+        if not isinstance(material, Material):
+            raise TypeError('Bar material must be a Material instance')
+        if not isinstance(section, Section):
+            raise TypeError('Bar section must be a Section instance')
+        if section.A is None:
+            raise ValueError("Bar requires section property 'A'")
+        self._material = material
+        self._section = section
+
+    @property
+    def material(self):
+        """Material associated with the element (read-only)."""
+        return self._material
+
+    @property
+    def section(self):
+        """Section associated with the element (read-only)."""
+        return self._section
+
+    @property
+    def E(self):
+        '''Young's modulus provided by the material.'''
+        return self.material.E
+
+    @property
+    def A(self):
+        '''Cross-sectional area provided by the section.'''
+        return self.section.A
         
     def compute_results(self, u_e):
-        """Return canonical bar results from local displacements."""
+        '''Return canonical bar results from local displacements.'''
         u_e = np.asarray(u_e, dtype=float).reshape(-1)
         if u_e.size != 2:
-            raise ValueError("Bar result evaluation requires 2 displacements")
+            raise ValueError('Bar result evaluation requires 2 displacements')
         forces = self.get_element_stiffness() @ u_e
         axial_strain = (u_e[1] - u_e[0]) / self.L
         axial_force = self.E * self.A * axial_strain
         return {
-            "force_i": float(forces[0]),
-            "force_j": float(forces[1]),
-            "axial_force": float(axial_force),
-            "axial_stress": float(axial_force / self.A),
+            'force_i': float(forces[0]),
+            'force_j': float(forces[1]),
+            'axial_force': float(axial_force),
+            'axial_stress': float(axial_force / self.A),
         }
 
     @property
     def L(self):
-        """
-        Length of element
-        """
-        ni,nj = self.nodes
-        x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
-        _l = np.sqrt( (x1-x0)**2 + (y1-y0)**2 )
-        return _l
+        '''Length of element.'''
+        ni, nj = self.nodes
+        x0, x1, y0, y1 = ni.x, nj.x, ni.y, nj.y
+        return np.sqrt((x1-x0)**2 + (y1-y0)**2)
 
     def get_element_stiffness(self):
-        r"""
-        Get stiffness matrix for this element
-        
-        The stiffness matrix for bar element is given by:
-        
-        .. math::
-        
-            [k]_e = \frac{AE}{L} \begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix}
-        
-        where
-        
-        * A - Cross-section of element
-        * E - Young's Modulus
-        * L - Length of element
-        """
+        '''Return the bar element stiffness matrix.'''
         self._KE = (self.A*self.E/self.L)*np.array([[1,-1],[-1,1]])
         return self._KE
-        
-
-
 
 
 
 class Truss(Element):
-    """
-    Truss element for finite element analysis
-    
-    *nodes* : Tuple of :class:`~nusa.node.Node`
-        Connectivity for element
-    
-    *E* : float
-        Young modulus
-        
-    *A* : float
-        Area of element
-    """
-    def __init__(self,nodes,E,A):
-        Element.__init__(self,etype="truss")
-        self.nodes = _validate_nodes(nodes, 2, "Truss")
-        _validate_nonzero_length(self.nodes, "Truss")
-        self.E = _positive_finite(E, "Young's modulus E")
-        self.A = _positive_finite(A, "Cross-sectional area A")
+    '''Truss element for finite element analysis.
+
+    Parameters
+    ----------
+    nodes : tuple of Node
+        Element connectivity.
+    material : Material
+        Material providing Young's modulus E.
+    section : Section
+        Section providing cross-sectional area A.
+    '''
+    def __init__(self, nodes, *, material, section):
+        Element.__init__(self, etype='truss')
+        self.nodes = _validate_nodes(nodes, 2, 'Truss')
+        _validate_nonzero_length(self.nodes, 'Truss')
+        if not isinstance(material, Material):
+            raise TypeError('Truss material must be a Material instance')
+        if not isinstance(section, Section):
+            raise TypeError('Truss section must be a Section instance')
+        if section.A is None:
+            raise ValueError("Truss requires section property 'A'")
+        self._material = material
+        self._section = section
+
+    @property
+    def material(self):
+        """Material associated with the element (read-only)."""
+        return self._material
+
+    @property
+    def section(self):
+        """Section associated with the element (read-only)."""
+        return self._section
+
+    @property
+    def E(self):
+        '''Young's modulus provided by the material.'''
+        return self.material.E
+
+    @property
+    def A(self):
+        '''Cross-sectional area provided by the section.'''
+        return self.section.A
         
     @property
     def L(self):
@@ -287,31 +311,52 @@ class Truss(Element):
 
 
 class Beam(Element):
-    """
-    Beam element for finite element analysis
-    
-    *nodes* : :class:`~nusa.node.Node`
-        Connectivity for element
-    
-    *E* : float
-        Young's modulus
-        
-    *I* : float
-        Moment of inertia
-    
-    """
-    def __init__(self,nodes,E,I):
-        Element.__init__(self,etype="beam")
-        self.nodes = _validate_nodes(nodes, 2, "Beam")
-        _validate_nonzero_length(self.nodes, "Beam")
-        self.E = _positive_finite(E, "Young's modulus E")
-        self.I = _positive_finite(I, "Second moment of area I")
-        
+    '''Euler-Bernoulli beam element for finite element analysis.
+
+    Parameters
+    ----------
+    nodes : tuple of Node
+        Element connectivity.
+    material : Material
+        Material providing Young's modulus E.
+    section : Section
+        Section providing second moment of area I.
+    '''
+    def __init__(self, nodes, *, material, section):
+        Element.__init__(self, etype='beam')
+        self.nodes = _validate_nodes(nodes, 2, 'Beam')
+        _validate_nonzero_length(self.nodes, 'Beam')
+        if not isinstance(material, Material):
+            raise TypeError('Beam material must be a Material instance')
+        if not isinstance(section, Section):
+            raise TypeError('Beam section must be a Section instance')
+        if section.I is None:
+            raise ValueError("Beam requires section property 'I'")
+        self._material = material
+        self._section = section
+
+    @property
+    def material(self):
+        """Material associated with the element (read-only)."""
+        return self._material
+
+    @property
+    def section(self):
+        """Section associated with the element (read-only)."""
+        return self._section
+
+    @property
+    def E(self):
+        '''Young's modulus provided by the material.'''
+        return self.material.E
+
+    @property
+    def I(self):
+        '''Second moment of area provided by the section.'''
+        return self.section.I
+
     def get_element_stiffness(self):
-        """
-        Get stiffness matrix for this element
-        
-        """
+        '''Return the beam element stiffness matrix.'''
         multiplier = (self.I*self.E/self.L**3)
         a = 6*self.L
         b = 4*self.L**2
@@ -323,61 +368,70 @@ class Beam(Element):
         return self._K
 
     def compute_results(self, u_e):
-        """Return canonical beam end actions from local displacements."""
+        '''Return canonical beam end actions from local displacements.'''
         u_e = np.asarray(u_e, dtype=float).reshape(-1)
         if u_e.size != 4:
-            raise ValueError("Beam result evaluation requires 4 displacements")
+            raise ValueError('Beam result evaluation requires 4 displacements')
         actions = self.get_element_stiffness() @ u_e
         return {
-            "shear_force_i": float(actions[0]),
-            "shear_force_j": float(actions[2]),
-            "bending_moment_i": float(actions[1]),
-            "bending_moment_j": float(actions[3]),
+            'shear_force_i': float(actions[0]),
+            'shear_force_j': float(actions[2]),
+            'bending_moment_i': float(actions[1]),
+            'bending_moment_j': float(actions[3]),
         }
 
     @property
     def L(self):
-        """
-        Length of element
-        """
-        ni,nj = self.nodes
-        x0,x1,y0,y1 = ni.x, nj.x, ni.y, nj.y
-        _l = np.sqrt( (x1-x0)**2 + (y1-y0)**2 )
-        return _l
-        
+        '''Length of element.'''
+        ni, nj = self.nodes
+        x0, x1, y0, y1 = ni.x, nj.x, ni.y, nj.y
+        return np.sqrt((x1-x0)**2 + (y1-y0)**2)
 
 
 
 class LinearTriangle(Element):
-    """
-    Linear triangle element for finite element analysis
-    
-    *nodes* : :class:`~nusa.node.Node`
-        Connectivity for element
-    
-    *E* : float
-        Young's modulus
-        
-    *nu* : float
-        Poisson ratio
-        
-    *t* : float
-        Thickness
-    
-    Example::
-        n1 = Node((0,0))
-        n2 = Node((0.5,0))
-        n3 = Node((0.5,0.25))
-        e1 = LinearTriangle((n1,n2,n3),210e9, 0.3, 0.025)
-    """
-    def __init__(self,nodes,E,nu,t):
-        Element.__init__(self,etype="triangle")
-        self.nodes = _validate_nodes(nodes, 3, "LinearTriangle")
+    '''Three-node constant-strain triangle (plane stress).
+
+    Parameters
+    ----------
+    nodes : tuple of Node
+        Triangle connectivity.
+    material : Material
+        Material defining E and nu (both required).
+    thickness : float
+        Finite, strictly positive thickness.
+    '''
+    def __init__(self, nodes, *, material, thickness):
+        Element.__init__(self, etype='triangle')
+        self.nodes = _validate_nodes(nodes, 3, 'LinearTriangle')
         _validate_triangle_geometry(self.nodes)
-        self.E = _positive_finite(E, "Young's modulus E")
-        self.nu = _poisson_ratio(nu)
-        self.t = _positive_finite(t, "Thickness t")
-        
+        if not isinstance(material, Material):
+            raise TypeError('LinearTriangle material must be a Material instance')
+        if material.nu is None:
+            raise ValueError("LinearTriangle requires material property 'nu'")
+        self._material = material
+        self._thickness = _positive_finite(thickness, 'Thickness')
+
+    @property
+    def material(self):
+        return self._material
+
+    @property
+    def E(self):
+        return self.material.E
+
+    @property
+    def nu(self):
+        return self.material.nu
+
+    @property
+    def thickness(self):
+        return self._thickness
+
+    @property
+    def t(self):
+        return self.thickness
+
     @property
     def D(self):
         """

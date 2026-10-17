@@ -5,7 +5,7 @@
 #  License: MIT License
 # ***********************************
 
-from nusa import Bar, BarModel, Node
+from nusa import Bar, BarModel, Material, Node, Section
 
 
 def test1():
@@ -17,9 +17,14 @@ def test1():
     n3 = Node((60.0, 0.0))
     n4 = Node((90.0, 0.0))
 
-    e1 = Bar((n1, n2), E=30e6, A=1.0)
-    e2 = Bar((n2, n3), E=30e6, A=1.0)
-    e3 = Bar((n3, n4), E=15e6, A=2.0)
+    material_30 = Material(E=30e6)
+    material_15 = Material(E=15e6)
+    section_1 = Section(A=1.0)
+    section_2 = Section(A=2.0)
+
+    e1 = Bar((n1, n2), material=material_30, section=section_1)
+    e2 = Bar((n2, n3), material=material_30, section=section_1)
+    e3 = Bar((n3, n4), material=material_15, section=section_2)
 
     model.add_nodes([n1, n2, n3, n4])
     model.add_elements([e1, e2, e3])

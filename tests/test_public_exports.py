@@ -23,6 +23,8 @@ EXPECTED_PUBLIC_API = {
     "Model",
     "Element",
     "Node",
+    "Material",
+    "Section",
     "Spring",
     "Bar",
     "Truss",
@@ -107,3 +109,5 @@ def test_domain_classes_live_in_dedicated_modules():
     assert nusa.Node.__module__ == "nusa.node"
     assert nusa.Element.__module__ == "nusa.element"
     assert nusa.Model.__module__ == "nusa.model"
+    assert nusa.Material.__module__ == "nusa.material"
+    assert nusa.Section.__module__ == "nusa.section"

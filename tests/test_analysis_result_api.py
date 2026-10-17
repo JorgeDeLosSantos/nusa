@@ -20,6 +20,27 @@ from nusa import (
     solve,
 )
 
+from nusa import Material, Section
+from nusa import Material, Section
+from nusa import Material
+
+def _make_triangle(nodes, E, nu, t):
+    return LinearTriangle(nodes, material=Material(E=E, nu=nu), thickness=t)
+
+
+
+def _make_beam(nodes, E, I):
+    return Beam(nodes, material=Material(E=E), section=Section(I=I))
+
+
+
+def _make_bar(nodes, E, A):
+    return Bar(nodes, material=Material(E=E), section=Section(A=A))
+
+def _make_truss(nodes, E, A):
+    return Truss(nodes, material=Material(E=E), section=Section(A=A))
+
+
 
 def _spring_problem(load=50.0):
     model = SpringModel("spring analysis")
@@ -119,7 +140,7 @@ def test_result_freezes_geometry_connectivity_and_labels():
     model = TrussModel("snapshot")
     n1 = Node((0.0, 0.0))
     n2 = Node((2.0, 0.0))
-    element = Truss((n1, n2), E=100.0, A=2.0)
+    element = _make_truss((n1, n2), E=100.0, A=2.0)
     model.add_nodes([n1, n2])
     model.add_element(element)
     model.add_constraint(n1, ux=0.0, uy=0.0)
@@ -168,7 +189,7 @@ def _bar_problem():
     n1 = Node((0.0, 0.0))
     n2 = Node((2.0, 0.0))
     model.add_nodes([n1, n2])
-    model.add_element(Bar((n1, n2), E=100.0, A=2.0))
+    model.add_element(_make_bar((n1, n2), E=100.0, A=2.0))
     model.add_constraint(n1, ux=0.0)
     model.add_force(n2, (10.0,))
     return model
@@ -179,7 +200,7 @@ def _truss_problem():
     n1 = Node((0.0, 0.0))
     n2 = Node((2.0, 0.0))
     model.add_nodes([n1, n2])
-    model.add_element(Truss((n1, n2), E=100.0, A=2.0))
+    model.add_element(_make_truss((n1, n2), E=100.0, A=2.0))
     model.add_constraint(n1, ux=0.0, uy=0.0)
     model.add_constraint(n2, uy=0.0)
     model.add_force(n2, (10.0, 0.0))
@@ -191,7 +212,7 @@ def _beam_problem():
     n1 = Node((0.0, 0.0))
     n2 = Node((2.0, 0.0))
     model.add_nodes([n1, n2])
-    model.add_element(Beam((n1, n2), E=100.0, I=1.0))
+    model.add_element(_make_beam((n1, n2), E=100.0, I=1.0))
     model.add_constraint(n1, uy=0.0, ur=0.0)
     model.add_force(n2, (-10.0,))
     return model
@@ -222,7 +243,7 @@ def test_new_analysis_solves_linear_triangle_without_node_writeback():
     n3 = Node((0.0, 1.0))
     model.add_nodes([n1, n2, n3])
     model.add_element(
-        LinearTriangle((n1, n2, n3), E=200e9, nu=0.3, t=0.1)
+        _make_triangle((n1, n2, n3), E=200e9, nu=0.3, t=0.1)
     )
     model.add_constraint(n1, ux=0.0, uy=0.0)
     model.add_constraint(n3, ux=0.0, uy=0.0)

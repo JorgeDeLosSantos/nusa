@@ -38,14 +38,16 @@ workflow without Gmsh:
 
 .. code-block:: python
 
-   from nusa import Bar, BarModel, Node
+   from nusa import Bar, BarModel, Material, Node, Section
 
    n1 = Node((0.0, 0.0))
    n2 = Node((1.0, 0.0))
+   material = Material(E=200e9)
+   section = Section(A=1e-4)
 
    model = BarModel("Colab bar smoke test")
    model.add_nodes([n1, n2])
-   model.add_element(Bar((n1, n2), E=200e9, A=1e-4))
+   model.add_element(Bar((n1, n2), material=material, section=section))
    model.add_constraint(n1, ux=0.0)
    model.add_force(n2, (1000.0,))
 
@@ -85,7 +87,7 @@ This example exercises the complete preprocessing and solution path:
 
    import numpy as np
 
-   from nusa import LinearTriangle, LinearTriangleModel, Node
+   from nusa import LinearTriangle, LinearTriangleModel, Material, Node
    from nusa.mesh import Modeler
 
    modeler = Modeler()
@@ -93,12 +95,12 @@ This example exercises the complete preprocessing and solution path:
    coordinates, connectivity = modeler.generate_mesh()
 
    nodes = [Node(tuple(point[:2])) for point in coordinates]
+   material = Material(E=200e9, nu=0.3)
    elements = [
        LinearTriangle(
            (nodes[int(i)], nodes[int(j)], nodes[int(k)]),
-           E=200e9,
-           nu=0.3,
-           t=0.01,
+           material=material,
+           thickness=0.01,
        )
        for i, j, k in connectivity
    ]

@@ -4,11 +4,17 @@ import numpy as np
 
 from nusa import LinearTriangle, LinearTriangleModel, Node
 
+from nusa import Material
+
+def _make_triangle(nodes, E, nu, t):
+    return LinearTriangle(nodes, material=Material(E=E, nu=nu), thickness=t)
+
+
 
 class TestLinearTriangleElement:
     def test_area_constitutive_B_and_stiffness(self):
         n1, n2, n3 = Node((0, 0)), Node((1, 0)), Node((0, 1))
-        element = LinearTriangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5)
+        element = _make_triangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5)
 
         assert np.isclose(element.A, 0.5)
         np.testing.assert_allclose(
@@ -30,7 +36,7 @@ class TestLinearTriangleElement:
 
     def test_affine_displacement_field_is_exact(self):
         n1, n2, n3 = Node((0, 0)), Node((1, 0)), Node((0, 1))
-        element = LinearTriangle((n1, n2, n3), E=200e9, nu=0.3, t=0.1)
+        element = _make_triangle((n1, n2, n3), E=200e9, nu=0.3, t=0.1)
         a, b, c = 1e-3, 2e-3, 0.1
         d, e, f = -0.5e-3, 3e-3, -0.2
 
@@ -49,7 +55,7 @@ class TestLinearTriangleElement:
 
     def test_rigid_body_motion_produces_zero_strain_and_stress(self):
         n1, n2, n3 = Node((0, 0)), Node((1, 0)), Node((0, 1))
-        element = LinearTriangle((n1, n2, n3), E=200e9, nu=0.3, t=0.1)
+        element = _make_triangle((n1, n2, n3), E=200e9, nu=0.3, t=0.1)
         tx, ty, omega = 0.25, -0.4, 0.03
         u_e = []
         for node in (n1, n2, n3):
@@ -60,8 +66,8 @@ class TestLinearTriangleElement:
 
     def test_clockwise_and_counterclockwise_are_equivalent(self):
         a, b, c = Node((0, 0)), Node((1, 0)), Node((0, 1))
-        ccw = LinearTriangle((a, b, c), E=1000.0, nu=0.25, t=0.5)
-        cw = LinearTriangle((a, c, b), E=1000.0, nu=0.25, t=0.5)
+        ccw = _make_triangle((a, b, c), E=1000.0, nu=0.25, t=0.5)
+        cw = _make_triangle((a, c, b), E=1000.0, nu=0.25, t=0.5)
 
         dof_permutation = [0, 1, 4, 5, 2, 3]
         np.testing.assert_allclose(
@@ -80,7 +86,7 @@ class TestLinearTriangleElement:
 
     def test_degenerate_triangle_rejected(self):
         with np.testing.assert_raises_regex(ValueError, "non-collinear"):
-            LinearTriangle(
+            _make_triangle(
                 (Node((0, 0)), Node((1, 0)), Node((2, 0))),
                 E=1000.0,
                 nu=0.25,
@@ -92,7 +98,7 @@ class TestLinearTriangleModel:
     def test_single_triangle_reference_problem(self):
         model = LinearTriangleModel("Single CST")
         n1, n2, n3 = Node((0, 0)), Node((1, 0.5)), Node((0, 1))
-        element = LinearTriangle((n1, n2, n3), E=200e9, nu=0.3, t=0.1)
+        element = _make_triangle((n1, n2, n3), E=200e9, nu=0.3, t=0.1)
         model.add_nodes([n1, n2, n3])
         model.add_element(element)
         model.add_constraint(n1, ux=0.0, uy=0.0)
@@ -132,9 +138,9 @@ class TestLinearTriangleModel:
         ]
         n1, n2, n3, n4, n5 = nodes
         elements = [
-            LinearTriangle((n1, n3, n4), E, nu, t),
-            LinearTriangle((n1, n2, n3), E, nu, t),
-            LinearTriangle((n4, n3, n5), E, nu, t),
+            _make_triangle((n1, n3, n4), E, nu, t),
+            _make_triangle((n1, n2, n3), E, nu, t),
+            _make_triangle((n4, n3, n5), E, nu, t),
         ]
         model.add_nodes(nodes)
         model.add_elements(elements)
@@ -176,7 +182,7 @@ class TestLinearTriangleModel:
         model = LinearTriangleModel("Prescribed CST")
         n1, n2, n3 = Node((0, 0)), Node((1, 0)), Node((0, 1))
         model.add_nodes([n1, n2, n3])
-        model.add_element(LinearTriangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5))
+        model.add_element(_make_triangle((n1, n2, n3), E=1000.0, nu=0.25, t=0.5))
         model.add_constraint(n1, ux=0.0, uy=0.0)
         model.add_constraint(n2, ux=0.01, uy=0.0)
 

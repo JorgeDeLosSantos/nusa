@@ -6,6 +6,22 @@ This file contains information related to the development of the project, such a
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-12
+
+### Added
+- Introduced reusable `Material(E, nu=None, name=None)` and `Section(A=None, I=None, name=None)` domain objects with validated, read-only physical properties.
+- Added documentation for physical properties and migration from 0.4 to 0.5.
+
+### Changed
+- Migrated `Bar` and `Truss` to keyword-only `material` and `section`, requiring cross-sectional area `A`.
+- Migrated `Beam` to keyword-only `material` and `section`, requiring second moment of area `I`.
+- Migrated `LinearTriangle` to keyword-only `material` and `thickness`, requiring a defined Poisson ratio `nu`; `t` remains a read-only convenience alias.
+- Made element material/section references read-only and rejected boolean physical parameters, including NumPy booleans.
+- Removed the old element constructors that accepted scalar physical parameters directly. These are intentional pre-1.0 breaking changes.
+
+### Tests
+- Added material/section validation, delegation, reuse and reference-contract coverage while preserving numerical element regression tests.
+
 ## [0.4.0] - 2026-10-06
 
 ### Added

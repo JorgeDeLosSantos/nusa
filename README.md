@@ -18,6 +18,7 @@ A Python library for structural analysis using the finite element method, design
 * **0.3.0rc2** Release candidate (22/09/2026)
 * **0.3.0** Stable release (23/09/2026)
 * **0.4.0** Stable release (06/10/2026)
+* **0.5.0** Stable release (12/10/2026)
 
 ## Requirements
 
@@ -80,6 +81,14 @@ result = LinearStaticAnalysis().solve(model)
 an independent `StaticResult` snapshot containing displacements, reactions,
 nodal forces, and canonical element results.
 
+## Physical properties in NuSA 0.5
+
+NuSA 0.5 uses reusable `Material` and `Section` objects for
+`Bar`, `Truss`, and `Beam`, while `LinearTriangle` takes a `Material` and
+explicit `thickness`. The examples below require NuSA 0.5.0 or newer
+(or the current `develop` branch). If upgrading from 0.4.0, consult the
+[0.4 → 0.5 migration guide](docs/source/migration_0_4_to_0_5.rst).
+
 ## Supported element types
 
 * Spring
@@ -95,7 +104,7 @@ nodal forces, and canonical element results.
 ```python
 import numpy as np
 
-from nusa import LinearTriangle, LinearTriangleModel, Node, plot_model
+from nusa import LinearTriangle, LinearTriangleModel, Material, Node, plot_model
 import nusa.mesh as nmsh
 
 md = nmsh.Modeler()
@@ -112,10 +121,12 @@ for k,nd in enumerate(nc):
     cn = Node((x[k],y[k]))
     nodes.append(cn)
     
+material = Material(E=200e9, nu=0.3)
+
 for elm in ec:
     i, j, k = int(elm[0]), int(elm[1]), int(elm[2])
     ni, nj, nk = nodes[i], nodes[j], nodes[k]
-    ce = LinearTriangle((ni, nj, nk), 200e9, 0.3, 0.1)
+    ce = LinearTriangle((ni, nj, nk), material=material, thickness=0.1)
     elements.append(ce)
 
 model = LinearTriangleModel()
@@ -205,12 +216,14 @@ Use E = 29 x 10<sup>6</sup> psi.
 Beer & Johnston. (2012) Mechanics of materials. 
 Problem 9.13 , pp. 568.
 """
-from nusa import Beam, BeamModel, Node
+from nusa import Beam, BeamModel, Material, Node, Section
 
 # Input data 
 E = 29e6
-I = 291 # W14x30 
+I = 291 # W14x30
 P = 35e3
+material = Material(E=E)
+section = Section(I=I)
 L1 = 5*12 # in
 L2 = 10*12 #in
 # Model
@@ -220,8 +233,8 @@ n1 = Node((0,0))
 n2 = Node((L1,0))
 n3 = Node((L1+L2,0))
 # Elements
-e1 = Beam((n1,n2),E,I)
-e2 = Beam((n2,n3),E,I)
+e1 = Beam((n1,n2), material=material, section=section)
+e2 = Beam((n2,n3), material=material, section=section)
 
 # Add elements and nodes
 for nd in (n1,n2,n3): m1.add_node(nd)

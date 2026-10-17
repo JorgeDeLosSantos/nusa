@@ -4,11 +4,17 @@ import numpy as np
 
 from nusa import Node, Truss, TrussModel
 
+from nusa import Material, Section
+
+def _make_truss(nodes, E, A):
+    return Truss(nodes, material=Material(E=E), section=Section(A=A))
+
+
 
 class TestTrussElement:
     def test_geometry_and_stiffness(self):
         n1, n2 = Node((0.0, 0.0)), Node((3.0, 4.0))
-        element = Truss((n1, n2), E=200.0, A=2.0)
+        element = _make_truss((n1, n2), E=200.0, A=2.0)
 
         assert np.isclose(element.L, 5.0)
         assert np.isclose(element.theta, np.arctan2(4.0, 3.0))
@@ -23,7 +29,7 @@ class TestTrussElement:
         )
 
     def test_explicit_axial_force_and_stress(self):
-        element = Truss((Node((0.0, 0.0)), Node((3.0, 4.0))), E=200.0, A=2.0)
+        element = _make_truss((Node((0.0, 0.0)), Node((3.0, 4.0))), E=200.0, A=2.0)
 
         values = element.compute_results([0.0, 0.0, 0.006, 0.008])
         assert np.isclose(values["axial_force"], 0.8)
@@ -44,9 +50,9 @@ class TestTrussModel:
             Node((120.0, 0.0)),
         )
         elements = [
-            Truss((n1, n2), E, A),
-            Truss((n1, n3), E, A),
-            Truss((n1, n4), E, A),
+            _make_truss((n1, n2), E, A),
+            _make_truss((n1, n3), E, A),
+            _make_truss((n1, n4), E, A),
         ]
         model.add_nodes([n1, n2, n3, n4])
         model.add_elements(elements)
@@ -78,11 +84,11 @@ class TestTrussModel:
         ]
         n1, n2, n3, n4, n5, n6 = nodes
         elements = [
-            Truss((n1, n2), E, A), Truss((n1, n3), E, A),
-            Truss((n2, n3), E, A), Truss((n2, n4), E, A),
-            Truss((n2, n5), E, A), Truss((n3, n5), E, A),
-            Truss((n4, n5), E, A), Truss((n4, n6), E, A),
-            Truss((n5, n6), E, A),
+            _make_truss((n1, n2), E, A), _make_truss((n1, n3), E, A),
+            _make_truss((n2, n3), E, A), _make_truss((n2, n4), E, A),
+            _make_truss((n2, n5), E, A), _make_truss((n3, n5), E, A),
+            _make_truss((n4, n5), E, A), _make_truss((n4, n6), E, A),
+            _make_truss((n5, n6), E, A),
         ]
         model.add_nodes(nodes)
         model.add_elements(elements)
@@ -122,7 +128,7 @@ class TestTrussModel:
 def test_truss_nonzero_prescribed_displacement():
     model = TrussModel("prescribed truss")
     n1, n2, n3 = Node((0.0, 0.0)), Node((1.0, 0.0)), Node((2.0, 0.0))
-    e1, e2 = Truss((n1, n2), 100.0, 1.0), Truss((n2, n3), 100.0, 1.0)
+    e1, e2 = _make_truss((n1, n2), 100.0, 1.0), _make_truss((n2, n3), 100.0, 1.0)
     model.add_nodes([n1, n2, n3])
     model.add_elements([e1, e2])
     model.add_constraint(n1, ux=0.0, uy=0.0)
